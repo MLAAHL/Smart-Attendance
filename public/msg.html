@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manual WhatsApp Messaging System</title>
+  
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    
+    .card-hover {
+      transition: all 0.3s ease;
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    .animate-fade-in {
+      animation: fadeIn 0.5s ease-in;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+
+    .status-indicator.connected {
+      background-color: #10b981;
+      animation: pulse-green 2s infinite;
+    }
+
+    .status-indicator.disconnected {
+      background-color: #ef4444;
+    }
+
+    .status-indicator.loading {
+      background-color: #f59e0b;
+      animation: pulse-orange 1s infinite;
+    }
+
+    @keyframes pulse-green {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    @keyframes pulse-orange {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      max-width: 400px;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    .notification.success {
+      background-color: #10b981;
+      color: white;
+    }
+
+    .notification.error {
+      background-color: #ef4444;
+      color: white;
+    }
+
+    .notification.info {
+      background-color: #3b82f6;
+      color: white;
+    }
+
+    .notification.warning {
+      background-color: #f59e0b;
+      color: white;
+    }
+
+    .stats-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .stats-card:hover {
+      background: rgba(255, 255, 255, 1);
+      transform: translateY(-2px);
+    }
+
+    .message-full-day {
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      border-left: 4px solid #ef4444;
+    }
+
+    .message-partial-day {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border-left: 4px solid #f59e0b;
+    }
+
+    .message-preview {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      white-space: pre-line;
+      max-height: 200px;
+      overflow-y: auto;
+      color: #374151;
+    }
+
+    .quick-action-card {
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .quick-action-card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .date-input::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      border-radius: 4px;
+      margin-right: 2px;
+      opacity: 0.6;
+      filter: invert(1);
+    }
+
+    .date-input::-webkit-calendar-picker-indicator:hover {
+      opacity: 1;
+    }
+
+    /* Alert modal styles */
+    .alert-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+
+    .alert-content {
+      background: white;
+      padding: 2rem;
+      border-radius: 1rem;
+      max-width: 500px;
+      margin: 1rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="min-h-screen py-8 px-4">
+    <div class="max-w-7xl mx-auto">
+      
+      <!-- Header -->
+      <div class="text-center mb-12 animate-fade-in">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full shadow-lg mb-6">
+          <i class="fas fa-paper-plane text-3xl text-purple-600"></i>
+        </div>
+        <h1 class="text-4xl font-bold text-white mb-4">Manual WhatsApp Messaging System</h1>
+        <p class="text-xl text-purple-100 max-w-3xl mx-auto">
+          Send consolidated absence notifications to parents on-demand - anytime, any date, any semester
+        </p>
+        
+        <!-- System Status -->
+        <div class="mt-6 inline-flex items-center bg-white bg-opacity-20 rounded-lg px-4 py-2">
+          <span class="status-indicator" id="systemStatus"></span>
+          <span class="text-white text-sm" id="systemStatusText">Checking system status...</span>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-fade-in">
+        
+        <div class="quick-action-card bg-white rounded-2xl p-6 text-center shadow-lg" onclick="setTodayDate()">
+          <div class="text-3xl text-blue-600 mb-4">
+            <i class="fas fa-calendar-day"></i>
+          </div>
+          <h3 class="font-bold text-gray-800 mb-2">Today's Messages</h3>
+          <p class="text-sm text-gray-600">Set date to today</p>
+        </div>
+        
+        <div class="quick-action-card bg-white rounded-2xl p-6 text-center shadow-lg" onclick="setYesterdayDate()">
+          <div class="text-3xl text-orange-600 mb-4">
+            <i class="fas fa-calendar-minus"></i>
+          </div>
+          <h3 class="font-bold text-gray-800 mb-2">Yesterday's Messages</h3>
+          <p class="text-sm text-gray-600">Set date to yesterday</p>
+        </div>
+        
+        <div class="quick-action-card bg-white rounded-2xl p-6 text-center shadow-lg" onclick="clearForm()">
+          <div class="text-3xl text-gray-600 mb-4">
+            <i class="fas fa-eraser"></i>
+          </div>
+          <h3 class="font-bold text-gray-800 mb-2">Clear Form</h3>
+          <p class="text-sm text-gray-600">Reset all selections</p>
+        </div>
+        
+      </div>
+
+      <!-- Main Messaging Panel -->
+      <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover animate-fade-in">
+        <div class="flex items-center mb-8">
+          <div class="w-12 h-12 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-lg mr-4">
+            <i class="fas fa-paper-plane"></i>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Send WhatsApp Messages</h2>
+            <p class="text-gray-600">Select stream, semester, and date to send consolidated absence notifications</p>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+  
+          <!-- Academic Stream Selection -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-3">
+              <i class="fas fa-university mr-2 text-purple-600"></i>Academic Stream
+            </label>
+            <select id="messagingStream" onchange="validateForm()" class="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all text-lg">
+              <option value="">-- Select Stream --</option>
+              <option value="BCA">BCA - Computer Applications</option>
+              <option value="BBA">BBA - Business Administration</option>
+              <option value="BCom">BCom - Commerce (Section A)</option>
+              <option value="BCom Section B">BCom Section B - Commerce</option>
+              <option value="BCom-BDA">BCom-BDA - Big Data Analytics</option>
+              <option value="BCom A and F">BCom A&F - Accounting & Finance</option>
+            </select>
+          </div>
+          
+          <!-- Semester Selection -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-3">
+              <i class="fas fa-layer-group mr-2 text-purple-600"></i>Semester
+            </label>
+            <select id="messagingSemester" onchange="validateForm()" class="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all text-lg">
+              <option value="">-- Select Semester --</option>
+              <option value="1">First Semester</option>
+              <option value="2">Second Semester</option>
+              <option value="3">Third Semester</option>
+              <option value="4">Fourth Semester</option>
+              <option value="5">Fifth Semester</option>
+              <option value="6">Sixth Semester</option>
+            </select>
+          </div>
+          
+          
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-3">
+              <i class="fas fa-clock mr-2 text-purple-600"></i>Date
+            </label>
+            <input type="date" id="messagingDate" onchange="validateForm()" class="date-input w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all text-lg">
+          </div>
+          
+          <div class="flex items-end">
+            <button onclick="previewMessages()" id="previewBtn" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-4 rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 font-semibold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+              <i class="fas fa-eye mr-2"></i>Preview
+            </button>
+          </div>
+        </div>
+        
+        <!-- Send Button -->
+        <div class="text-center">
+          <button onclick="sendMessages()" id="sendBtn" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-12 py-4 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 font-semibold text-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            <i class="fas fa-paper-plane mr-3"></i>Send WhatsApp Messages Now
+          </button>
+        </div>
+      </div>
+
+      <!-- Results Section -->
+      <div id="resultsSection" class="hidden animate-fade-in">
+        
+        <!-- Statistics Cards -->
+        <div id="statsCards" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <!-- Stats will be loaded here -->
+        </div>
+
+        <!-- Main Results -->
+        <div id="resultsContent" class="space-y-8">
+          <!-- Results will be displayed here -->
+        </div>
+        
+      </div>
+
+      <!-- Footer -->
+      <div class="text-center mt-16 text-white animate-fade-in">
+        <p class="text-lg opacity-75">© 2025 MLA ACADEMY OF HIGHER LEARNING</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Notification Container -->
+  <div id="notificationContainer"></div>
+
+  <script>
+    // Global variables
+    let isLoading = false;
+    let currentPreviewData = null;
+
+    // Initialize system
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeSystem();
+    });
+
+    function initializeSystem() {
+      // Set today's date as default
+      setTodayDate();
+      
+      // Check server connection
+      checkServerConnection();
+      
+      // Validate form initially
+      validateForm();
+      
+      console.log('📱 Manual WhatsApp Messaging System initialized');
+    }
+
+    // System status management
+    function updateSystemStatus(status, message) {
+      const indicator = document.getElementById('systemStatus');
+      const text = document.getElementById('systemStatusText');
+      
+      if (indicator && text) {
+        indicator.className = `status-indicator ${status}`;
+        text.textContent = message;
+      }
+    }
+
+    // Server connection check
+    async function checkServerConnection() {
+      try {
+        updateSystemStatus('loading', 'Checking server connection...');
+        
+        const response = await fetch('/api/promotion-options');
+        if (response.ok) {
+          updateSystemStatus('connected', 'Server connected - Ready for messaging');
+          showNotification('✅ Server connected successfully', 'success');
+        } else {
+          throw new Error(`Server responded with ${response.status}`);
+        }
+      } catch (error) {
+        updateSystemStatus('disconnected', 'Server connection failed');
+        showNotification('❌ Server connection failed. Please check your connection.', 'error');
+      }
+    }
+
+    // Validation
+    function validateForm() {
+      const stream = document.getElementById('messagingStream').value;
+      const semester = document.getElementById('messagingSemester').value;
+      const date = document.getElementById('messagingDate').value;
+      
+      const previewBtn = document.getElementById('previewBtn');
+      const sendBtn = document.getElementById('sendBtn');
+      
+      const isValid = stream && semester && date;
+      
+      if (previewBtn) previewBtn.disabled = !isValid;
+      if (sendBtn) sendBtn.disabled = !isValid || !currentPreviewData;
+      
+      return isValid ? { stream, semester, date } : null;
+    }
+
+    // Quick date setters
+    function setTodayDate() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('messagingDate').value = today;
+      validateForm();
+      showNotification('📅 Date set to today', 'info');
+    }
+
+    function setYesterdayDate() {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      document.getElementById('messagingDate').value = yesterday.toISOString().split('T')[0];
+      validateForm();
+      showNotification('📅 Date set to yesterday', 'info');
+    }
+
+    function clearForm() {
+      document.getElementById('messagingStream').value = '';
+      document.getElementById('messagingSemester').value = '';
+      document.getElementById('messagingDate').value = '';
+      
+      const resultsSection = document.getElementById('resultsSection');
+      if (resultsSection) resultsSection.classList.add('hidden');
+      
+      currentPreviewData = null;
+      validateForm();
+      showNotification('🧹 Form cleared', 'info');
+    }
+
+    // ENHANCED: Preview messages with already sent check
+    async function previewMessages() {
+      const inputs = validateForm();
+      if (!inputs) {
+        showNotification('❌ Please fill in all fields', 'error');
+        return;
+      }
+      
+      const { stream, semester, date } = inputs;
+      
+      if (isLoading) return;
+      isLoading = true;
+      
+      const previewBtn = document.getElementById('previewBtn');
+      const originalText = previewBtn.innerHTML;
+      previewBtn.innerHTML = '<div class="loading-spinner"></div>Loading Preview...';
+      previewBtn.disabled = true;
+      
+      updateSystemStatus('loading', 'Loading message preview...');
+      
+      try {
+        const response = await fetch(`/api/daily-absence-summary/${stream}/sem${semester}/${date}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          currentPreviewData = data;
+          displayPreview(data);
+          updateSystemStatus('connected', 'Preview loaded successfully');
+          
+          // Check if messages were already sent
+          if (data.messageStatus && data.messageStatus.alreadySent) {
+            showNotification('⚠️ Messages already sent for this date!', 'warning');
+          } else {
+            showNotification('✅ Preview loaded successfully', 'success');
+          }
+          
+          // Enable send button
+          const sendBtn = document.getElementById('sendBtn');
+          if (sendBtn) sendBtn.disabled = false;
+        } else {
+          // Fallback: Check if students exist first
+          const studentsResponse = await fetch(`/api/students/${stream}/sem${semester}`);
+          
+          if (!studentsResponse.ok) {
+            if (studentsResponse.status === 404) {
+              throw new Error('No students found for this stream and semester');
+            } else {
+              throw new Error(`Server error: ${studentsResponse.status}`);
+            }
+          }
+          
+          const studentsData = await studentsResponse.json();
+          
+          // Create mock preview data
+          const mockPreviewData = {
+            success: true,
+            date: new Date(date).toLocaleDateString('en-IN', {
+              day: '2-digit',
+              month: '2-digit', 
+              year: 'numeric'
+            }),
+            stream: stream.toUpperCase(),
+            semester: semester,
+            summary: {
+              totalStudents: studentsData.length,
+              totalSubjects: 0,
+              subjectsWithAttendance: 0,
+              studentsToNotify: 0,
+              fullDayAbsent: 0,
+              partialDayAbsent: 0,
+              studentsPresent: studentsData.length
+            },
+            absenceSummary: studentsData.map(student => ({
+              studentID: student.studentID,
+              studentName: student.name,
+              parentPhone: student.parentPhone,
+              absentSubjects: [],
+              absentSubjectCount: 0,
+              isFullDayAbsent: false,
+              messageType: 'present',
+              willReceiveMessage: false
+            })),
+            subjectsWithAttendance: [],
+            consolidatedMessaging: {
+              totalMessagesToSend: 0,
+              fullDayMessages: 0,
+              partialDayMessages: 0
+            },
+            messageStatus: {
+              alreadySent: false,
+              note: "No messages sent yet for this date. Ready to send messages."
+            }
+          };
+          
+          currentPreviewData = mockPreviewData;
+          displayPreview(mockPreviewData);
+          updateSystemStatus('connected', 'Preview loaded (using student data)');
+          showNotification('✅ Preview loaded - Click "Send Messages Now" to check actual attendance', 'success');
+          
+          // Enable send button
+          const sendBtn = document.getElementById('sendBtn');
+          if (sendBtn) sendBtn.disabled = false;
+        }
+      } catch (error) {
+        console.error('Error loading preview:', error);
+        updateSystemStatus('disconnected', 'Failed to load preview');
+        showNotification('❌ Error loading preview: ' + error.message, 'error');
+        currentPreviewData = null;
+      } finally {
+        previewBtn.innerHTML = originalText;
+        previewBtn.disabled = false;
+        isLoading = false;
+      }
+    }
+
+    // ENHANCED: Display preview with message status
+    function displayPreview(data) {
+      const resultsSection = document.getElementById('resultsSection');
+      const statsCards = document.getElementById('statsCards');
+      const resultsContent = document.getElementById('resultsContent');
+      
+      if (!resultsSection || !statsCards || !resultsContent) return;
+      
+      // Show results section
+      resultsSection.classList.remove('hidden');
+      
+      // Update statistics cards
+      statsCards.innerHTML = `
+        <div class="stats-card rounded-2xl p-6 text-center shadow-lg">
+          <div class="text-3xl font-bold text-blue-600 mb-2">${data.summary.totalStudents}</div>
+          <div class="text-sm text-gray-600">Total Students</div>
+        </div>
+        
+        <div class="stats-card rounded-2xl p-6 text-center shadow-lg">
+          <div class="text-3xl font-bold text-orange-600 mb-2">${data.summary.studentsToNotify}</div>
+          <div class="text-sm text-gray-600">Will Get Messages</div>
+        </div>
+        
+        <div class="stats-card rounded-2xl p-6 text-center shadow-lg">
+          <div class="text-3xl font-bold text-red-600 mb-2">${data.summary.fullDayAbsent}</div>
+          <div class="text-sm text-gray-600">Full Day Absent</div>
+        </div>
+        
+        <div class="stats-card rounded-2xl p-6 text-center shadow-lg">
+          <div class="text-3xl font-bold text-yellow-600 mb-2">${data.summary.partialDayAbsent}</div>
+          <div class="text-sm text-gray-600">Partial Day Absent</div>
+        </div>
+      `;
+      
+      // Add message status alert if already sent
+      let messageStatusAlert = '';
+      if (data.messageStatus && data.messageStatus.alreadySent) {
+        messageStatusAlert = `
+          <div class="bg-orange-50 border-l-4 border-orange-400 p-6 mb-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <i class="fas fa-exclamation-triangle text-orange-400 text-xl"></i>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-lg font-semibold text-orange-800">⚠️ Messages Already Sent Today!</h3>
+                <div class="mt-2 text-sm text-orange-700">
+                  <p><strong>Sent at:</strong> ${new Date(data.messageStatus.sentAt).toLocaleString()}</p>
+                  <p><strong>Messages sent:</strong> ${data.messageStatus.messagesSent}</p>
+                  <p><strong>Students notified:</strong> ${data.messageStatus.totalStudentsNotified}</p>
+                  <p><strong>Subjects:</strong> ${data.messageStatus.subjectsIncluded?.join(', ') || 'N/A'}</p>
+                </div>
+                <div class="mt-3">
+                  <p class="text-sm text-orange-600 font-medium">
+                    Clicking "Send Messages Now" will ask if you want to send duplicate messages.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      // Display preview content
+      if (data.summary.studentsToNotify > 0) {
+        resultsContent.innerHTML = messageStatusAlert + `
+          <div class="bg-white rounded-2xl shadow-xl p-8">
+            <h4 class="text-2xl font-bold text-gray-800 mb-6">
+              <i class="fas fa-eye mr-3 text-blue-600"></i>Message Preview for ${data.date}
+            </h4>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+              <h5 class="font-semibold text-blue-800 mb-3">
+                <i class="fas fa-info-circle mr-2"></i>Attendance Summary:
+              </h5>
+              <div class="text-blue-700 space-y-1">
+                <p><strong>Subjects with attendance:</strong> ${data.subjectsWithAttendance.join(', ')}</p>
+                <p><strong>Messages ready to send:</strong> ${data.consolidatedMessaging?.totalMessagesToSend || data.summary.studentsToNotify}</p>
+                <p><strong>Full day absent:</strong> ${data.summary.fullDayAbsent} | <strong>Partial day absent:</strong> ${data.summary.partialDayAbsent}</p>
+              </div>
+            </div>
+            
+            <div class="space-y-4">
+              <h5 class="font-semibold text-gray-800 mb-3">Students who will receive messages:</h5>
+              
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                ${data.absenceSummary.filter(s => s.willReceiveMessage).map(student => `
+                  <div class="message-${student.isFullDayAbsent ? 'full' : 'partial'}-day p-4 rounded-lg">
+                    <div class="flex justify-between items-start mb-2">
+                      <div>
+                        <div class="font-semibold text-gray-800">${student.studentID}</div>
+                        <div class="text-sm text-gray-700">${student.studentName}</div>
+                        <div class="text-xs text-gray-600">${student.parentPhone || 'No phone'}</div>
+                      </div>
+                      <div class="text-right">
+                        <span class="text-sm font-semibold ${student.isFullDayAbsent ? 'text-red-600' : 'text-yellow-600'}">
+                          ${student.isFullDayAbsent ? '🔴 Full Day' : `🟡 ${student.absentSubjectCount} subject(s)`}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    ${!student.isFullDayAbsent ? `
+                      <div class="text-xs text-gray-600 mb-2">
+                        <strong>Absent in:</strong> ${student.absentSubjects.join(', ')}
+                      </div>
+                    ` : ''}
+                    
+                    <!-- Sample Message Preview -->
+                    <details class="mt-3">
+                      <summary class="text-xs text-blue-600 cursor-pointer hover:text-blue-800">Preview message</summary>
+                      <div class="message-preview mt-2">
+${student.isFullDayAbsent ? 
+`Dear Parent,
+
+Your child ${student.studentName} (${student.studentID}) was ABSENT for the WHOLE DAY on ${data.date}.
+
+Stream: ${data.stream}
+Semester: ${data.semester}
+Total Subjects: ${student.absentSubjectCount}
+
+Please contact the school if this is incorrect.
+
+Best regards,
+School Administration` :
+`Dear Parent,
+
+Your child ${student.studentName} (${student.studentID}) was ABSENT for the following subject(s) on ${data.date}:
+
+${student.absentSubjects.map((subj, index) => `${index + 1}. ${subj}`).join('\n')}
+
+Stream: ${data.stream}
+Semester: ${data.semester}
+
+Please contact the school if this is incorrect.
+
+Best regards,
+School Administration`}
+                      </div>
+                    </details>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+            
+            <div class="mt-8 bg-green-50 border border-green-200 rounded-lg p-4">
+              <p class="text-green-800 font-semibold">
+                <i class="fas fa-check-circle mr-2"></i>Ready to send ${data.consolidatedMessaging?.totalMessagesToSend || data.summary.studentsToNotify} consolidated messages
+              </p>
+            </div>
+          </div>
+        `;
+      } else {
+        resultsContent.innerHTML = messageStatusAlert + `
+          <div class="bg-white rounded-2xl shadow-xl p-8 text-center">
+            <div class="text-6xl text-green-500 mb-6">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <h4 class="text-2xl font-bold text-gray-800 mb-4">🎉 Perfect Attendance!</h4>
+            <p class="text-lg text-gray-600 mb-4">
+              All students were present on ${data.date}. No messages to send.
+            </p>
+            <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-green-700">
+                <div>
+                  <div class="text-2xl font-bold">${data.summary.totalStudents}</div>
+                  <div class="text-sm">Total Students</div>
+                </div>
+                <div>
+                  <div class="text-2xl font-bold">${data.summary.subjectsWithAttendance}</div>
+                  <div class="text-sm">Subjects with Attendance</div>
+                </div>
+                <div>
+                  <div class="text-2xl font-bold">100%</div>
+                  <div class="text-sm">Attendance Rate</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // ENHANCED: Send messages with alert for already sent
+    async function sendMessages() {
+      const inputs = validateForm();
+      if (!inputs) {
+        showNotification('❌ Please fill in all fields', 'error');
+        return;
+      }
+      
+      if (!currentPreviewData) {
+        showNotification('❌ Please preview messages first', 'error');
+        return;
+      }
+      
+      const { stream, semester, date } = inputs;
+      
+      if (isLoading) return;
+      isLoading = true;
+      
+      const sendBtn = document.getElementById('sendBtn');
+      const originalText = sendBtn.innerHTML;
+      sendBtn.innerHTML = '<div class="loading-spinner"></div>Checking message status...';
+      sendBtn.disabled = true;
+      
+      updateSystemStatus('loading', 'Checking if messages were already sent...');
+      
+      try {
+        const response = await fetch(`/api/send-absence-messages/${stream}/sem${semester}/${date}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+          // Check if messages were already sent
+          if (result.alreadySent) {
+            // Show alert for already sent messages
+            const alertMsg = `🚨 MESSAGES ALREADY SENT TODAY!
+
+Date: ${result.previousSendInfo.date}
+Stream: ${result.previousSendInfo.stream}
+Semester: ${result.previousSendInfo.semester}
+
+Previous Send Details:
+✅ Messages Sent: ${result.previousSendInfo.messagesSent}
+❌ Messages Failed: ${result.previousSendInfo.messagesFailed}
+👥 Students Notified: ${result.previousSendInfo.totalStudentsNotified}
+📚 Subjects: ${result.previousSendInfo.subjectsIncluded.join(', ')}
+🕒 Sent At: ${new Date(result.previousSendInfo.sentAt).toLocaleString()}
+
+❓ Do you want to send messages again anyway?
+(This will send duplicate messages to parents)`;
+
+            const confirmResend = confirm(alertMsg);
+            
+            if (confirmResend) {
+              // User confirmed to resend - call with forceResend
+              await sendMessagesForce(stream, semester, date);
+            } else {
+              // User cancelled - show the already sent results
+              displayAlreadySentResults(result);
+              updateSystemStatus('connected', 'Messages were already sent today');
+              showNotification('ℹ️ No new messages sent - already processed today', 'info');
+            }
+          } else {
+            // Normal send - messages were sent successfully
+            displaySendResults(result);
+            updateSystemStatus('connected', 'Messages sent successfully');
+            showNotification(`✅ Successfully sent ${result.summary.messagesSent} messages!`, 'success');
+          }
+        } else {
+          throw new Error(result.message || 'Failed to send messages');
+        }
+      } catch (error) {
+        console.error('Error sending messages:', error);
+        updateSystemStatus('disconnected', 'Failed to send messages');
+        showNotification('❌ Error sending messages: ' + error.message, 'error');
+      } finally {
+        sendBtn.innerHTML = originalText;
+        sendBtn.disabled = false;
+        isLoading = false;
+      }
+    }
+
+    // NEW: Force send messages (for resending)
+    async function sendMessagesForce(stream, semester, date) {
+      const sendBtn = document.getElementById('sendBtn');
+      const originalText = sendBtn.innerHTML;
+      sendBtn.innerHTML = '<div class="loading-spinner"></div>Force Sending Messages...';
+      sendBtn.disabled = true;
+      
+      updateSystemStatus('loading', 'Force sending WhatsApp messages...');
+      
+      try {
+        const response = await fetch(`/api/send-absence-messages/${stream}/sem${semester}/${date}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ forceResend: true })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+          displaySendResults(result);
+          updateSystemStatus('connected', 'Messages force sent successfully');
+          showNotification(`✅ Force sent ${result.summary.messagesSent} messages!`, 'success');
+        } else {
+          throw new Error(result.message || 'Failed to force send messages');
+        }
+      } catch (error) {
+        console.error('Error force sending messages:', error);
+        updateSystemStatus('disconnected', 'Failed to force send messages');
+        showNotification('❌ Error force sending messages: ' + error.message, 'error');
+      } finally {
+        sendBtn.innerHTML = originalText;
+        sendBtn.disabled = false;
+      }
+    }
+
+    // NEW: Display already sent results
+    function displayAlreadySentResults(result) {
+      const resultsContent = document.getElementById('resultsContent');
+      if (!resultsContent) return;
+      
+      const info = result.previousSendInfo;
+      
+      resultsContent.innerHTML = `
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+          <h4 class="text-2xl font-bold text-orange-800 mb-6">
+            <i class="fas fa-info-circle mr-3 text-orange-600"></i>Messages Already Sent Today!
+          </h4>
+          
+          <div class="bg-orange-50 border border-orange-200 rounded-lg p-6 mb-6">
+            <h5 class="font-semibold text-orange-800 mb-3">
+              <i class="fas fa-clock mr-2"></i>Previous Send Information:
+            </h5>
+            <div class="text-orange-700 space-y-2">
+              <p><strong>Date:</strong> ${info.date}</p>
+              <p><strong>Stream:</strong> ${info.stream} Semester ${info.semester}</p>
+              <p><strong>Messages Sent:</strong> ${info.messagesSent}</p>
+              <p><strong>Messages Failed:</strong> ${info.messagesFailed}</p>
+              <p><strong>Students Notified:</strong> ${info.totalStudentsNotified}</p>
+              <p><strong>Subjects Included:</strong> ${info.subjectsIncluded.join(', ')}</p>
+              <p><strong>Sent At:</strong> ${new Date(info.sentAt).toLocaleString()}</p>
+              <p><strong>Sent By:</strong> ${info.sentBy || 'Manual'}</p>
+            </div>
+          </div>
+          
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+            <h5 class="font-semibold text-blue-800 mb-3">
+              <i class="fas fa-lightbulb mr-2"></i>What This Means:
+            </h5>
+            <div class="text-blue-700 space-y-2">
+              <p>• WhatsApp messages have already been sent to parents for this date</p>
+              <p>• Sending again would create duplicate notifications</p>
+              <p>• Parents have already been informed about absences</p>
+              <p>• The system prevents accidental duplicate messages</p>
+            </div>
+          </div>
+          
+          <div class="text-center space-x-4">
+            <button onclick="clearForm()" class="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-8 py-3 rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-300 font-semibold">
+              <i class="fas fa-plus mr-2"></i>Send Messages for Different Date
+            </button>
+            
+            <button onclick="forceResendConfirm()" class="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-300 font-semibold">
+              <i class="fas fa-redo mr-2"></i>Force Resend Anyway
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // NEW: Confirm force resend
+    function forceResendConfirm() {
+      const inputs = validateForm();
+      if (!inputs) return;
+      
+      const { stream, semester, date } = inputs;
+      
+      const confirmMsg = `⚠️ FORCE RESEND CONFIRMATION
+
+This will send DUPLICATE WhatsApp messages to parents!
+
+Are you absolutely sure you want to:
+• Send messages again for ${stream} Semester ${semester}
+• On date: ${date}
+• Even though messages were already sent today?
+
+Parents will receive duplicate notifications.
+
+Continue with force resend?`;
+
+      if (confirm(confirmMsg)) {
+        sendMessagesForce(stream, semester, date);
+      }
+    }
+
+    // Display send results
+    function displaySendResults(result) {
+      const resultsContent = document.getElementById('resultsContent');
+      if (!resultsContent) return;
+      
+      const successRate = result.summary.messagesSent + result.summary.messagesFailed > 0 ? 
+        ((result.summary.messagesSent / (result.summary.messagesSent + result.summary.messagesFailed)) * 100).toFixed(1) : 0;
+      
+      resultsContent.innerHTML = `
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+          <h4 class="text-2xl font-bold text-green-800 mb-6">
+            <i class="fas fa-check-circle mr-3 text-green-600"></i>Messages Sent Successfully!
+          </h4>
+          
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div class="stats-card rounded-xl p-6 text-center border-l-4 border-green-500">
+              <div class="text-3xl font-bold text-green-600 mb-2">${result.summary.messagesSent}</div>
+              <div class="text-sm text-gray-600">Messages Sent</div>
+            </div>
+            
+            <div class="stats-card rounded-xl p-6 text-center border-l-4 border-red-500">
+              <div class="text-3xl font-bold text-red-600 mb-2">${result.summary.messagesFailed}</div>
+              <div class="text-sm text-gray-600">Failed</div>
+            </div>
+            
+            <div class="stats-card rounded-xl p-6 text-center border-l-4 border-purple-500">
+              <div class="text-3xl font-bold text-purple-600 mb-2">${result.summary.fullDayAbsent}</div>
+              <div class="text-sm text-gray-600">Full Day Messages</div>
+            </div>
+            
+            <div class="stats-card rounded-xl p-6 text-center border-l-4 border-orange-500">
+              <div class="text-3xl font-bold text-orange-600 mb-2">${result.summary.partialDayAbsent}</div>
+              <div class="text-sm text-gray-600">Partial Day Messages</div>
+            </div>
+          </div>
+          
+          <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+            <h5 class="font-semibold text-green-800 mb-3">
+              <i class="fas fa-info-circle mr-2"></i>Summary:
+            </h5>
+            <div class="text-green-700 space-y-1">
+              <p><strong>Date:</strong> ${result.date}</p>
+              <p><strong>Stream:</strong> ${result.stream} Semester ${result.semester}</p>
+              <p><strong>Success Rate:</strong> ${successRate}%</p>
+              <p><strong>Subjects included:</strong> ${result.subjectsIncluded.join(', ')}</p>
+              <p><strong>Sent at:</strong> ${new Date(result.triggeredAt).toLocaleString()}</p>
+              ${result.summary.isForceResend ? '<p><strong>Type:</strong> Force Resend</p>' : ''}
+            </div>
+          </div>
+          
+          ${result.summary.messagesFailed > 0 ? `
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+              <h5 class="font-semibold text-red-800 mb-3">
+                <i class="fas fa-exclamation-triangle mr-2"></i>Failed Messages:
+              </h5>
+              <div class="space-y-2 max-h-40 overflow-y-auto">
+                ${result.whatsappResults.filter(r => !r.success).slice(0, 10).map(failure => `
+                  <div class="text-sm text-red-700">
+                    <strong>${failure.studentID}</strong> - ${failure.error}
+                  </div>
+                `).join('')}
+                ${result.whatsappResults.filter(r => !r.success).length > 10 ? 
+                  `<div class="text-sm text-red-600">... and ${result.whatsappResults.filter(r => !r.success).length - 10} more</div>` : ''}
+              </div>
+            </div>
+          ` : ''}
+          
+          <div class="text-center mt-8">
+            <button onclick="clearForm()" class="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-8 py-3 rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-300 font-semibold">
+              <i class="fas fa-plus mr-2"></i>Send More Messages
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // Notification system
+    function showNotification(message, type = 'info') {
+      const container = document.getElementById('notificationContainer');
+      if (!container) return;
+      
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.innerHTML = `
+        <div class="flex items-center justify-between">
+          <span>${message}</span>
+          <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      `;
+      
+      container.appendChild(notification);
+      
+      // Show notification
+      setTimeout(() => notification.classList.add('show'), 100);
+      
+      // Auto remove after 5 seconds
+      setTimeout(() => {
+        if (notification.parentElement) {
+          notification.classList.remove('show');
+          setTimeout(() => notification.remove(), 300);
+        }
+      }, 5000);
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+      if (e.ctrlKey && e.key === 'p') {
+        e.preventDefault();
+        previewMessages();
+      }
+      
+      if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        sendMessages();
+      }
+      
+      if (e.ctrlKey && e.key === 'r') {
+        e.preventDefault();
+        clearForm();
+      }
+    });
+
+  </script>
+</body>
+
+</body>
+</html>
