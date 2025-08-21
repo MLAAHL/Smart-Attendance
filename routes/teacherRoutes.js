@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const BaseAttendance = require("../models/BaseAttendance");
 const sendWhatsAppMessage = require('../utils/sendWhatsAppMessage');
 
-// ✅ Enhanced Schema (No section handling needed)
+// ✅ ENHANCED: Student Schema with Language Support
 const studentSchema = new mongoose.Schema({
   studentID: {
     type: String,
@@ -16,7 +16,8 @@ const studentSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    uppercase: true
   },
   stream: {
     type: String,
@@ -39,6 +40,20 @@ const studentSchema = new mongoose.Schema({
       message: "Please enter a valid phone number"
     }
   },
+  
+  // ✅ NEW: Language preference fields
+  languageSubject: {
+    type: String,
+    uppercase: true,
+    enum: ['KANNADA', 'HINDI', 'SANSKRIT', null],
+    default: null
+  },
+  languageGroup: {
+    type: String,
+    uppercase: true,
+    default: null // e.g., "BBA_SEM3_KANNADA", "BCA_SEM5_HINDI"
+  },
+  
   isActive: {
     type: Boolean,
     default: true
@@ -80,12 +95,13 @@ const studentSchema = new mongoose.Schema({
   strict: false
 });
 
-// ✅ Subject Schema (No section handling needed)
+// ✅ ENHANCED: Subject Schema with Language Support
 const subjectSchema = new mongoose.Schema({
   subjectName: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    uppercase: true
   },
   stream: {
     type: String,
@@ -98,16 +114,47 @@ const subjectSchema = new mongoose.Schema({
     min: 1,
     max: 8
   },
+  credits: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 6,
+    default: 4
+  },
+  subjectType: {
+    type: String,
+    required: true,
+    uppercase: true,
+    enum: ['CORE', 'ELECTIVE', 'LANGUAGE', 'OPTIONAL'],
+    default: 'CORE'
+  },
+  
+  // ✅ NEW: Language-specific fields
+  isLanguageSubject: {
+    type: Boolean,
+    default: false
+  },
+  languageType: {
+    type: String,
+    uppercase: true,
+    enum: ['KANNADA', 'HINDI', 'SANSKRIT', null],
+    default: null
+  },
+  
   isActive: {
     type: Boolean,
     default: true
+  },
+  academicYear: {
+    type: String,
+    default: () => new Date().getFullYear().toString()
   }
 }, {
   timestamps: true,
   strict: false
 });
 
-// ✅ Attendance Schema (No section handling needed)
+// ✅ ENHANCED: Attendance Schema with Language Group Support
 const attendanceSchema = new mongoose.Schema({
   date: {
     type: Date,
@@ -126,6 +173,24 @@ const attendanceSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  
+  // ✅ NEW: Language group support
+  isLanguageSubject: {
+    type: Boolean,
+    default: false
+  },
+  languageType: {
+    type: String,
+    uppercase: true,
+    enum: ['KANNADA', 'HINDI', 'SANSKRIT', null],
+    default: null
+  },
+  languageGroup: {
+    type: String,
+    uppercase: true,
+    default: null
+  },
+  
   studentsPresent: {
     type: [String],
     default: []
@@ -133,12 +198,16 @@ const attendanceSchema = new mongoose.Schema({
   totalStudents: {
     type: Number,
     default: 0
+  },
+  totalPossibleStudents: {
+    type: Number,
+    default: 0 // For language subjects, this is the count of students in that language group
   }
 }, {
   timestamps: true
 });
 
-// ✅ Message Log Schema (No section handling needed)
+// ✅ ENHANCED: Message Log Schema
 const messageLogSchema = new mongoose.Schema({
   date: {
     type: String,
@@ -153,6 +222,14 @@ const messageLogSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  
+  // ✅ NEW: Language group messaging support
+  languageGroup: {
+    type: String,
+    uppercase: true,
+    default: null
+  },
+  
   messagesSent: {
     type: Number,
     default: 0
@@ -189,29 +266,34 @@ const messageLogSchema = new mongoose.Schema({
     studentName: String,
     success: Boolean,
     messageType: String,
-    error: String
+    error: String,
+    languageGroup: String
   }]
 }, {
   timestamps: true
 });
 
-// ✅ FIXED: Stream mappings - BCom Section B is its own stream
+// ✅ FIXED: Complete Stream mappings including BCom Section B
 const STREAM_MAPPINGS = {
   "BCA": "bca",
-  "BBA": "bba",
+  "BBA": "bba", 
   "BCom": "bcom",
   "BCom Section B": "bcomsectionb",  // ✅ Separate stream
-  "BCom-BDA": "bcom-bda",
+  "BCom-BDA": "bcom-bda",           // ✅ Fixed underscore
   "BCom A and F": "bcom_a_and_f"
 };
 
-// ✅ SIMPLIFIED: Collection name function (no section parameters)
+// ✅ Collection name function with validation
 function getCollectionName(stream, semester, type) {
   console.log(`🗂️ Input: stream="${stream}", semester="${semester}", type="${type}"`);
   
+  if (!stream || !semester || !type) {
+    throw new Error("Stream, semester, and type are required");
+  }
+  
   const streamCode = STREAM_MAPPINGS[stream];
   if (!streamCode) {
-    throw new Error(`Unknown stream: ${stream}`);
+    throw new Error(`Unknown stream: ${stream}. Valid streams: ${Object.keys(STREAM_MAPPINGS).join(', ')}`);
   }
   
   const collectionName = `${streamCode}_sem${semester}_${type}`;
@@ -222,7 +304,7 @@ function getCollectionName(stream, semester, type) {
 // Enhanced Dynamic Model Loaders with caching
 const modelCache = new Map();
 
-// ✅ SIMPLIFIED: Student Model (no section parameters)
+// ✅ Enhanced Student Model with language support
 function getStudentModel(stream, sem) {
   if (!stream || !sem) {
     throw new Error("Stream and semester are required");
@@ -237,11 +319,11 @@ function getStudentModel(stream, sem) {
   const model = mongoose.models[modelName] || mongoose.model(modelName, studentSchema, modelName);
   modelCache.set(modelName, model);
   
-  console.log(`✅ Created model for collection: ${modelName}`);
+  console.log(`✅ Created student model for collection: ${modelName}`);
   return model;
 }
 
-// ✅ SIMPLIFIED: Subject Model (no section parameters)
+// ✅ Enhanced Subject Model with language support
 function getSubjectModel(stream, sem) {
   if (!stream || !sem) {
     throw new Error("Stream and semester are required");
@@ -260,7 +342,7 @@ function getSubjectModel(stream, sem) {
   return model;
 }
 
-// ✅ SIMPLIFIED: Attendance Model (no section parameters)
+// ✅ Enhanced Attendance Model with language support
 function getAttendanceModel(stream, sem, subject) {
   if (!stream || !sem || !subject) {
     throw new Error("Stream, semester, and subject are required");
@@ -271,7 +353,9 @@ function getAttendanceModel(stream, sem, subject) {
     throw new Error(`Unknown stream: ${stream}`);
   }
   
-  const cleanSubject = subject.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  const cleanSubject = subject.toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9_]/g, '');
   const modelName = `${streamCode}_sem${sem}_${cleanSubject}_attendance`;
   
   if (modelCache.has(modelName)) {
@@ -290,7 +374,7 @@ function getMessageLogModel() {
   return mongoose.models.message_logs || mongoose.model('message_logs', messageLogSchema);
 }
 
-// ✅ SIMPLIFIED: Input Validation Middleware (no section validation)
+// ✅ Enhanced Input Validation Middleware
 const validateParams = (req, res, next) => {
   const { stream, sem } = req.params;
   
@@ -308,8 +392,8 @@ const validateParams = (req, res, next) => {
     });
   }
   
-  // ✅ Validate streams
-  const validStreams = ['BCA', 'BBA', 'BCom', 'BCom Section B', 'BCom-BDA', 'BCom A and F'];
+  // ✅ Complete stream validation
+  const validStreams = Object.keys(STREAM_MAPPINGS);
   if (!validStreams.includes(stream)) {
     return res.status(400).json({
       success: false,
@@ -320,7 +404,7 @@ const validateParams = (req, res, next) => {
   next();
 };
 
-// Helper function for active student query
+// ✅ Enhanced helper functions
 const getActiveStudentQuery = () => ({
   $or: [
     { isActive: true },
@@ -329,52 +413,33 @@ const getActiveStudentQuery = () => ({
   ]
 });
 
-// ✅ API ROUTES (SIMPLIFIED - NO SECTION PARAMETERS)
-
-
-
-// ✅ GET Promotion Options
-// Get promotion options
-// ✅ GET Promotion Options - Updated with BCom Section B
-router.get("/promotion-options", async (req, res) => {
-  try {
-    res.json({
-      success: true,
-      message: "Simple promotion system is ready",
-      availableStreams: [
-        { code: "BCA", name: "Bachelor of Computer Applications" },
-        { code: "BBA", name: "Bachelor of Business Administration" },
-        { code: "BCom", name: "Bachelor of Commerce (Section A)" },
-        { code: "BCom Section B", name: "Bachelor of Commerce (Section B)" }, // ✅ ADDED
-        { code: "BCom-BDA", name: "Bachelor of Commerce - Big Data Analytics" },
-        { code: "BCom A and F", name: "Bachelor of Commerce - Accounting and Finance" }
-      ],
-      maxSemesters: 6,
-      specialStreams: {
-        "BCom Section B": {
-          note: "Limited to semesters 5-6 only",
-          availableSemesters: [5, 6]
-        }
-      },
-      features: [
-        "Simple one-click promotion",
-        "All students move up one semester", 
-        "Auto graduation for 6th semester",
-        "Bulk upload for Semester 1",
-        "Support for separate stream collections",
-        "Manual WhatsApp messaging system",
-        "Message tracking and duplicate prevention"
-      ]
-    });
-  } catch (error) {
-    console.error("Error in promotion-options:", error);
-    res.status(500).json({ 
-      success: false,
-      message: "Server error",
-      error: error.message 
-    });
+// ✅ NEW: Helper to get students by language group
+const getStudentsByLanguage = async (Student, languageType = null) => {
+  if (languageType) {
+    return await Student.find({
+      ...getActiveStudentQuery(),
+      languageSubject: languageType
+    }).sort({ studentID: 1 });
+  } else {
+    return await Student.find(getActiveStudentQuery()).sort({ studentID: 1 });
   }
-});
+};
+
+// ✅ NEW: Helper to get subjects by type
+const getSubjectsByType = async (Subject, subjectType = null, languageType = null) => {
+  let query = { isActive: { $ne: false } };
+  
+  if (subjectType) {
+    query.subjectType = subjectType;
+  }
+  
+  if (languageType) {
+    query.languageType = languageType;
+    query.isLanguageSubject = true;
+  }
+  
+  return await Subject.find(query).sort({ subjectName: 1 });
+};
 
 // ✅ FIXED: Simple promotion system with BCom Section B support
 router.post("/simple-promotion/:stream", async (req, res) => {
@@ -1082,6 +1147,7 @@ router.get("/check-attendance/:stream/sem:sem/:subject", validateParams, async (
     });
   }
 });
+// ✅ FIXED: GET Students Route with Language Fields
 router.get("/students/:stream/sem:sem", validateParams, async (req, res) => {
   const { stream, sem } = req.params;
   
@@ -1092,8 +1158,16 @@ router.get("/students/:stream/sem:sem", validateParams, async (req, res) => {
     const query = getActiveStudentQuery();
     
     const students = await Student.find(query)
-      .select('studentID name parentPhone stream semester migrationGeneration originalSemester')
+      .select('studentID name parentPhone stream semester migrationGeneration originalSemester languageSubject languageGroup') // ✅ Added language fields
       .sort({ studentID: 1 });
+    
+    // ✅ Group students by language for better organization
+    const studentsByLanguage = students.reduce((acc, student) => {
+      const lang = student.languageSubject || 'NO_LANGUAGE';
+      if (!acc[lang]) acc[lang] = [];
+      acc[lang].push(student);
+      return acc;
+    }, {});
     
     console.log(`✅ Found ${students.length} students in collection: ${Student.collection.name}`);
     
@@ -1103,6 +1177,12 @@ router.get("/students/:stream/sem:sem", validateParams, async (req, res) => {
       stream: stream,
       semester: parseInt(sem),
       students: students,
+      studentsByLanguage: studentsByLanguage, // ✅ Grouped by language
+      languageBreakdown: Object.keys(studentsByLanguage).map(lang => ({
+        language: lang,
+        count: studentsByLanguage[lang].length,
+        students: studentsByLanguage[lang].map(s => ({ id: s.studentID, name: s.name }))
+      })),
       collectionUsed: Student.collection.name
     });
     
@@ -1118,7 +1198,7 @@ router.get("/students/:stream/sem:sem", validateParams, async (req, res) => {
   }
 });
 
-// GET Subjects Route
+// ✅ FIXED: GET Subjects Route with Language Fields
 router.get("/subjects/:stream/sem:sem", validateParams, async (req, res) => {
   const { stream, sem } = req.params;
   
@@ -1129,10 +1209,15 @@ router.get("/subjects/:stream/sem:sem", validateParams, async (req, res) => {
     const query = { isActive: { $ne: false } };
     
     const subjects = await Subject.find(query)
-      .select('subjectName stream semester isActive')
+      .select('subjectName stream semester isActive subjectType isLanguageSubject languageType credits') // ✅ Added language fields
       .sort({ subjectName: 1 });
     
+    // ✅ Separate core and language subjects
+    const coreSubjects = subjects.filter(s => !s.isLanguageSubject);
+    const languageSubjects = subjects.filter(s => s.isLanguageSubject);
+    
     console.log(`✅ Found ${subjects.length} subjects in collection: ${Subject.collection.name}`);
+    console.log(`   Core: ${coreSubjects.length}, Language: ${languageSubjects.length}`);
     
     res.json({
       success: true,
@@ -1140,6 +1225,25 @@ router.get("/subjects/:stream/sem:sem", validateParams, async (req, res) => {
       stream: stream,
       semester: parseInt(sem),
       subjects: subjects,
+      subjectsByType: {
+        core: coreSubjects.map(s => ({
+          name: s.subjectName,
+          type: s.subjectType,
+          credits: s.credits,
+          attendanceType: 'ALL_STUDENTS'
+        })),
+        language: languageSubjects.map(s => ({
+          name: s.subjectName,
+          type: s.subjectType,
+          languageType: s.languageType,
+          credits: s.credits,
+          attendanceType: 'LANGUAGE_FILTERED'
+        }))
+      },
+      attendanceInfo: {
+        coreSubjects: "All students attend together",
+        languageSubjects: "Students filtered by language choice"
+      },
       collectionUsed: Subject.collection.name
     });
     
@@ -1155,19 +1259,85 @@ router.get("/subjects/:stream/sem:sem", validateParams, async (req, res) => {
   }
 });
 
-// ✅ POST Mark Attendance (Without Immediate WhatsApp Messages - For Manual System)
+// ✅ FIXED: POST Mark Attendance with Language Subject Filtering
 router.post("/attendance/:stream/sem:sem/:subject", validateParams, async (req, res) => {
   const { stream, sem, subject } = req.params;
   const { date, studentsPresent, forceOverwrite } = req.body;
 
   if (!date || !subject || !Array.isArray(studentsPresent)) {
-    return res.status(400).json({ message: "Missing required fields: date, subject, studentsPresent (array)" });
+    return res.status(400).json({ 
+      success: false,
+      message: "Missing required fields: date, subject, studentsPresent (array)" 
+    });
   }
 
   try {
+    console.log(`📝 Marking attendance for: ${stream} Sem ${sem} - ${subject} on ${date}`);
+    
     const Attendance = getAttendanceModel(stream, sem, subject);
     const Student = getStudentModel(stream, sem);
+    const Subject = getSubjectModel(stream, sem);
     
+    // ✅ Get subject details to determine filtering
+    const subjectDoc = await Subject.findOne({ 
+      subjectName: subject.toUpperCase(),
+      isActive: { $ne: false }
+    });
+    
+    if (!subjectDoc) {
+      return res.status(404).json({
+        success: false,
+        message: `Subject "${subject}" not found in ${stream} Semester ${sem}`
+      });
+    }
+    
+    // ✅ KEY FIX: Filter students based on subject type
+    let relevantStudents;
+    let attendanceScope;
+    
+    if (subjectDoc.isLanguageSubject && subjectDoc.languageType) {
+      // Language Subject: Only get students who chose this language
+      relevantStudents = await Student.find({
+        ...getActiveStudentQuery(),
+        languageSubject: subjectDoc.languageType
+      }, "studentID name parentPhone languageSubject languageGroup");
+      
+      attendanceScope = {
+        type: 'LANGUAGE_FILTERED',
+        language: subjectDoc.languageType,
+        note: `Only ${subjectDoc.languageType} students`
+      };
+      
+      console.log(`🔤 Language subject: Found ${relevantStudents.length} ${subjectDoc.languageType} students`);
+      
+    } else {
+      // Core Subject: Get all students
+      relevantStudents = await Student.find(
+        getActiveStudentQuery(), 
+        "studentID name parentPhone languageSubject languageGroup"
+      );
+      
+      attendanceScope = {
+        type: 'ALL_STUDENTS',
+        language: null,
+        note: 'All students attend together'
+      };
+      
+      console.log(`📚 Core subject: Found ${relevantStudents.length} total students`);
+    }
+
+    const totalRelevantStudents = relevantStudents.length;
+
+    if (totalRelevantStudents === 0) {
+      return res.status(404).json({ 
+        success: false,
+        message: subjectDoc.isLanguageSubject ? 
+          `No students found who chose ${subjectDoc.languageType}` :
+          "No students found for this stream and semester"
+      });
+    }
+
+    // ✅ Check for existing record
     if (!forceOverwrite) {
       const existingRecord = await Attendance.findOne({
         date: new Date(date),
@@ -1176,12 +1346,14 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, async (req, 
 
       if (existingRecord) {
         return res.status(409).json({
+          success: false,
           exists: true,
           message: "Attendance already taken for this subject and date",
           date: date,
           subject: subject,
           stream: stream,
           semester: sem,
+          attendanceScope,
           existingData: {
             studentsPresent: existingRecord.studentsPresent,
             recordId: existingRecord._id,
@@ -1190,24 +1362,49 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, async (req, 
         });
       }
     }
+
+    // ✅ Validate that all present students are in the relevant student list
+    const relevantStudentIDs = relevantStudents.map(s => s.studentID);
+    const invalidStudents = studentsPresent.filter(id => !relevantStudentIDs.includes(id));
     
-    const allStudents = await Student.find(getActiveStudentQuery(), "studentID name parentPhone");
-    const totalStudents = allStudents.length;
-
-    if (totalStudents === 0) {
-      return res.status(404).json({ message: "No students found for this stream and semester" });
+    if (invalidStudents.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid students for this ${subjectDoc.isLanguageSubject ? 'language ' : ''}subject`,
+        invalidStudents,
+        attendanceScope,
+        hint: subjectDoc.isLanguageSubject ? 
+          `Only ${subjectDoc.languageType} students can attend this subject` :
+          "Only enrolled students can be marked present"
+      });
     }
-
+    
     const existingRecord = await Attendance.findOne({
       date: new Date(date),
       subject: subject
     });
     const isOverwrite = !!existingRecord;
 
-    // ✅ Store attendance in database
+    // ✅ Store attendance in database with language info
+    const attendanceData = {
+      date: new Date(date),
+      subject: subject,
+      stream: stream.toUpperCase(),
+      semester: parseInt(sem),
+      studentsPresent: studentsPresent,
+      totalStudents: totalRelevantStudents,
+      isLanguageSubject: subjectDoc.isLanguageSubject,
+      languageType: subjectDoc.languageType || null,
+      languageGroup: subjectDoc.isLanguageSubject ? 
+        `${stream.toUpperCase()}_SEM${sem}_${subjectDoc.languageType}` : null
+    };
+    
     const record = await Attendance.findOneAndUpdate(
-      { date: new Date(date), subject },
-      { $set: { studentsPresent } },
+      { 
+        date: new Date(date), 
+        subject: subject 
+      },
+      { $set: attendanceData },
       { upsert: true, new: true }
     );
 
@@ -1217,56 +1414,70 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, async (req, 
         date: new Date(date).toISOString().slice(0, 10),
         stream: stream.toUpperCase(),
         semester: Number(sem),
-        subject,
+        subject: subject,
       },
       {
         $set: {
-          studentsPresent,
-          studentsTotal: totalStudents,
+          studentsPresent: studentsPresent,
+          studentsTotal: totalRelevantStudents,
+          isLanguageSubject: subjectDoc.isLanguageSubject,
+          languageType: subjectDoc.languageType || null
         },
       },
       { upsert: true, new: true }
     );
 
-    // ✅ Calculate absent students (for summary only - no immediate messages)
-    const absentStudents = allStudents.filter(
+    // ✅ Calculate absent students from relevant student pool
+    const absentStudents = relevantStudents.filter(
       student => !studentsPresent.includes(student.studentID)
     );
 
-    // ✅ Count students with/without phone numbers
     const absentWithPhone = absentStudents.filter(s => s.parentPhone).length;
     const absentWithoutPhone = absentStudents.filter(s => !s.parentPhone).length;
 
-    console.log(`✅ Attendance marked for ${stream} Semester ${sem} - ${subject} on ${date}`);
+    console.log(`✅ Attendance ${isOverwrite ? 'updated' : 'marked'} for ${stream} Semester ${sem} - ${subject} on ${date}`);
+    console.log(`   Attendance Scope: ${attendanceScope.note}`);
+    console.log(`   Relevant Students: ${totalRelevantStudents}`);
     console.log(`   Present: ${studentsPresent.length}, Absent: ${absentStudents.length}`);
     console.log(`   Absent with phone: ${absentWithPhone}, Absent without phone: ${absentWithoutPhone}`);
 
-    // ✅ No immediate WhatsApp messages - data stored for manual messaging
     res.status(200).json({ 
-      message: `✅ Attendance ${isOverwrite ? 'updated' : 'marked'} successfully. Use manual messaging system to send WhatsApp notifications.`, 
+      success: true,
+      message: `✅ Attendance ${isOverwrite ? 'updated' : 'marked'} successfully for ${subjectDoc.isLanguageSubject ? 'language ' : ''}subject. Use manual messaging system to send WhatsApp notifications.`, 
       data: record,
       isOverwrite,
+      subject: {
+        name: subjectDoc.subjectName,
+        type: subjectDoc.subjectType,
+        isLanguageSubject: subjectDoc.isLanguageSubject,
+        languageType: subjectDoc.languageType,
+        credits: subjectDoc.credits
+      },
+      attendanceScope,
       summary: {
-        totalStudents,
+        totalRelevantStudents: totalRelevantStudents,
         presentStudents: studentsPresent.length,
         absentStudents: absentStudents.length,
         absentWithPhone: absentWithPhone,
         absentWithoutPhone: absentWithoutPhone,
+        attendancePercentage: ((studentsPresent.length / totalRelevantStudents) * 100).toFixed(1),
         // ✅ List of absent students for immediate feedback
         absentStudentsList: absentStudents.map(s => ({
           studentID: s.studentID,
           name: s.name,
           hasPhone: !!s.parentPhone,
-          parentPhone: s.parentPhone ? 'Available' : 'Not Available'
+          parentPhone: s.parentPhone ? 'Available' : 'Not Available',
+          languageSubject: s.languageSubject || null
         }))
       },
-      // ✅ Manual messaging info
+      // ✅ Manual messaging info with language context
       manualMessaging: {
         enabled: true,
-        note: "Attendance data stored. Use manual messaging system to send consolidated WhatsApp messages.",
+        note: `Attendance data stored for ${attendanceScope.note.toLowerCase()}. Use manual messaging system to send consolidated WhatsApp messages.`,
         nextSteps: [
           "Go to Manual Messaging System",
           `Select ${stream} - Semester ${sem}`,
+          subjectDoc.isLanguageSubject ? `Filter by ${subjectDoc.languageType} students` : "Include all students",
           `Set date to ${new Date(date).toLocaleDateString('en-IN')}`,
           "Click 'Send Messages Now' when ready"
         ]
@@ -1275,9 +1486,109 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, async (req, 
 
   } catch (error) {
     console.error("❌ Error marking attendance:", error);
-    res.status(500).json({ message: "Failed to mark attendance." });
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to mark attendance",
+      error: error.message 
+    });
   }
 });
+// ✅ FIXED: Enhanced attendance marking with proper language subject handling
+router.post("/attendance/:stream/sem:sem/:subject", validateParams, async (req, res) => {
+  const { stream, sem, subject } = req.params;
+  const { date, studentsPresent, forceOverwrite } = req.body;
+
+  try {
+    const Student = getStudentModel(stream, sem);
+    const Subject = getSubjectModel(stream, sem);
+    const Attendance = getAttendanceModel(stream, sem, subject);
+    
+    // ✅ KEY FIX: Get subject details and filter students properly
+    const subjectDoc = await Subject.findOne({ 
+      subjectName: subject.toUpperCase(),
+      isActive: { $ne: false }
+    });
+    
+    if (!subjectDoc) {
+      return res.status(404).json({
+        success: false,
+        message: `Subject "${subject}" not found`
+      });
+    }
+    
+    // ✅ Get the correct student list (filtered for language subjects)
+    let relevantStudents;
+    if (subjectDoc.isLanguageSubject && subjectDoc.languageType) {
+      relevantStudents = await Student.find({
+        ...getActiveStudentQuery(),
+        languageSubject: subjectDoc.languageType
+      }, "studentID name");
+    } else {
+      relevantStudents = await Student.find(getActiveStudentQuery(), "studentID name");
+    }
+    
+    // ✅ Ensure all present students are from the correct filtered list
+    const validStudentIDs = relevantStudents.map(s => s.studentID);
+    const validPresentStudents = studentsPresent.filter(id => validStudentIDs.includes(id));
+    
+    // ✅ Save attendance with proper language metadata
+    const attendanceData = {
+      date: new Date(date),
+      subject: subject.toUpperCase(),
+      stream: stream.toUpperCase(),
+      semester: parseInt(sem),
+      studentsPresent: validPresentStudents,
+      totalStudents: relevantStudents.length,
+      
+      // ✅ KEY: Add language metadata for proper retrieval
+      isLanguageSubject: subjectDoc.isLanguageSubject || false,
+      languageType: subjectDoc.languageType || null,
+      languageGroup: subjectDoc.isLanguageSubject ? 
+        `${stream.toUpperCase()}_SEM${sem}_${subjectDoc.languageType}` : null,
+      
+      // ✅ Add student list for verification
+      eligibleStudents: validStudentIDs,
+      subjectMetadata: {
+        subjectType: subjectDoc.subjectType,
+        credits: subjectDoc.credits
+      }
+    };
+    
+    const record = await Attendance.findOneAndUpdate(
+      { date: new Date(date), subject: subject.toUpperCase() },
+      { $set: attendanceData },
+      { upsert: true, new: true }
+    );
+    
+    console.log(`✅ Saved attendance for ${subject}:`);
+    console.log(`   Language Subject: ${subjectDoc.isLanguageSubject}`);
+    console.log(`   Language Type: ${subjectDoc.languageType || 'N/A'}`);
+    console.log(`   Students Present: ${validPresentStudents.length}/${relevantStudents.length}`);
+    console.log(`   Present IDs: ${validPresentStudents.join(', ')}`);
+    
+    res.status(200).json({
+      success: true,
+      message: "Attendance saved successfully",
+      data: record,
+      summary: {
+        totalRelevantStudents: relevantStudents.length,
+        presentStudents: validPresentStudents.length,
+        absentStudents: relevantStudents.length - validPresentStudents.length,
+        languageFiltered: subjectDoc.isLanguageSubject,
+        languageType: subjectDoc.languageType
+      }
+    });
+    
+  } catch (error) {
+    console.error("❌ Error saving attendance:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to save attendance",
+      error: error.message 
+    });
+  }
+});
+
 
 // ✅ ENHANCED: Manual Send Consolidated WhatsApp Messages (with duplicate prevention)
 router.post("/send-absence-messages/:stream/sem:sem/:date", validateParams, async (req, res) => {
@@ -1784,85 +2095,380 @@ router.post("/force-resend-messages/:stream/sem:sem/:date", validateParams, asyn
     method: 'POST'
   }, res);
 });
+// ✅ FIXED: GET Attendance Register with Language Subject Support
+// ✅ FIXED: Async error handler middleware
+const asyncHandler = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
 
-// ✅ GET Attendance Register
-router.get("/attendance-register/:stream/sem:sem/:subject", validateParams, async (req, res) => {
+// ✅ FIXED: GET Attendance Register with Consistent Response Format
+router.get("/attendance-register/:stream/sem:sem/:subject", validateParams, asyncHandler(async (req, res) => {
   const { stream, sem, subject } = req.params;
 
   try {
+    console.log(`📊 Getting attendance register for: ${subject} in ${stream} Sem ${sem}`);
+    
     const Student = getStudentModel(stream, sem);
+    const Subject = getSubjectModel(stream, sem);
     const Attendance = getAttendanceModel(stream, sem, subject);
 
-    const students = await Student.find(getActiveStudentQuery(), "studentID name migrationGeneration");
-    const attendanceRecords = await Attendance.find().sort({ date: 1 });
+    // Get subject details to determine if it's a language subject
+    const subjectDoc = await Subject.findOne({ 
+      subjectName: subject.toUpperCase(),
+      isActive: { $ne: false }
+    });
 
-    if (students.length === 0) {
-      return res.status(404).json({ message: "No students found for this stream and semester" });
+    if (!subjectDoc) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'SUBJECT_NOT_FOUND',
+        message: `Subject "${subject}" not found in ${stream} Semester ${sem}` 
+      });
     }
 
+    // Get filtered students based on subject type
+    let students;
+    let attendanceScope;
+
+    if (subjectDoc.isLanguageSubject && subjectDoc.languageType) {
+      // Language Subject: Only get students who chose this language
+      students = await Student.find({
+        ...getActiveStudentQuery(),
+        languageSubject: subjectDoc.languageType
+      }, "studentID name migrationGeneration languageSubject languageGroup");
+      
+      attendanceScope = {
+        type: 'LANGUAGE_FILTERED',
+        language: subjectDoc.languageType,
+        note: `Only ${subjectDoc.languageType} students`,
+        totalPossible: students.length
+      };
+      
+      console.log(`🔤 Language subject: Found ${students.length} ${subjectDoc.languageType} students`);
+      
+    } else {
+      // Core Subject: Get all students
+      students = await Student.find(
+        getActiveStudentQuery(), 
+        "studentID name migrationGeneration languageSubject languageGroup"
+      );
+      
+      attendanceScope = {
+        type: 'ALL_STUDENTS',
+        language: null,
+        note: 'All students attend together',
+        totalPossible: students.length
+      };
+      
+      console.log(`📚 Core subject: Found ${students.length} total students`);
+    }
+
+    if (students.length === 0) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'NO_STUDENTS_FOUND',
+        message: subjectDoc.isLanguageSubject ? 
+          `No students found who chose ${subjectDoc.languageType} language` :
+          "No students found for this stream and semester",
+        attendanceScope
+      });
+    }
+
+    // Get attendance records for this subject
+    const attendanceRecords = await Attendance.find({
+      subject: { $regex: new RegExp(`^${subject}$`, 'i') }
+    }).sort({ date: 1 });
+
+    console.log(`📅 Found ${attendanceRecords.length} attendance records for ${subject}`);
+
+    // Build attendance map with proper student filtering
     const attendanceMap = {};
+    const studentIDs = students.map(s => s.studentID);
+
     attendanceRecords.forEach(record => {
       const dateKey = new Date(record.date).toISOString().split("T")[0];
-      attendanceMap[dateKey] = record.studentsPresent;
+      
+      // Only include students that are in our filtered list
+      const filteredPresent = record.studentsPresent.filter(studentID => 
+        studentIDs.includes(studentID)
+      );
+      
+      attendanceMap[dateKey] = filteredPresent;
+      
+      // Debug log for first few records
+      if (Object.keys(attendanceMap).length <= 3) {
+        console.log(`📊 ${dateKey}: ${filteredPresent.length}/${students.length} present (${filteredPresent.join(', ')})`);
+      }
     });
 
-    res.json({ 
+    // Calculate summary statistics
+    const totalDates = Object.keys(attendanceMap).length;
+    const avgAttendance = students.length > 0 && totalDates > 0 ?
+      (students.reduce((sum, student) => {
+        const attendedCount = Object.values(attendanceMap).filter(datePresent => 
+          datePresent.includes(student.studentID)
+        ).length;
+        return sum + (attendedCount / totalDates) * 100;
+      }, 0) / students.length).toFixed(1) : 0;
+
+    console.log(`✅ Register loaded: ${students.length} students, ${totalDates} dates, ${avgAttendance}% avg`);
+
+    // ✅ FIXED: Consistent success response format
+    res.status(200).json({ 
+      success: true,
+      message: `Register loaded successfully for ${subject}`,
       students, 
       attendanceMap, 
-      subject, 
+      subject: subject.toUpperCase(), 
       stream: stream.toUpperCase(), 
-      semester: sem 
+      semester: parseInt(sem),
+      subjectInfo: {
+        name: subjectDoc.subjectName,
+        type: subjectDoc.subjectType,
+        isLanguageSubject: subjectDoc.isLanguageSubject,
+        languageType: subjectDoc.languageType,
+        credits: subjectDoc.credits
+      },
+      attendanceScope,
+      summary: {
+        totalStudents: students.length,
+        totalDates: totalDates,
+        averageAttendance: parseFloat(avgAttendance),
+        attendanceRecords: attendanceRecords.length
+      }
     });
+
   } catch (error) {
     console.error("❌ Error fetching attendance register:", error);
-    res.status(500).json({ message: "Failed to fetch attendance register" });
+    res.status(500).json({ 
+      success: false,
+      error: 'SERVER_ERROR',
+      message: "Failed to fetch attendance register",
+      details: error.message 
+    });
   }
-});
+}));
 
-// ✅ POST Bulk Attendance Update
-router.post("/update-attendance/:stream/sem:sem/:subject", validateParams, async (req, res) => {
+// ✅ FIXED: POST Bulk Attendance Update with Consistent Response Format
+router.post("/update-attendance/:stream/sem:sem/:subject", validateParams, asyncHandler(async (req, res) => {
   const { stream, sem, subject } = req.params;
   const { attendanceMap } = req.body;
 
+  console.log(`📊 Bulk update request for: ${subject} in ${stream} Sem ${sem}`);
+  console.log(`📊 Attendance data received:`, attendanceMap);
+
+  // ✅ Enhanced input validation
   if (!attendanceMap || typeof attendanceMap !== "object") {
-    return res.status(400).json({ message: "Invalid attendance data. Expected object." });
+    return res.status(400).json({ 
+      success: false,
+      error: 'INVALID_INPUT_FORMAT',
+      message: "Invalid attendance data. Expected object with date keys and student arrays.",
+      expectedFormat: {
+        attendanceMap: {
+          "2025-01-15": ["STU001", "STU002"],
+          "2025-01-16": ["STU003", "STU004"]
+        }
+      }
+    });
+  }
+
+  const dates = Object.keys(attendanceMap);
+  if (dates.length === 0) {
+    return res.status(400).json({ 
+      success: false,
+      error: 'EMPTY_ATTENDANCE_DATA',
+      message: "No attendance data provided" 
+    });
+  }
+
+  // ✅ Validate date formats
+  const invalidDates = dates.filter(dateStr => {
+    const isoRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!isoRegex.test(dateStr)) return true;
+    const date = new Date(dateStr);
+    return isNaN(date.getTime());
+  });
+
+  if (invalidDates.length > 0) {
+    return res.status(400).json({
+      success: false,
+      error: 'INVALID_DATE_FORMAT',
+      message: `Invalid date formats: ${invalidDates.join(', ')}`,
+      invalidDates: invalidDates,
+      hint: "Dates must be in YYYY-MM-DD format"
+    });
   }
 
   try {
+    const Student = getStudentModel(stream, sem);
+    const Subject = getSubjectModel(stream, sem);
     const Attendance = getAttendanceModel(stream, sem, subject);
-    const dates = Object.keys(attendanceMap);
 
-    if (dates.length === 0) {
-      return res.status(400).json({ message: "No attendance data provided" });
+    // ✅ Validate subject exists
+    const subjectDoc = await Subject.findOne({ 
+      subjectName: subject.toUpperCase(),
+      isActive: { $ne: false }
+    });
+
+    if (!subjectDoc) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'SUBJECT_NOT_FOUND',
+        message: `Subject "${subject}" not found in ${stream} Semester ${sem}`
+      });
     }
 
-    const updatePromises = dates.map(async (date) => {
-      const studentsPresent = attendanceMap[date];
-      
+    // ✅ Get valid students for validation
+    let validStudents;
+    if (subjectDoc.isLanguageSubject && subjectDoc.languageType) {
+      validStudents = await Student.find({
+        ...getActiveStudentQuery(),
+        languageSubject: subjectDoc.languageType
+      }, "studentID");
+    } else {
+      validStudents = await Student.find(getActiveStudentQuery(), "studentID");
+    }
+
+    const validStudentIDs = validStudents.map(s => s.studentID);
+    console.log(`👥 Valid students for ${subject}: ${validStudentIDs.length}`);
+
+    if (validStudentIDs.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'NO_STUDENTS_FOUND',
+        message: subjectDoc.isLanguageSubject ? 
+          `No students found who chose ${subjectDoc.languageType} language` :
+          "No students found for this stream and semester"
+      });
+    }
+
+    // ✅ Validate student data in attendance map
+    const invalidStudentData = [];
+
+    for (const [dateStr, studentsPresent] of Object.entries(attendanceMap)) {
       if (!Array.isArray(studentsPresent)) {
-        throw new Error(`Invalid data for date ${date}. Expected array.`);
+        invalidStudentData.push(`Date ${dateStr}: Expected array, got ${typeof studentsPresent}`);
+        continue;
       }
 
-      return await Attendance.findOneAndUpdate(
-        { date: new Date(date), subject },
-        { $set: { studentsPresent } },
-        { upsert: true, new: true }
-      );
+      studentsPresent.forEach(studentID => {
+        if (typeof studentID !== 'string') {
+          invalidStudentData.push(`Date ${dateStr}: Invalid student ID format: ${studentID}`);
+        }
+      });
+    }
+
+    if (invalidStudentData.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'INVALID_STUDENT_DATA',
+        message: "Invalid student data in attendance map",
+        details: invalidStudentData
+      });
+    }
+
+    // ✅ Use transaction for data consistency
+    const session = await Attendance.startSession();
+    let updateResults = [];
+
+    try {
+      await session.withTransaction(async () => {
+        const updatePromises = dates.map(async (dateStr) => {
+          const studentsPresent = attendanceMap[dateStr];
+          
+          // Filter to only include valid students
+          const filteredPresent = studentsPresent.filter(studentID => 
+            validStudentIDs.includes(studentID)
+          );
+
+          const dateObj = new Date(dateStr);
+          
+          console.log(`📅 Updating ${dateStr}: ${filteredPresent.length}/${validStudentIDs.length} present`);
+
+          const result = await Attendance.findOneAndUpdate(
+            { 
+              date: dateObj, 
+              subject: subject.toUpperCase()
+            },
+            { 
+              $set: { 
+                studentsPresent: filteredPresent,
+                totalStudents: validStudentIDs.length,
+                stream: stream.toUpperCase(),
+                semester: parseInt(sem),
+                isLanguageSubject: subjectDoc.isLanguageSubject,
+                languageType: subjectDoc.languageType || null,
+                lastUpdated: new Date(),
+                updatedBy: 'bulk_update'
+              }
+            },
+            { 
+              upsert: true, 
+              new: true,
+              session
+            }
+          );
+
+          return {
+            date: dateStr,
+            totalStudents: validStudentIDs.length,
+            presentStudents: filteredPresent.length,
+            attendanceId: result._id
+          };
+        });
+
+        updateResults = await Promise.all(updatePromises);
+      });
+
+      console.log(`✅ Transaction completed successfully for ${dates.length} dates`);
+
+    } finally {
+      await session.endSession();
+    }
+
+    // ✅ CRITICAL FIX: Consistent success response with success: true
+    const totalPresent = updateResults.reduce((sum, result) => sum + result.presentStudents, 0);
+    const avgAttendance = updateResults.length > 0 ? 
+      (totalPresent / (updateResults.length * validStudentIDs.length) * 100).toFixed(1) : 0;
+
+    res.status(200).json({ 
+      success: true, // ✅ This was missing - causing frontend confusion
+      message: `✅ Attendance updated successfully for ${dates.length} dates`,
+      updatedDates: dates.length,
+      summary: {
+        totalDates: dates.length,
+        totalStudents: validStudentIDs.length,
+        averageAttendance: parseFloat(avgAttendance),
+        updateResults: updateResults
+      },
+      subjectInfo: {
+        name: subjectDoc.subjectName,
+        type: subjectDoc.subjectType,
+        isLanguageSubject: subjectDoc.isLanguageSubject,
+        languageType: subjectDoc.languageType
+      }
     });
 
-    await Promise.all(updatePromises);
-
-    res.json({ 
-      message: "✅ Attendance updated successfully",
-      updatedDates: dates.length 
-    });
   } catch (error) {
     console.error("❌ Server error while updating attendance:", error);
-    res.status(500).json({ message: "Server error while updating attendance" });
+    
+    res.status(500).json({ 
+      success: false,
+      error: 'SERVER_ERROR',
+      message: "Server error while updating attendance",
+      details: error.message,
+      context: {
+        subject,
+        stream,
+        semester: sem,
+        requestedDates: dates.length
+      }
+    });
   }
-});
-// Debug route to test exact mapping
-router.get("/debug/test-bcom-mapping", async (req, res) => {
+}));
+
+// ✅ FIXED: Debug route with consistent format
+router.get("/debug/test-bcom-mapping", asyncHandler(async (req, res) => {
   const stream = "BCom A and F";
   const semester = "5";
   
@@ -1877,6 +2483,8 @@ router.get("/debug/test-bcom-mapping", async (req, res) => {
     const sample = await StudentModel.findOne();
     
     res.json({
+      success: true,
+      message: "Debug mapping test completed",
       mapping: {
         input: { stream, semester },
         output: {
@@ -1897,10 +2505,17 @@ router.get("/debug/test-bcom-mapping", async (req, res) => {
       mappingCorrect: studentCollection === "bcom_a_and_f_sem5_students"
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      success: false,
+      error: 'DEBUG_ERROR',
+      message: "Debug test failed",
+      details: error.message 
+    });
   }
-});
-router.get("/reports/student-subject-report/:stream/sem:sem", validateParams, async (req, res) => {
+}));
+
+// ✅ FIXED: Reports route with consistent format
+router.get("/reports/student-subject-report/:stream/sem:sem", validateParams, asyncHandler(async (req, res) => {
   const { stream, sem } = req.params;
   
   try {
@@ -1919,7 +2534,7 @@ router.get("/reports/student-subject-report/:stream/sem:sem", validateParams, as
       subjectCollectionName = getCollectionName(stream, sem, "subjects");
     }
     
-    console.log(`🗂️  Collections: ${studentCollectionName}, ${subjectCollectionName}`);
+    console.log(`🗂️ Collections: ${studentCollectionName}, ${subjectCollectionName}`);
     
     // Create models with exact collection names
     const StudentModel = mongoose.models[studentCollectionName] || 
@@ -1935,7 +2550,8 @@ router.get("/reports/student-subject-report/:stream/sem:sem", validateParams, as
     
     if (students.length === 0) {
       return res.status(404).json({ 
-        success: false, 
+        success: false,
+        error: 'NO_STUDENTS_FOUND',
         message: `No students found in collection: ${studentCollectionName}` 
       });
     }
@@ -1943,6 +2559,7 @@ router.get("/reports/student-subject-report/:stream/sem:sem", validateParams, as
     // Build report data
     const reportData = {
       success: true,
+      message: "Report generated successfully",
       stream: stream.toUpperCase(),
       semester: parseInt(sem),
       reportDate: new Date().toLocaleDateString('en-IN'),
@@ -1970,8 +2587,77 @@ router.get("/reports/student-subject-report/:stream/sem:sem", validateParams, as
   } catch (error) {
     console.error(`❌ Report error:`, error);
     res.status(500).json({ 
-      success: false, 
+      success: false,
+      error: 'REPORT_ERROR',
       message: "Failed to generate report",
+      details: error.message 
+    });
+  }
+}));
+
+// ✅ ADD THIS ROUTE to your backend (e.g., in routes/attendance.js)
+router.get("/attendance-students/:stream/sem:sem/:subject", validateParams, async (req, res) => {
+  const { stream, sem, subject } = req.params;
+
+  try {
+    console.log(`📊 Getting students for: ${subject} in ${stream} Sem ${sem}`);
+    
+    const Student = getStudentModel(stream, sem);
+    const Subject = getSubjectModel(stream, sem);
+
+    // Get subject details to determine filtering
+    const subjectDoc = await Subject.findOne({ 
+      subjectName: subject.toUpperCase(),
+      isActive: { $ne: false }
+    });
+
+    if (!subjectDoc) {
+      return res.status(404).json({ 
+        success: false,
+        message: `Subject "${subject}" not found in ${stream} Semester ${sem}` 
+      });
+    }
+
+    // Filter students based on subject type
+    let students;
+    if (subjectDoc.isLanguageSubject && subjectDoc.languageType) {
+      // Language Subject: Only get students who chose this language
+      students = await Student.find({
+        ...getActiveStudentQuery(),
+        languageSubject: subjectDoc.languageType
+      }, "studentID name languageSubject");
+      
+      console.log(`🔤 Found ${students.length} ${subjectDoc.languageType} students`);
+    } else {
+      // Core Subject: Get all students
+      students = await Student.find(
+        getActiveStudentQuery(), 
+        "studentID name languageSubject"
+      );
+      
+      console.log(`📚 Found ${students.length} total students`);
+    }
+
+    // Return JSON response
+    res.json({
+      success: true,
+      students,
+      subject: {
+        name: subjectDoc.subjectName,
+        isLanguageSubject: subjectDoc.isLanguageSubject,
+        languageType: subjectDoc.languageType,
+        type: subjectDoc.subjectType
+      },
+      message: subjectDoc.isLanguageSubject ? 
+        `${subjectDoc.languageType} language students only` : 
+        'All students'
+    });
+
+  } catch (error) {
+    console.error("❌ Error fetching students:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to fetch students for subject",
       error: error.message 
     });
   }
