@@ -11,7 +11,7 @@ export const firebaseConfig = {
   
   export const AUTHORIZED_TEACHERS = [
     "skandaumesh82@gmail.com",
-    "sksspotify85@gmail.com", 
-    "supracar65@gmail.com"
+    "kamalaswamy06@gmail.com"
   ];
+
   
