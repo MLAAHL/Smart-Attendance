@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Simple Student Promotion System</title>
+  <title>Restricted Student Promotion System</title>
   
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -16,6 +16,152 @@
 
   <!-- SheetJS for Excel parsing -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <!-- Firebase -->
+  <script type="module">
+    // Import your Firebase config
+    import { firebaseConfig } from './firebase-config.js';
+    
+    // Import Firebase services
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { 
+      getAuth, 
+      signInWithEmailAndPassword, 
+      signOut, 
+      onAuthStateChanged 
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+    // ⚠️ CHANGE THIS TO YOUR AUTHORIZED EMAIL
+    const AUTHORIZED_EMAIL = "skandaumesh82@gmail.com"; // 👈 CHANGE THIS!
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    console.log('✅ Firebase initialized with your config file');
+    console.log('📧 Authorized email:', AUTHORIZED_EMAIL);
+
+    // Make auth available globally
+    window.firebaseAuth = auth;
+    window.signInWithEmailPassword = signInWithEmailAndPassword;
+    window.signOut = signOut;
+    window.AUTHORIZED_EMAIL = AUTHORIZED_EMAIL;
+
+    // Auth state listener
+    onAuthStateChanged(auth, (user) => {
+      console.log('Auth state changed:', user);
+      handleAuthStateChange(user);
+    });
+
+    // Handle authentication state
+    window.handleAuthStateChange = function(user) {
+      const loginScreen = document.getElementById('loginScreen');
+      const mainApp = document.getElementById('mainApp');
+      const unauthorizedScreen = document.getElementById('unauthorizedScreen');
+      const userEmailSpan = document.getElementById('userEmail');
+      
+      if (user) {
+        console.log('User logged in:', user.email);
+        
+        // Check if this is the authorized email
+        if (user.email === AUTHORIZED_EMAIL) {
+          // ✅ AUTHORIZED USER
+          console.log('✅ Authorized user access granted');
+          loginScreen.classList.add('hidden');
+          unauthorizedScreen.classList.add('hidden');
+          mainApp.classList.remove('hidden');
+          userEmailSpan.textContent = user.email;
+        } else {
+          // ❌ UNAUTHORIZED USER
+          console.log('❌ Unauthorized user - access denied');
+          loginScreen.classList.add('hidden');
+          mainApp.classList.add('hidden');
+          unauthorizedScreen.classList.remove('hidden');
+          
+          // Show user's email in unauthorized screen
+          document.getElementById('unauthorizedEmail').textContent = user.email;
+          
+          // Auto sign out unauthorized user after 3 seconds
+          setTimeout(() => {
+            signOut(auth).then(() => {
+              console.log('Unauthorized user signed out');
+            });
+          }, 3000);
+        }
+      } else {
+        // No user signed in
+        console.log('No user signed in');
+        mainApp.classList.add('hidden');
+        unauthorizedScreen.classList.add('hidden');
+        loginScreen.classList.remove('hidden');
+      }
+    };
+
+    // Global login handler
+    window.handleLogin = async function(event) {
+      event.preventDefault();
+      
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      const loginBtn = document.getElementById('loginBtn');
+      const loginError = document.getElementById('loginError');
+      
+      // Show loading state
+      loginBtn.disabled = true;
+      loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Signing In...';
+      loginError.classList.add('hidden');
+      
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        console.log('Login successful:', userCredential.user.email);
+        
+        // Clear form
+        document.getElementById('loginEmail').value = '';
+        document.getElementById('loginPassword').value = '';
+        
+      } catch (error) {
+        console.error('Login error:', error);
+        
+        let errorMessage = 'Login failed. Please check your credentials.';
+        
+        switch(error.code) {
+          case 'auth/user-not-found':
+            errorMessage = 'No account found with this email address.';
+            break;
+          case 'auth/wrong-password':
+            errorMessage = 'Incorrect password.';
+            break;
+          case 'auth/invalid-email':
+            errorMessage = 'Invalid email address format.';
+            break;
+          case 'auth/too-many-requests':
+            errorMessage = 'Too many failed attempts. Please try again later.';
+            break;
+          case 'auth/user-disabled':
+            errorMessage = 'This account has been disabled.';
+            break;
+        }
+        
+        document.getElementById('loginErrorMessage').textContent = errorMessage;
+        loginError.classList.remove('hidden');
+      } finally {
+        // Restore button
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Secure Login';
+      }
+    };
+
+    // Global sign out handler
+    window.handleSignOut = async function() {
+      try {
+        await signOut(auth);
+        console.log('User signed out successfully');
+      } catch (error) {
+        console.error('Sign out error:', error);
+        alert('Error signing out. Please try again.');
+      }
+    };
+  </script>
 
   <style>
     body {
@@ -74,169 +220,303 @@
       border-radius: 2px;
       transition: width 0.3s ease;
     }
+
+    .login-container {
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    .pulse-warning {
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .hidden {
+      display: none !important;
+    }
   </style>
 </head>
 
 <body>
-  <div class="min-h-screen py-8 px-4">
-    <div class="max-w-6xl mx-auto">
-      
-      <!-- Header -->
-      <div class="text-center mb-12 animate-fade-in">
-        <div class="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full shadow-lg mb-6">
-          <i class="fas fa-graduation-cap text-3xl text-purple-600"></i>
+  <!-- 🔐 LOGIN SCREEN -->
+  <div id="loginScreen" class="min-h-screen flex items-center justify-center px-4">
+    <div class="login-container max-w-md w-full rounded-2xl shadow-2xl p-8 animate-fade-in">
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full shadow-lg mb-6">
+          <i class="fas fa-shield-alt text-3xl text-white"></i>
         </div>
-        <h1 class="text-4xl font-bold text-white mb-4">Student Promotion System</h1>
-        <p class="text-xl text-purple-100 max-w-2xl mx-auto">
-          Easy one-click promotion: Move all students up one semester and graduate 6th semester students
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Restricted Access</h1>
+        <p class="text-gray-600 mb-2">Student Promotion System</p>
+        <div class="text-xs text-gray-500 bg-gray-100 p-2 rounded">
+        </div>
+      </div>
+
+      <form onsubmit="handleLogin(event)" class="space-y-6">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            <i class="fas fa-envelope mr-2 text-purple-600"></i>Email Address
+          </label>
+          <input 
+            type="email" 
+            id="loginEmail" 
+            required 
+            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all"
+            placeholder="Enter your email"
+          >
+        </div>
+        
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            <i class="fas fa-lock mr-2 text-purple-600"></i>Password
+          </label>
+          <input 
+            type="password" 
+            id="loginPassword" 
+            required 
+            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all"
+            placeholder="Enter your password"
+          >
+        </div>
+
+        <button 
+          type="submit" 
+          id="loginBtn"
+          class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 font-semibold shadow-lg"
+        >
+          <i class="fas fa-sign-in-alt mr-2"></i>Secure Login
+        </button>
+      </form>
+
+      <div id="loginError" class="hidden mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+        <div class="flex items-center">
+          <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
+          <span class="text-red-700 text-sm" id="loginErrorMessage"></span>
+        </div>
+      </div>
+
+      <div class="mt-8 text-center">
+        <p class="text-sm text-gray-500">
+          <i class="fas fa-info-circle mr-1"></i>
+          Only authorized personnel can access this system
         </p>
       </div>
+    </div>
+  </div>
 
-      <!-- Stream Selection & Promotion -->
-      <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover animate-fade-in">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">
-          <i class="fas fa-arrow-up mr-3 text-purple-600"></i>Select Stream & Promote
-        </h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-3">
-              <i class="fas fa-university mr-2 text-purple-600"></i>Academic Stream
-            </label>
-            <select id="promotionStream" onchange="loadPromotionPreview()" class="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all text-lg">
-              <option value="">-- Select Stream --</option>
-              <option value="BCA">BCA - Bachelor of Computer Applications</option>
-              <option value="BBA">BBA - Bachelor of Business Administration</option>
-              <option value="BCom">BCom - Bachelor of Commerce (Section A)</option>
-              <option value="BCom Section B">BCom Section B - Bachelor of Commerce</option>
-              <option value="BCom-BDA">BCom-BDA - Big Data Analytics</option>
-              <option value="BCom A and F">BCom A&F - Accounting & Finance</option>
-            </select>
-          </div>
-          
-          <!-- Second column content here -->
+  <!-- ❌ UNAUTHORIZED SCREEN -->
+  <div id="unauthorizedScreen" class="hidden min-h-screen flex items-center justify-center px-4">
+    <div class="login-container max-w-md w-full rounded-2xl shadow-2xl p-8 animate-fade-in">
+      <div class="text-center">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-red-500 rounded-full shadow-lg mb-6 pulse-warning">
+          <i class="fas fa-ban text-3xl text-white"></i>
         </div>
+        <h1 class="text-3xl font-bold text-red-600 mb-4">Access Denied</h1>
+        <p class="text-gray-700 mb-2">
+          Your email (<strong><span id="unauthorizedEmail"></span></strong>) is not authorized to access this system.
+        </p>
+        <p class="text-gray-600 mb-6">Contact the administrator for access.</p>
         
-          <div class="flex items-end">
-            <button onclick="executeSimplePromotion()" id="promoteBtn" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-8 py-4 rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 font-semibold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-              <i class="fas fa-rocket mr-3"></i>🎓 Promote All Students
-            </button>
-          </div>
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <p class="text-sm text-red-700">
+            <i class="fas fa-shield-alt mr-2"></i>
+            This system requires special authorization.
+            <br>You will be automatically signed out in 3 seconds.
+          </p>
         </div>
 
-        <!-- Promotion Preview -->
-        <div id="promotionPreview" class="hidden">
-          <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-            <h4 class="font-semibold text-blue-800 mb-4">
-              <i class="fas fa-preview mr-2"></i>Promotion Preview:
-            </h4>
-            <div id="promotionSummary" class="space-y-2"></div>
-          </div>
-          
-          <!-- Promotion Flow -->
-          <div class="bg-gradient-to-r from-green-100 to-emerald-100 border border-green-200 rounded-lg p-6">
-            <h4 class="font-semibold text-green-800 mb-4">
-              <i class="fas fa-arrow-right mr-2"></i>Promotion Flow:
-            </h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="promotionFlow">
-              <!-- Flow items will be loaded here -->
-            </div>
-          </div>
-        </div>
+        <button 
+          onclick="handleSignOut()"
+          class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-all"
+        >
+          <i class="fas fa-sign-out-alt mr-2"></i>Sign Out Now
+        </button>
       </div>
+    </div>
+  </div>
 
-      <!-- Bulk Upload for Semester 1 -->
-      <div class="bg-white rounded-2xl shadow-xl p-8 card-hover animate-fade-in">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">
-          <i class="fas fa-upload mr-3 text-green-600"></i>Add New Students to Semester 1
-        </h2>
-        
-        <!-- File Format Instructions -->
-        <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-          <h5 class="font-semibold text-green-800 mb-2">📋 File Format Requirements:</h5>
-          <ul class="text-sm text-green-700 space-y-1">
-            <li>• <strong>Column 1:</strong> Student ID (e.g., BCA2025001)</li>
-            <li>• <strong>Column 2:</strong> Student Name (e.g., John Doe)</li>
-            <li>• <strong>Column 3:</strong> Parent Phone (e.g., +919876543210)</li>
-            <li>• <strong>Formats:</strong> CSV, Excel (.xlsx, .xls)</li>
-            <li>• <strong>Note:</strong> Students will be added to Semester 1 only</li>
-          </ul>
-        </div>
-        
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          
-          <!-- Stream Selection for Upload -->
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-3">
-              <i class="fas fa-graduation-cap mr-2 text-green-600"></i>Target Stream
-            </label>
-            <select id="uploadStream" class="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all text-lg">
-              <option value="">Select Academic Stream</option>
-              <option value="BCA">BCA - Computer Applications</option>
-              <option value="BBA">BBA - Business Administration</option>
-              <option value="BCom">BCom - Commerce (Section A)</option>
-              <option value="BCom Section B">BCom Section B - Commerce</option>
-              <option value="BCom-BDA">BCom-BDA - Big Data Analytics</option>
-              <option value="BCom A and F">BCom A&F - Accounting & Finance</option>
-            </select>
+  <!-- ✅ MAIN APPLICATION (Only for authorized users) -->
+  <div id="mainApp" class="hidden">
+    <div class="min-h-screen py-8 px-4">
+      <!-- User Info Bar -->
+      <div class="max-w-6xl mx-auto mb-4">
+        <div class="bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-xl p-4 flex justify-between items-center">
+          <div class="flex items-center text-white">
+            <i class="fas fa-user-check mr-2 text-green-300"></i>
+            <span class="font-semibold">Authorized User: </span>
+            <span id="userEmail" class="ml-2 font-mono bg-white bg-opacity-20 px-2 py-1 rounded text-sm"></span>
+            <span class="ml-4 text-xs opacity-75">
+      
+            </span>
           </div>
-          
-          <!-- File Upload -->
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-3">
-              <i class="fas fa-file-upload mr-2 text-green-600"></i>Upload Student File
-            </label>
-            <div id="uploadArea" class="upload-area border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer">
-              <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
-              <p class="text-gray-600 mb-2">Drag & Drop your file here</p>
-              <p class="text-sm text-gray-500 mb-3">or click to browse</p>
-              <input type="file" id="studentFile" accept=".csv,.xlsx,.xls" class="hidden">
-              <button type="button" onclick="document.getElementById('studentFile').click()" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-all">
-                <i class="fas fa-file-import mr-2"></i>Choose File
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <!-- File Info Display -->
-        <div id="fileInfo" class="hidden mt-6 p-4 bg-gray-50 rounded-lg">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center">
-              <i class="fas fa-file-excel text-green-600 mr-2"></i>
-              <span id="fileName" class="font-medium"></span>
-            </div>
-            <button onclick="clearFile()" class="text-red-500 hover:text-red-700">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-          <div class="text-sm text-gray-600 mt-2">
-            Size: <span id="fileSize"></span> | Type: <span id="fileType"></span>
-          </div>
-        </div>
-        
-        <!-- Upload Progress -->
-        <div id="uploadProgress" class="hidden mt-6">
-          <div class="flex justify-between text-sm text-gray-600 mb-2">
-            <span>Uploading...</span>
-            <span id="progressPercent">0%</span>
-          </div>
-          <div class="w-full bg-gray-200 rounded-full h-2">
-            <div id="progressBar" class="progress-bar h-2 rounded-full" style="width: 0%"></div>
-          </div>
-        </div>
-        
-        <div class="text-center mt-8">
-          <button onclick="bulkUploadStudents()" id="uploadBtn" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-4 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 font-semibold text-lg shadow-lg">
-            <i class="fas fa-upload mr-2"></i>Upload to Semester 1
+          <button 
+            onclick="handleSignOut()"
+            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-all"
+          >
+            <i class="fas fa-sign-out-alt mr-2"></i>Sign Out
           </button>
         </div>
       </div>
-      
-      <!-- Footer -->
-      <div class="text-center mt-16 text-white">
-        <p class="text-lg opacity-75">© 2025 MLA ACADEMY OF HIGHER LEARNING</p>
-      </div>
 
+      <div class="max-w-6xl mx-auto">
+        
+        <!-- Header -->
+        <div class="text-center mb-12 animate-fade-in">
+          <div class="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full shadow-lg mb-6">
+            <i class="fas fa-graduation-cap text-3xl text-purple-600"></i>
+          </div>
+          <h1 class="text-4xl font-bold text-white mb-4">Student Promotion System</h1>
+          <p class="text-xl text-purple-100 max-w-2xl mx-auto">
+            Easy one-click promotion: Move all students up one semester and graduate 6th semester students
+          </p>
+        </div>
+
+        <!-- Stream Selection & Promotion -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover animate-fade-in">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+            <i class="fas fa-arrow-up mr-3 text-purple-600"></i>Select Stream & Promote
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-3">
+                <i class="fas fa-university mr-2 text-purple-600"></i>Academic Stream
+              </label>
+              <select id="promotionStream" onchange="loadPromotionPreview()" class="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all text-lg">
+                <option value="">-- Select Stream --</option>
+                <option value="BCA">BCA - Bachelor of Computer Applications</option>
+                <option value="BBA">BBA - Bachelor of Business Administration</option>
+                <option value="BCom">BCom - Bachelor of Commerce (Section A)</option>
+                <option value="BCom Section B">BCom Section B - Bachelor of Commerce</option>
+                <option value="BCom-BDA">BCom-BDA - Big Data Analytics</option>
+                <option value="BCom A and F">BCom A&F - Accounting & Finance</option>
+              </select>
+            </div>
+            
+            <div class="flex items-end">
+              <button onclick="executeSimplePromotion()" id="promoteBtn" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-8 py-4 rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 font-semibold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <i class="fas fa-rocket mr-3"></i>🎓 Promote All Students
+              </button>
+            </div>
+          </div>
+
+          <!-- Promotion Preview -->
+          <div id="promotionPreview" class="hidden">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+              <h4 class="font-semibold text-blue-800 mb-4">
+                <i class="fas fa-preview mr-2"></i>Promotion Preview:
+              </h4>
+              <div id="promotionSummary" class="space-y-2"></div>
+            </div>
+            
+            <!-- Promotion Flow -->
+            <div class="bg-gradient-to-r from-green-100 to-emerald-100 border border-green-200 rounded-lg p-6">
+              <h4 class="font-semibold text-green-800 mb-4">
+                <i class="fas fa-arrow-right mr-2"></i>Promotion Flow:
+              </h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="promotionFlow">
+                <!-- Flow items will be loaded here -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bulk Upload for Semester 1 -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 card-hover animate-fade-in">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-upload mr-3 text-green-600"></i>Add New Students to Semester 1
+          </h2>
+          
+          <!-- File Format Instructions -->
+          <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+            <h5 class="font-semibold text-green-800 mb-2">📋 File Format Requirements:</h5>
+            <ul class="text-sm text-green-700 space-y-1">
+              <li>• <strong>Column 1:</strong> Student ID (e.g., BCA2025001)</li>
+              <li>• <strong>Column 2:</strong> Student Name (e.g., John Doe)</li>
+              <li>• <strong>Column 3:</strong> Parent Phone (e.g., +919876543210)</li>
+              <li>• <strong>Formats:</strong> CSV, Excel (.xlsx, .xls)</li>
+              <li>• <strong>Note:</strong> Students will be added to Semester 1 only</li>
+            </ul>
+          </div>
+          
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Stream Selection for Upload -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-3">
+                <i class="fas fa-graduation-cap mr-2 text-green-600"></i>Target Stream
+              </label>
+              <select id="uploadStream" class="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all text-lg">
+                <option value="">Select Academic Stream</option>
+                <option value="BCA">BCA - Computer Applications</option>
+                <option value="BBA">BBA - Business Administration</option>
+                <option value="BCom">BCom - Commerce (Section A)</option>
+                <option value="BCom Section B">BCom Section B - Commerce</option>
+                <option value="BCom-BDA">BCom-BDA - Big Data Analytics</option>
+                <option value="BCom A and F">BCom A&F - Accounting & Finance</option>
+              </select>
+            </div>
+            
+            <!-- File Upload -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-3">
+                <i class="fas fa-file-upload mr-2 text-green-600"></i>Upload Student File
+              </label>
+              <div id="uploadArea" class="upload-area border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer">
+                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
+                <p class="text-gray-600 mb-2">Drag & Drop your file here</p>
+                <p class="text-sm text-gray-500 mb-3">or click to browse</p>
+                <input type="file" id="studentFile" accept=".csv,.xlsx,.xls" class="hidden">
+                <button type="button" onclick="document.getElementById('studentFile').click()" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-all">
+                  <i class="fas fa-file-import mr-2"></i>Choose File
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- File Info Display -->
+          <div id="fileInfo" class="hidden mt-6 p-4 bg-gray-50 rounded-lg">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <i class="fas fa-file-excel text-green-600 mr-2"></i>
+                <span id="fileName" class="font-medium"></span>
+              </div>
+              <button onclick="clearFile()" class="text-red-500 hover:text-red-700">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="text-sm text-gray-600 mt-2">
+              Size: <span id="fileSize"></span> | Type: <span id="fileType"></span>
+            </div>
+          </div>
+          
+          <!-- Upload Progress -->
+          <div id="uploadProgress" class="hidden mt-6">
+            <div class="flex justify-between text-sm text-gray-600 mb-2">
+              <span>Uploading...</span>
+              <span id="progressPercent">0%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div id="progressBar" class="progress-bar h-2 rounded-full" style="width: 0%"></div>
+            </div>
+          </div>
+          
+          <div class="text-center mt-8">
+            <button onclick="bulkUploadStudents()" id="uploadBtn" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-4 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 font-semibold text-lg shadow-lg">
+              <i class="fas fa-upload mr-2"></i>Upload to Semester 1
+            </button>
+          </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="text-center mt-16 text-white">
+          <p class="text-lg opacity-75">© 2025 MLA ACADEMY OF HIGHER LEARNING</p>
+        </div>
+
+      </div>
     </div>
   </div>
 
@@ -246,6 +526,7 @@
     // ✅ Initialize system
     document.addEventListener('DOMContentLoaded', function() {
       setupDragAndDrop();
+      console.log('System initialized with firebase-config.js');
     });
 
     // ✅ Load promotion preview
@@ -276,15 +557,15 @@
           summaryDiv.innerHTML = `
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div class="text-center">
-                <div class="text-2xl font-bold text-blue-600">${data.totalStudents}</div>
+                <div class="text-2xl font-bold text-blue-600">${data.totalStudents || 0}</div>
                 <div class="text-sm text-gray-600">Total Students</div>
               </div>
               <div class="text-center">
-                <div class="text-2xl font-bold text-green-600">${data.semesterBreakdown.semester5}</div>
+                <div class="text-2xl font-bold text-green-600">${data.semesterBreakdown?.semester5 || 0}</div>
                 <div class="text-sm text-gray-600">Will Graduate</div>
               </div>
               <div class="text-center">
-                <div class="text-2xl font-bold text-purple-600">${data.totalStudents - data.semesterBreakdown.semester6}</div>
+                <div class="text-2xl font-bold text-purple-600">${(data.totalStudents || 0) - (data.semesterBreakdown?.semester6 || 0)}</div>
                 <div class="text-sm text-gray-600">Will Promote</div>
               </div>
               <div class="text-center">
@@ -295,7 +576,7 @@
           `;
           
           const flowDiv = document.getElementById('promotionFlow');
-          flowDiv.innerHTML = data.promotionPreview.map(flow => `
+          flowDiv.innerHTML = (data.promotionPreview || []).map(flow => `
             <div class="bg-white p-3 rounded-lg border border-gray-200 text-center">
               <div class="text-sm font-semibold text-gray-700">${flow}</div>
             </div>
@@ -355,9 +636,9 @@ Continue?`;
 • Semester 1 Status: Empty (Ready for new students)
 
 🎓 Promotion Flow:
-${result.promotionFlow.map(flow => `• ${flow}`).join('\n')}
+${result.promotionFlow?.map(flow => `• ${flow}`).join('\n')}
 
-${result.note}`;
+${result.note || ''}`;
 
           alert(successMsg);
           loadPromotionPreview(); // Refresh preview
@@ -601,16 +882,15 @@ ${result.failed > 0 ? `\nFailed Students:\n${result.failures.slice(0, 5).map(f =
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
-    // [parseCSV, parseExcelData, validateStudentData functions remain the same as before]
     function parseCSV(text) {
       const lines = text.split('\n').filter(line => line.trim());
       const students = [];
       
       const hasHeader = lines[0] && (
-        lines[0].toLowerCase().includes('student') || 
-        lines[0].toLowerCase().includes('name') || 
-        lines[0].toLowerCase().includes('phone') ||
-        lines[0].toLowerCase().includes('id')
+        lines.toLowerCase().includes('student') || 
+        lines.toLowerCase().includes('name') || 
+        lines.toLowerCase().includes('phone') ||
+        lines.toLowerCase().includes('id')
       );
       
       const startIndex = hasHeader ? 1 : 0;
@@ -621,11 +901,11 @@ ${result.failed > 0 ? `\nFailed Students:\n${result.failures.slice(0, 5).map(f =
         
         const cols = parseCSVLine(line);
         
-        if (cols.length >= 3 && cols[0] && cols[1] && cols[2]) {
+        if (cols.length >= 3 && cols[0] && cols[21] && cols) {
           students.push({
-            studentID: cols[0].trim(),
-            name: cols[1].trim(),
-            parentPhone: cols[2].trim(),
+            studentID: cols.trim(),
+            name: cols[21].trim(),
+            parentPhone: cols.trim(),
             rowNumber: i + 1
           });
         }
@@ -676,11 +956,11 @@ ${result.failed > 0 ? `\nFailed Students:\n${result.failures.slice(0, 5).map(f =
       for (let i = startIndex; i < jsonData.length; i++) {
         const row = jsonData[i];
         
-        if (row && row.length >= 3 && row[0] && row[1] && row[2]) {
+        if (row && row.length >= 3 && row && row[1] && row[2]) {
           students.push({
-            studentID: String(row[0]).trim(),
-            name: String(row[1]).trim(),
-            parentPhone: String(row[2]).trim(),
+            studentID: String(row).trim(),
+            name: String(row[21]).trim(),
+            parentPhone: String(row).trim(),
             rowNumber: i + 1
           });
         }
@@ -726,7 +1006,6 @@ ${result.failed > 0 ? `\nFailed Students:\n${result.failures.slice(0, 5).map(f =
       
       return { validStudents, errors };
     }
-
   </script>
 </body>
 </html>
