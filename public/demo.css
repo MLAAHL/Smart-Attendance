@@ -311,7 +311,7 @@ body {
   }
   
   .banner-img img {
-    width: 300%; /* larger on mobile */
+    width: 200%; /* larger on mobile */
     max-width: 1000%;
     height: auto;
     background: transparent;
@@ -624,5 +624,6 @@ tr:hover .sticky-student-id {
     padding: 4px 6px;
   }
 }
+
 
 
