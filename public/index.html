@@ -81,22 +81,14 @@
         
         <ul class="space-y-4 text-black">
           <li>
-            <button onclick="goToHome()" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-indigo-50 text-gray-700 hover:text-indigo-600 transition">
+            <button onclick="window.location.reload()" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-indigo-50 text-gray-700 hover:text-indigo-600 transition">
               <div class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600">
                 <i class="fas fa-home text-sm"></i>
               </div>
               <span>Dashboard</span>
             </button>
           </li>
-          
-          <li>
-            <button onclick="alert('Classes')" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-indigo-50 text-gray-700 hover:text-indigo-600 transition">
-              <div class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600">
-                <i class="fas fa-users text-sm"></i>
-              </div>
-              <span>My Classes</span>
-            </button>
-          </li>
+        
         
           <!-- ✅ NEW: Promote Students Button -->
           <li>
@@ -125,14 +117,7 @@
             </a>
           </li>
           
-          <li>
-            <button onclick="alert('Settings')" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-indigo-50 text-gray-700 hover:text-indigo-600 transition">
-              <div class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600">
-                <i class="fas fa-cog text-sm"></i>
-              </div>
-              <span>Settings</span>
-            </button>
-          </li>
+       
         </ul>
         
         <!-- Logout Button -->
@@ -155,7 +140,7 @@
           <p>Mark it. View it. Stay on track.</p>
         </div>
         <div class="banner-img">
-          <img src="illu.png" 
+          <img src="b1.png" 
          alt="Attendance Illustration" 
          class="w-40 sm:w-40 drop-shadow-lg" />
         </div>
@@ -667,8 +652,8 @@ document.addEventListener("DOMContentLoaded", () => {
       name: "BCom Section B",
       displayName: "BCom B",
       icon: '<i class="fas fa-money-bill-wave text-orange-500"></i>',
-      color: "bg-orange-100",
-      textColor: "text-orange-600",
+      color: "bg-purple-100",
+      textColor: "text-purple-600",
       limitedSemesters: [5, 6] // Only show semesters 5 and 6
     },
     {
@@ -725,7 +710,7 @@ document.addEventListener("DOMContentLoaded", () => {
       header.className = "w-full bg-white shadow-md border-b border-gray-200 px-4 py-3 mb-0";
       header.innerHTML = `
         <div class="flex items-center justify-between max-w-7xl mx-auto">
-          <button onclick="goToStreamsHome()" class="w-8 h-8 rounded-full bg-gradient-to-r from-white to-blue-100 hover:from-blue-50 hover:to-blue-200 border border-blue-300 flex items-center justify-center transition-all duration-200 active:scale-95">
+          <button onclick="window.location.reload()"  class="w-8 h-8 rounded-full bg-gradient-to-r from-white to-blue-100 hover:from-blue-50 hover:to-blue-200 border border-blue-300 flex items-center justify-center transition-all duration-200 active:scale-95">
             <i class="fa-solid fa-angle-left text-blue-600 text-xs"></i>
           </button>
           <div class="flex items-center space-x-3">
@@ -849,12 +834,15 @@ window.loadSubjectsAndStudents = loadSubjectsAndStudents;
 
 
 
-
 async function loadSubjectsAndStudents(stream, sem) {
   try {
     console.log(`🔄 Loading data for: ${stream} Sem ${sem}`);
     
-    // ✅ FIXED: Fetch subjects with proper error handling
+    // ✅ Store globally for later use
+    window.selectedStream = stream;
+    window.selectedSem = sem;
+    
+    // ✅ Fetch subjects with proper error handling
     const subjectsRes = await fetch(`/api/subjects/${stream}/sem${sem}`);
     
     if (!subjectsRes.ok) {
@@ -864,39 +852,66 @@ async function loadSubjectsAndStudents(stream, sem) {
     const subjectsData = await subjectsRes.json();
     console.log('📚 Subjects response:', subjectsData);
     
-    // ✅ FIXED: Handle both response formats
+    // ✅ Handle both response formats
     const subjects = subjectsData.subjects || subjectsData || [];
     
-    // Clear and populate subject dropdowns
-    subjectMark.innerHTML = '<option value="">-- Select Subject --</option>';
-    subjectView.innerHTML = '<option value="">-- Select Subject --</option>';
+    // ✅ FIXED: Populate subject dropdowns with language data attributes
+    populateSubjectDropdowns(subjects);
     
-    if (Array.isArray(subjects) && subjects.length > 0) {
-      subjects.forEach(sub => {
-        const subjectName = sub.subjectName || sub.name || sub;
-        const markOption = new Option(subjectName, subjectName);
-        const viewOption = new Option(subjectName, subjectName);
-        subjectMark.appendChild(markOption);
-        subjectView.appendChild(viewOption);
-      });
-      console.log(`✅ Populated ${subjects.length} subjects`);
+    // ✅ Load all students initially
+    await loadAllStudents(stream, sem);
+    
+    // ✅ FIXED: Setup subject filtering with language support
+    setupSubjectFilteringListener(stream, sem);
+    
+    console.log(`✅ Data loaded successfully: ${subjects.length} subjects`);
+    
+  } catch (error) {
+    console.error("❌ Error loading data:", error);
+    handleLoadingError(error, stream, sem);
+  }
+}
+
+// ✅ FIXED: Enhanced subject dropdown population with language attributes
+function populateSubjectDropdowns(subjects) {
+  // Clear dropdowns
+  subjectMark.innerHTML = '<option value="">-- Select Subject --</option>';
+  subjectView.innerHTML = '<option value="">-- Select Subject --</option>';
+  
+  if (!Array.isArray(subjects) || subjects.length === 0) {
+    console.warn('⚠️ No subjects found');
+    return;
+  }
+  
+  subjects.forEach(sub => {
+    const subjectName = sub.subjectName || sub.name || sub;
+    
+    const markOption = new Option(subjectName, subjectName);
+    const viewOption = new Option(subjectName, subjectName);
+    
+    // ✅ CRITICAL: Add data attributes for language subjects
+    if (sub.isLanguageSubject || (sub.subjectType === 'LANGUAGE')) {
+      markOption.setAttribute('data-type', 'LANGUAGE');
+      markOption.setAttribute('data-language', sub.languageType);
+      viewOption.setAttribute('data-type', 'LANGUAGE');  
+      viewOption.setAttribute('data-language', sub.languageType);
+      
+      console.log(`🔤 Language subject: ${subjectName} (${sub.languageType})`);
     } else {
-      console.warn('⚠️ No subjects found');
+      markOption.setAttribute('data-type', 'CORE');
+      viewOption.setAttribute('data-type', 'CORE');
     }
     
-    // ✅ FIXED: Prevent multiple event listeners
-    if (!window.subjectChangeListenerAdded) {
-      subjectMark.addEventListener("change", () => {
-        const selectedSubject = subjectMark.value;
-        if (selectedSubject) {
-          const confirmSub = confirm(`📚 Confirm subject: "${selectedSubject}" for marking attendance?`);
-          if (!confirmSub) subjectMark.value = "";
-        }
-      });
-      window.subjectChangeListenerAdded = true;
-    }
-    
-    // ✅ FIXED: Fetch students with proper error handling
+    subjectMark.appendChild(markOption);
+    subjectView.appendChild(viewOption);
+  });
+  
+  console.log(`✅ Populated ${subjects.length} subjects with language attributes`);
+}
+
+// ✅ Load all students initially
+async function loadAllStudents(stream, sem) {
+  try {
     const studentsRes = await fetch(`/api/students/${stream}/sem${sem}`);
     
     if (!studentsRes.ok) {
@@ -906,107 +921,206 @@ async function loadSubjectsAndStudents(stream, sem) {
     const studentsData = await studentsRes.json();
     console.log('👥 Students response:', studentsData);
     
-    // ✅ FIXED: Handle both response formats
     const students = studentsData.students || studentsData || [];
+    displayStudents(students);
     
-    // Clear students list
-    studentsList.innerHTML = '';
-    
-    if (Array.isArray(students) && students.length > 0) {
-      students.forEach((student, index) => {
-        const serialNumber = index + 1;
-        const studentID = student.studentID || student.id || 'N/A';
-        const studentName = student.name || 'Unknown';
-        
-        // ✅ FIXED: Create table row properly
-        const tableRow = document.createElement('tr');
-        tableRow.className = `${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-indigo-100 transition duration-200`;
-        
-        tableRow.innerHTML = `
-          <td class="p-3 border border-gray-300 text-[#0f172a] font-medium text-center">
-            ${serialNumber}
-          </td>
-          <td class="p-3 border border-gray-300 text-[#0f172a] font-medium">
-            ${studentID}
-          </td>
-          <td class="p-3 border border-gray-300 text-[#0f172a]">
-            ${studentName}
-          </td>
-          <td class="p-3 border border-gray-300 text-center">
-            <input 
-              type="checkbox" 
-              value="${studentID}" 
-              checked 
-              class="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-400 transition duration-200"
-            />
-          </td>
-        `;
-        
-        studentsList.appendChild(tableRow);
-      });
-      
-      console.log(`✅ Populated ${students.length} students`);
-    } else {
-      // ✅ Show message when no students found
-      studentsList.innerHTML = `
-        <tr>
-          <td colspan="4" class="p-6 text-center text-gray-500">
-            <i class="fas fa-users-slash text-4xl mb-2 text-gray-300"></i>
-            <p>No students found for ${stream} Semester ${sem}</p>
-            <p class="text-sm">Please check if students exist in the database.</p>
-          </td>
-        </tr>
-      `;
-      console.warn('⚠️ No students found');
-    }
-    
-    // ✅ Show summary
-    const subjectCount = subjects.length;
-    const studentCount = students.length;
-    console.log(`✅ Data loaded successfully: ${subjectCount} subjects, ${studentCount} students`);
-    
-    // ✅ Optional: Show alert if no data found
-    if (subjectCount === 0 && studentCount === 0) {
-      alert(`No data found for ${stream} Semester ${sem}. Please check if the collection exists.`);
-    }
+    console.log(`✅ Loaded ${students.length} students initially`);
     
   } catch (error) {
-    console.error("❌ Error loading data:", error);
-    
-    // ✅ Show user-friendly error message
-    alert(`Error loading data for ${stream} Semester ${sem}: ${error.message}`);
-    
-    // ✅ Clear UI on error
-    if (subjectMark) subjectMark.innerHTML = '<option value="">-- Error Loading Subjects --</option>';
-    if (subjectView) subjectView.innerHTML = '<option value="">-- Error Loading Subjects --</option>';
-    if (studentsList) {
-      studentsList.innerHTML = `
-        <tr>
-          <td colspan="4" class="p-6 text-center text-red-500">
-            <i class="fas fa-exclamation-triangle text-4xl mb-2"></i>
-            <p>Error loading students: ${error.message}</p>
-          </td>
-        </tr>
-      `;
-    }
+    console.error("❌ Error loading students:", error);
+    throw error;
   }
 }
 
-// ✅ FIXED: Make functions globally available
-window.goToStreamsHome = goToStreamsHome;
-window.updateCurrentSelectionDisplay = updateCurrentSelectionDisplay;
-window.selectStream = selectStream;
-window.showTab = showTab;
-window.backToSemesters = backToSemesters;
-window.loadSubjectsAndStudents = loadSubjectsAndStudents;
-
+// ✅ FIXED: Subject filtering listener with language support
+function setupSubjectFilteringListener(stream, sem) {
+  if (window.subjectChangeListenerAdded) return;
   
+  subjectMark.addEventListener("change", async function(event) {
+    const selectedSubject = event.target.value;
+    const selectedOption = event.target.selectedOptions[0];
+    
+    if (!selectedSubject) {
+      console.log("🔄 No subject selected, showing all students");
+      await loadAllStudents(stream, sem);
+      return;
+    }
+    
+    const subjectType = selectedOption.getAttribute('data-type');
+    const languageType = selectedOption.getAttribute('data-language');
+    
+    console.log(`🎯 Subject selected: ${selectedSubject}`);
+    console.log(`📋 Subject type: ${subjectType}`);
+    if (languageType) console.log(`🔤 Language type: ${languageType}`);
+    
+    try {
+      // Show loading state
+      studentsList.innerHTML = `
+        <tr>
+          <td colspan="4" class="p-6 text-center">
+            <div class="flex items-center justify-center">
+              <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 mr-3"></div>
+              Loading ${languageType ? languageType + ' ' : ''}students...
+            </div>
+          </td>
+        </tr>
+      `;
+      
+      // ✅ CRITICAL FIX: Use attendance-students API for language filtering
+      const response = await fetch(`/api/attendance-students/${stream}/sem${sem}/${encodeURIComponent(selectedSubject)}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to get students');
+      }
+      
+      const students = data.students || [];
+      
+      // ✅ Display filtered students
+      displayStudents(students);
+      
+      // ✅ Show success message for language filtering
+      if (subjectType === 'LANGUAGE' && languageType) {
+        console.log(`✅ Filtered to ${students.length} ${languageType} students`);
+        
+        if (students.length === 0) {
+          studentsList.innerHTML = `
+            <tr>
+              <td colspan="4" class="p-6 text-center text-yellow-500">
+                <i class="fas fa-info-circle text-3xl mb-2"></i>
+                <p class="font-semibold">No ${languageType} Students Found</p>
+                <p class="text-sm">No students have chosen ${languageType} as their language subject.</p>
+              </td>
+            </tr>
+          `;
+        }
+      } else {
+        console.log(`✅ Showing ${students.length} total students`);
+      }
+      
+    } catch (error) {
+      console.error('❌ Error filtering students:', error);
+      
+      studentsList.innerHTML = `
+        <tr>
+          <td colspan="4" class="p-6 text-center text-red-500">
+            <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+            <p class="font-semibold">Error Loading Students</p>
+            <p class="text-sm">${error.message}</p>
+            <button 
+              onclick="loadAllStudents('${stream}', '${sem}')"
+              class="mt-2 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+            >
+              Show All Students
+            </button>
+          </td>
+        </tr>
+      `;
+    }
+  });
+  
+  // ✅ Sync view dropdown with mark dropdown
+  subjectView.addEventListener("change", async function(event) {
+    const selectedSubject = event.target.value;
+    
+    if (selectedSubject) {
+      subjectMark.value = selectedSubject;
+      subjectMark.dispatchEvent(new Event('change'));
+    } else {
+      await loadAllStudents(stream, sem);
+    }
+  });
+  
+  window.subjectChangeListenerAdded = true;
+  console.log("✅ Subject filtering setup with language support");
+}
 
-  // Enhanced helper functions
-  // Enhanced attendance existence check with better error handling
+// ✅ Display students function
+function displayStudents(students) {
+  studentsList.innerHTML = '';
+  
+  if (!Array.isArray(students) || students.length === 0) {
+    studentsList.innerHTML = `
+      <tr>
+        <td colspan="4" class="p-6 text-center text-gray-500">
+          <i class="fas fa-users-slash text-4xl mb-3 text-gray-300"></i>
+          <p class="font-semibold text-lg">No students found</p>
+          <p class="text-sm">Please verify the data in your database.</p>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
+  students.forEach((student, index) => {
+    const serialNumber = index + 1;
+    const studentID = student.studentID || student.id || 'N/A';
+    const studentName = student.name || 'Unknown';
+    
+    const tableRow = document.createElement('tr');
+    tableRow.className = `${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-indigo-100 transition duration-200`;
+    
+    tableRow.innerHTML = `
+      <td class="p-3 border border-gray-300 text-[#0f172a] font-medium text-center">
+        ${serialNumber}
+      </td>
+      <td class="p-3 border border-gray-300 text-[#0f172a] font-medium">
+        ${studentID}
+      </td>
+      <td class="p-3 border border-gray-300 text-[#0f172a]">
+        ${studentName}
+      </td>
+      <td class="p-3 border border-gray-300 text-center">
+        <input 
+          type="checkbox" 
+          value="${studentID}" 
+          checked 
+          class="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-400 transition duration-200"
+        />
+      </td>
+    `;
+    
+    studentsList.appendChild(tableRow);
+  });
+  
+  console.log(`✅ Displayed ${students.length} students`);
+}
+
+// ✅ Error handling function
+function handleLoadingError(error, stream, sem) {
+  alert(`Error loading data for ${stream} Semester ${sem}: ${error.message}`);
+  
+  if (subjectMark) subjectMark.innerHTML = '<option value="">-- Error Loading Subjects --</option>';
+  if (subjectView) subjectView.innerHTML = '<option value="">-- Error Loading Subjects --</option>';
+  if (studentsList) {
+    studentsList.innerHTML = `
+      <tr>
+        <td colspan="4" class="p-6 text-center text-red-500">
+          <i class="fas fa-exclamation-triangle text-4xl mb-2"></i>
+          <p class="font-semibold">Error loading data</p>
+          <p class="text-sm">${error.message}</p>
+          <button 
+            onclick="loadSubjectsAndStudents('${stream}', '${sem}')" 
+            class="mt-3 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+          >
+            <i class="fas fa-redo mr-2"></i>
+            Retry
+          </button>
+        </td>
+      </tr>
+    `;
+  }
+}
+
+// ✅ Enhanced helper functions
 async function checkAttendanceExists(stream, sem, subject, date) {
   try {
-    const response = await fetch(`/api/check-attendance/${stream}/sem${sem}/${subject}/${date}`);
+    const response = await fetch(`/api/check-attendance/${stream}/sem${sem}/${encodeURIComponent(subject)}/${date}`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -1018,7 +1132,6 @@ async function checkAttendanceExists(stream, sem, subject, date) {
   }
 }
 
-// Enhanced date validation
 function isSunday(dateString) {
   const date = new Date(dateString);
   return date.getDay() === 0;
@@ -1033,121 +1146,159 @@ function isWeekend(dateString) {
   return isSunday(dateString) || isSaturday(dateString);
 }
 
-// Enhanced Submit button with improved validation and confirmations
-submitBtn.addEventListener("click", async () => {
-  const subject = subjectMark.value;
-  const date = document.getElementById("date").value;
+// ✅ FIXED: Enhanced Submit button with proper element selectors
+if (submitBtn) {
+  submitBtn.addEventListener("click", async () => {
+    const subject = subjectMark.value;
+    const dateInput = document.getElementById("date");
+    const date = dateInput ? dateInput.value : '';
 
-  // Basic validation
-  if (!subject || !date) {
-    showAlert("Missing Information", "Please fill in both Date and Subject.", "error");
-    return;
-  }
-
-  // Date validation - prevent future dates
-  const today = new Date().toISOString().split("T")[0];
-  if (date > today) {
-    showAlert("Invalid Date", "Future dates are not allowed for attendance marking.", "error");
-    return;
-  }
-
-  try {
-    // Show loading state
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="loading-spinner"></span> Checking...';
-
-    // Check if attendance already exists
-    const attendanceExists = await checkAttendanceExists(selectedStream, selectedSem, subject, date);
-    
-    if (attendanceExists) {
-      const overwriteConfirm = await showConfirmDialog(
-        "Attendance Already Exists",
-        `Subject: ${subject}\nDate: ${date}\nClass: ${selectedStream} Semester ${selectedSem}\n\nAttendance has already been recorded for this subject and date.\nDo you want to OVERWRITE the existing attendance?\n\nWARNING: This will send new WhatsApp notifications to parents.`,
-        "warning"
-      );
-      
-      if (!overwriteConfirm) {
-        showAlert("Cancelled", "Attendance submission cancelled.", "info");
-        return;
-      }
-    }
-
-    // Check for weekend
-    if (isWeekend(date)) {
-      const dayName = isSunday(date) ? "SUNDAY" : "SATURDAY";
-      const weekendConfirm = await showConfirmDialog(
-        "Weekend Alert",
-        `The selected date (${date}) falls on a ${dayName}.\n\nAre you sure you want to mark attendance for a weekend?\nThis is unusual for regular classes.`,
-        "warning"
-      );
-      
-      if (!weekendConfirm) {
-        showAlert("Cancelled", "Please select a different date.", "info");
-        return;
-      }
-    }
-
-    // Final confirmation with student count
-    const totalStudents = document.querySelectorAll("#students-list input[type='checkbox']").length;
-    const presentStudents = document.querySelectorAll("#students-list input:checked").length;
-    const absentStudents = totalStudents - presentStudents;
-
-    const finalConfirm = await showConfirmDialog(
-      "Confirm Submission",
-      `Subject: ${subject}\nDate: ${date}\nClass: ${selectedStream} Semester ${selectedSem}\n\nTotal Students: ${totalStudents}\nPresent: ${presentStudents}\nAbsent: ${absentStudents}\n\nWhatsApp notifications will be sent to parents of absent students.\n\nDo you want to proceed?`,
-      "info"
-    );
-
-    if (!finalConfirm) {
-      showAlert("Cancelled", "Attendance submission cancelled.", "info");
+    // Basic validation
+    if (!subject || !date) {
+      showAlert("Missing Information", "Please fill in both Date and Subject.", "error");
       return;
     }
 
-    // Prepare data
-    const studentsPresent = Array.from(
-      document.querySelectorAll("#students-list input:checked")
-    ).map(cb => cb.value);
-
-    // Submit attendance
-    submitBtn.innerHTML = '<span class="loading-spinner"></span> Submitting...';
-    
-    const res = await fetch(
-      `/api/attendance/${selectedStream}/sem${selectedSem}/${subject}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date, subject, studentsPresent })
-      }
-    );
-
-    const result = await res.json();
-
-    if (res.ok) {
-      // Enhanced success message
-      const { summary } = result;
-      const successMessage = `Attendance Submitted Successfully!\n\nSummary:\nTotal Students: ${summary?.totalStudents || totalStudents}\nPresent: ${summary?.presentStudents || presentStudents}\nAbsent: ${summary?.absentStudents || absentStudents}\nWhatsApp Sent: ${summary?.whatsappSent || 'N/A'}${summary?.whatsappFailed > 0 ? `\nWhatsApp Failed: ${summary.whatsappFailed}` : ''}`;
-      
-      showAlert("Success", successMessage, "success");
-      
-      // Reset form
-      subjectMark.value = "";
-      document.getElementById("date").value = new Date().toISOString().split("T")[0];
-      
-    } else {
-      showAlert("Submission Failed", result.message || "Unknown error occurred.", "error");
+    // Date validation
+    const today = new Date().toISOString().split("T")[0];
+    if (date > today) {
+      showAlert("Invalid Date", "Future dates are not allowed for attendance marking.", "error");
+      return;
     }
 
-  } catch (err) {
-    console.error("Submission error:", err);
-    showAlert("Network Error", "Failed to submit attendance. Please check your connection and try again.", "error");
-  } finally {
-    // Reset button state
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = '<span class="check-icon"></span> Submit Attendance';
-  }
-});
+    try {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="loading-spinner"></span> Checking...';
 
-// Enhanced save attendance changes function
+      // Check if attendance exists
+      const attendanceExists = await checkAttendanceExists(window.selectedStream, window.selectedSem, subject, date);
+      
+      if (attendanceExists) {
+        const overwriteConfirm = await showConfirmDialog(
+          "Attendance Already Exists",
+          `Subject: ${subject}\nDate: ${date}\nClass: ${window.selectedStream} Semester ${window.selectedSem}\n\nAttendance has already been recorded.\nDo you want to OVERWRITE it?`,
+          "warning"
+        );
+        
+        if (!overwriteConfirm) {
+          showAlert("Cancelled", "Attendance submission cancelled.", "info");
+          return;
+        }
+      }
+
+      // Weekend check
+      if (isWeekend(date)) {
+        const dayName = isSunday(date) ? "SUNDAY" : "SATURDAY";
+        const weekendConfirm = await showConfirmDialog(
+          "Weekend Alert",
+          `Selected date (${date}) is a ${dayName}.\n\nAre you sure about weekend attendance?`,
+          "warning"
+        );
+        
+        if (!weekendConfirm) {
+          showAlert("Cancelled", "Please select a different date.", "info");
+          return;
+        }
+      }
+
+      // Get student counts
+      const checkboxes = studentsList.querySelectorAll("input[type='checkbox']");
+      const checkedBoxes = studentsList.querySelectorAll("input:checked");
+      const totalStudents = checkboxes.length;
+      const presentStudents = checkedBoxes.length;
+      const absentStudents = totalStudents - presentStudents;
+
+      // Final confirmation
+      const confirmMessage = `Subject: ${subject}\nDate: ${date}\nClass: ${window.selectedStream} Semester ${window.selectedSem}\n\nTotal Students: ${totalStudents}\nPresent: ${presentStudents}\nAbsent: ${absentStudents}\n\nWhatsApp notifications will be sent to parents.\n\nProceed?`;
+
+      const finalConfirm = await showConfirmDialog("Confirm Submission", confirmMessage, "info");
+
+      if (!finalConfirm) {
+        showAlert("Cancelled", "Attendance submission cancelled.", "info");
+        return;
+      }
+
+      // Prepare data
+      const studentsPresent = Array.from(checkedBoxes).map(cb => cb.value);
+
+      // Submit attendance
+      submitBtn.innerHTML = '<span class="loading-spinner"></span> Submitting...';
+      
+      const res = await fetch(
+        `/api/attendance/${window.selectedStream}/sem${window.selectedSem}/${encodeURIComponent(subject)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date, subject, studentsPresent })
+        }
+      );
+
+      const result = await res.json();
+
+      if (res.ok) {
+        const { summary } = result;
+        const successMessage = `✅ Attendance Submitted Successfully!\n\nSubject: ${subject}\nDate: ${date}\n\nTotal Students: ${summary?.totalStudents || totalStudents}\nPresent: ${summary?.presentStudents || presentStudents}\nAbsent: ${summary?.absentStudents || absentStudents}`;
+        
+        showAlert("Success", successMessage, "success");
+        
+        // Reset form
+        subjectMark.value = "";
+        if (dateInput) dateInput.value = new Date().toISOString().split("T")[0];
+        
+        // Reload all students
+        await loadAllStudents(window.selectedStream, window.selectedSem);
+        
+      } else {
+        showAlert("Submission Failed", result.message || "Unknown error occurred.", "error");
+      }
+
+    } catch (err) {
+      console.error("Submission error:", err);
+      showAlert("Network Error", "Failed to submit attendance. Please check your connection.", "error");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<span class="check-icon"></span> Submit Attendance';
+    }
+  });
+}
+
+// ✅ Alert functions
+function showAlert(title, message, type = "info") {
+  const prefixes = {
+    success: "✅ SUCCESS: ",
+    error: "❌ ERROR: ",
+    warning: "⚠️ WARNING: ",
+    info: "ℹ️ INFO: "
+  };
+  
+  alert(`${prefixes[type]}${title}\n\n${message}`);
+}
+
+async function showConfirmDialog(title, message, type = "info") {
+  const prefixes = {
+    success: "✅ CONFIRM: ",
+    error: "❌ CONFIRM: ",
+    warning: "⚠️ CONFIRM: ",
+    info: "❓ CONFIRM: "
+  };
+  
+  return confirm(`${prefixes[type]}${title}\n\n${message}`);
+}
+
+// ✅ Make functions globally available
+window.goToStreamsHome = goToStreamsHome;
+window.updateCurrentSelectionDisplay = updateCurrentSelectionDisplay;
+window.selectStream = selectStream;
+window.showTab = showTab;
+window.backToSemesters = backToSemesters;
+window.loadSubjectsAndStudents = loadSubjectsAndStudents;
+window.loadAllStudents = loadAllStudents;
+window.checkAttendanceExists = checkAttendanceExists;
+window.showAlert = showAlert;
+window.showConfirmDialog = showConfirmDialog;
+
+console.log("✅ Complete attendance system loaded with language subject filtering");
+// ✅ FIXED: Save Attendance Changes - Single Message Only
 async function saveAttendanceChanges() {
   const subject = subjectView.value;
   const saveBtn = document.getElementById("saveChangesBtn");
@@ -1174,123 +1325,168 @@ async function saveAttendanceChanges() {
     }
 
     const rows = document.querySelectorAll("#view-tbody tr");
-    const headers = Array.from(document.querySelectorAll("#view-thead th"))
-      .slice(2, -3)
-      .map(th => th.textContent.trim());
+    
+    // Get actual date values from data-date attributes
+    const dateHeaders = Array.from(document.querySelectorAll("#view-thead th[data-date]"))
+      .map(th => th.dataset.date)
+      .filter(date => date && date !== 'undefined' && date !== 'null');
 
+    console.log(`📅 Found ${dateHeaders.length} date headers:`, dateHeaders);
+
+    if (dateHeaders.length === 0) {
+      showAlert("No Dates", "No valid date columns found. Please reload the register.", "error");
+      return;
+    }
+
+    // Initialize attendance map with actual dates
     const attendanceMap = {};
-    headers.forEach(date => (attendanceMap[date] = []));
+    dateHeaders.forEach(date => (attendanceMap[date] = []));
 
-    rows.forEach(row => {
+    // Process each row with proper checkbox mapping
+    rows.forEach((row, rowIndex) => {
       const studentID = row.dataset.studentId;
-      const checkboxes = row.querySelectorAll("input[type='checkbox']");
-      checkboxes.forEach((cb, i) => {
-        if (cb.checked) attendanceMap[headers[i]].push(studentID);
+      
+      if (!studentID) {
+        console.warn(`⚠️ Row ${rowIndex} missing studentId`);
+        return;
+      }
+
+      // Get checkboxes that have data-date attributes
+      const checkboxes = row.querySelectorAll("input[type='checkbox'][data-date]");
+      
+      checkboxes.forEach(cb => {
+        const cbDate = cb.dataset.date;
+        
+        if (cb.checked && cbDate && attendanceMap.hasOwnProperty(cbDate)) {
+          attendanceMap[cbDate].push(studentID);
+        }
       });
     });
 
-    const res = await fetch(`/api/update-attendance/${selectedStream}/sem${selectedSem}/${subject}`, {
+    console.log(`📊 Attendance data to save:`, attendanceMap);
+
+    // Validate attendance data
+    const invalidDates = Object.keys(attendanceMap).filter(dateStr => {
+      const date = new Date(dateStr);
+      return isNaN(date.getTime()) || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr);
+    });
+
+    if (invalidDates.length > 0) {
+      showAlert("Invalid Dates", `Found invalid date formats: ${invalidDates.join(', ')}`, "error");
+      return;
+    }
+
+    // Send to server
+    const res = await fetch(`/api/update-attendance/${selectedStream}/sem${selectedSem}/${encodeURIComponent(subject)}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ attendanceMap })
     });
 
-    const result = await res.json();
+    let result;
+    try {
+      result = await res.json();
+    } catch (parseError) {
+      console.error("❌ JSON Parse Error:", parseError);
+      throw new Error("Invalid response from server");
+    }
 
-    if (res.ok) {
-      showAlert("Success", "Attendance updated successfully.", "success");
+    console.log(`📊 Server response:`, result);
+
+    if (res.ok && result.success) {
+      // ✅ FIXED: Single success message with reload info
+      const totalDates = Object.keys(attendanceMap).length;
+      const totalEntries = Object.values(attendanceMap).reduce((sum, arr) => sum + arr.length, 0);
+      
+      showAlert("Success", `✅ Attendance updated successfully!\n\nUpdated: ${totalDates} dates\nTotal entries: ${totalEntries}\n\nRegister will refresh automatically.`, "success");
+      
+      // Hide save button and reset its state
       saveBtn.classList.add("hidden");
-      subjectView.dispatchEvent(new Event("change"));
+      saveBtn.classList.remove("animate-pulse", "bg-yellow-500", "hover:bg-yellow-600");
+      saveBtn.classList.add("bg-yellow-500", "hover:bg-yellow-600");
+      
+      // ✅ CRITICAL FIX: Silent reload without showing another success message
+      console.log("🔄 Silently refreshing register...");
+      await silentReloadRegister(subject);
+      console.log("✅ Register refreshed silently");
+      
     } else {
-      showAlert("Update Failed", result.message || "Unknown error occurred.", "error");
+      const errorMsg = result.message || result.error || "Unknown error occurred.";
+      showAlert("Update Failed", errorMsg, "error");
     }
 
   } catch (err) {
-    console.error("Update error:", err);
-    showAlert("Network Error", "Failed to update attendance. Please try again.", "error");
+    console.error("❌ Update error:", err);
+    showAlert("Network Error", `Failed to update attendance: ${err.message}`, "error");
   } finally {
     // Reset button state
     saveBtn.disabled = false;
-    saveBtn.innerHTML = '<span class="save-icon"></span> Save Changes';
+    saveBtn.innerHTML = '<i class="fas fa-save mr-1"></i>Save Changes';
   }
 }
 
-// Clean alert and confirmation functions
-function showAlert(title, message, type = "info") {
-  const prefixes = {
-    success: "SUCCESS: ",
-    error: "ERROR: ",
-    warning: "WARNING: ",
-    info: "INFO: "
-  };
-  
-  alert(`${prefixes[type]}${title}\n\n${message}`);
-}
-
-async function showConfirmDialog(title, message, type = "info") {
-  const prefixes = {
-    success: "SUCCESS: ",
-    error: "ERROR: ",
-    warning: "WARNING: ",
-    info: "CONFIRM: "
-  };
-  
-  return confirm(`${prefixes[type]}${title}\n\n${message}`);
-}
-
-// Make functions globally available
-window.checkAttendanceExists = checkAttendanceExists;
-window.saveAttendanceChanges = saveAttendanceChanges;
-window.showAlert = showAlert;
-window.showConfirmDialog = showConfirmDialog;
-
-  
-subjectView.addEventListener("change", () => {
-  const subject = subjectView.value;
-  const registerTable = document.getElementById("registerTable");
-  const saveBtn = document.getElementById("saveChangesBtn");
-  const exportExcelBtn = document.getElementById("exportExcelBtn");
-
-  registerTable.classList.add("hidden");
-  saveBtn.classList.add("hidden");
-  if (exportExcelBtn) exportExcelBtn.classList.add("hidden");
-});
-
-document.getElementById("loadRegisterBtn").addEventListener("click", async () => {
-  const subject = subjectView.value;
-  const registerTable = document.getElementById("registerTable");
-  const saveBtn = document.getElementById("saveChangesBtn");
-  const exportExcelBtn = document.getElementById("exportExcelBtn");
-  const loadBtn = document.getElementById("loadRegisterBtn");
-
-  if (!subject) {
-    alert("ERROR: Please select a subject.");
-    return;
-  }
-
+// ✅ NEW: Silent reload function without success message
+async function silentReloadRegister(subject) {
   try {
-    // Show loading state
-    loadBtn.disabled = true;
-    loadBtn.innerHTML = '<span class="loading-spinner"></span> Loading...';
+    console.log(`🔄 Silent reload for: ${subject}`);
 
-    const res = await fetch(`/api/attendance-register/${selectedStream}/sem${selectedSem}/${subject}`);
+    const res = await fetch(`/api/attendance-register/${selectedStream}/sem${selectedSem}/${encodeURIComponent(subject)}`);
     
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${res.status}`);
     }
 
-    const { students, attendanceMap } = await res.json();
+    const data = await res.json();
+    console.log('📊 Silent reload response:', data);
+    
+    // ✅ Handle both old and new response formats
+    let students, attendanceMap, subjectInfo;
+    
+    if (data.success && data.data) {
+      // New format
+      ({ students, attendanceMap, subjectInfo } = data.data);
+    } else if (data.students && data.attendanceMap) {
+      // Old format
+      ({ students, attendanceMap } = data);
+      subjectInfo = data.subjectInfo;
+    } else {
+      throw new Error(data.message || 'Invalid response format');
+    }
+
     const dates = Object.keys(attendanceMap).sort();
 
-    // Create table header
-    viewThead.innerHTML = `
+    console.log(`✅ Silent reload: ${students.length} students, ${dates.length} dates`);
+
+    if (students.length === 0) {
+      console.warn('⚠️ No students found in silent reload');
+      return;
+    }
+
+    // ✅ Re-render table silently
+    await renderAttendanceTableSilently(students, dates, attendanceMap);
+
+  } catch (error) {
+    console.error("❌ Silent reload failed:", error);
+    // Don't show error to user, just log it
+  }
+}
+
+// ✅ NEW: Silent table rendering without messages
+async function renderAttendanceTableSilently(students, dates, attendanceMap) {
+  if (!viewThead || !viewTbody) {
+    console.error('❌ Table elements not found');
+    return;
+  }
+
+  // Create table header
+  viewThead.innerHTML = `
     <tr class="bg-gradient-to-r from-indigo-500 to-blue-500 text-white">
       <th class="p-3 text-center font-bold text-sm">#</th>
-      <th class="p-3 text-left font-bold text-sm sticky-student-id-header">Student ID</th>
+      <th class="p-3 text-left font-bold text-sm">Student ID</th>
       <th class="p-3 text-left font-bold text-sm">Name</th>
       ${dates.map(d => {
         const dateObj = new Date(d);
-        const displayDate = dateObj.toLocaleDateString('en-GB').replace(/\//g, '-');
+        const displayDate = dateObj.toLocaleDateString('en-GB', {day: '2-digit', month: '2-digit'});
         const title = dateObj.toLocaleDateString('en-IN', { 
           weekday: 'short', 
           month: 'short', 
@@ -1306,209 +1502,330 @@ document.getElementById("loadRegisterBtn").addEventListener("click", async () =>
     </tr>
   `;
 
-    // Create table body
-    viewTbody.innerHTML = "";
-    students.forEach((stu, index) => {
-      let attended = 0;
-      const row = [];
+  // ✅ CRITICAL FIX: Create table body with proper DOM structure and dataset
+  viewTbody.innerHTML = "";
+  
+  students.forEach((stu, index) => {
+    let attended = 0;
+    const row = [];
 
-      // Serial Number Column
-      row.push(`<td class="p-3 text-center font-medium">${index + 1}</td>`);
+    // Basic columns
+    row.push(`<td class="p-3 text-center font-medium">${index + 1}</td>`);
+    row.push(`
+      <td class="p-3 font-medium">
+        <span class="text-xs font-bold text-indigo-600 bg-indigo-100 px-2 py-1 rounded-md whitespace-nowrap">${stu.studentID}</span>
+      </td>
+    `);
+    row.push(`
+      <td class="p-3 font-medium">
+        <span class="text-gray-800 text-sm">${stu.name}</span>
+      </td>
+    `);
 
-      // Student ID Column
-     // Student ID Column (Sticky/Fixed)
-row.push(`
-<td class="p-3 font-medium sticky-student-id">
-  <span class="text-xs font-bold text-indigo-600 bg-indigo-100 px-2 py-1 rounded-md whitespace-nowrap">${stu.studentID}</span>
-</td>
-`);
-
-
-      // Student Name Column
+    // Attendance columns
+    dates.forEach(date => {
+      const present = attendanceMap[date]?.includes(stu.studentID);
+      if (present) attended++;
+      
       row.push(`
-        <td class="p-3 font-medium">
-          <span class="text-gray-800 text-sm">${stu.name}</span>
+        <td class="p-2 text-center">
+          <input 
+            type="checkbox" 
+            ${present ? "checked" : ""} 
+            data-date="${date}"
+            data-student-id="${stu.studentID}"
+            class="form-checkbox h-4 w-4 text-indigo-600 rounded focus:ring-indigo-400 transition duration-200"
+            onchange="markUnsavedChanges()"
+          />
         </td>
       `);
-
-      // Attendance columns
-      dates.forEach(date => {
-        const present = attendanceMap[date]?.includes(stu.studentID);
-        if (present) attended++;
-        row.push(`
-          <td class="p-2 text-center">
-            <input 
-              type="checkbox" 
-              ${present ? "checked" : ""} 
-              data-date="${date}"
-              class="form-checkbox h-4 w-4 text-indigo-600 rounded focus:ring-indigo-400 transition duration-200"
-              onchange="markUnsavedChanges()"
-            />
-          </td>
-        `);
-      });
-
-      const total = dates.length;
-      const percentage = total ? ((attended / total) * 100).toFixed(1) : "0.0";
-      const percentClass = percentage < 75 ? 'text-red-600 bg-red-50' : 
-                          percentage >= 85 ? 'text-green-600 bg-green-50' : 
-                          'text-yellow-600 bg-yellow-50';
-
-      // Summary columns
-      row.push(`<td class="p-3 text-center font-semibold text-gray-700 bg-gray-50">${total}</td>`);
-      row.push(`<td class="p-3 text-center font-semibold text-blue-600 bg-blue-50">${attended}</td>`);
-      row.push(`<td class="p-3 text-center font-bold ${percentClass} rounded-md">${percentage}%</td>`);
-
-      viewTbody.innerHTML += `
-        <tr class="hover:bg-indigo-50 transition duration-200">
-          ${row.join("")}
-        </tr>
-      `;
     });
 
-    registerTable.classList.remove("hidden");
-    saveBtn.classList.remove("hidden");
+    const total = dates.length;
+    const percentage = total ? ((attended / total) * 100).toFixed(1) : "0.0";
+    const percentClass = percentage < 75 ? 'text-red-600 bg-red-50' : 
+                        percentage >= 85 ? 'text-green-600 bg-green-50' : 
+                        'text-yellow-600 bg-yellow-50';
+
+    // Summary columns
+    row.push(`<td class="p-3 text-center font-semibold text-gray-700 bg-gray-50">${total}</td>`);
+    row.push(`<td class="p-3 text-center font-semibold text-blue-600 bg-blue-50">${attended}</td>`);
+    row.push(`<td class="p-3 text-center font-bold ${percentClass} rounded-md">${percentage}%</td>`);
+
+    // ✅ CRITICAL FIX: Create row element properly with dataset
+    const tr = document.createElement('tr');
+    tr.className = `hover:bg-indigo-50 transition duration-200 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`;
+    tr.dataset.studentId = stu.studentID; // ✅ This is crucial for saving
+    tr.innerHTML = row.join("");
+    
+    viewTbody.appendChild(tr);
+  });
+
+  console.log(`✅ Table rendered silently with ${students.length} students`);
+}
+
+// ✅ FIXED: Enhanced alert and confirmation functions
+function showAlert(title, message, type = "info") {
+  const prefixes = {
+    success: "✅ SUCCESS: ",
+    error: "❌ ERROR: ",
+    warning: "⚠️ WARNING: ",
+    info: "ℹ️ INFO: "
+  };
+  
+  alert(`${prefixes[type]}${title}\n\n${message}`);
+}
+
+async function showConfirmDialog(title, message, type = "info") {
+  const prefixes = {
+    success: "✅ CONFIRM: ",
+    error: "❌ CONFIRM: ",
+    warning: "⚠️ CONFIRM: ",
+    info: "❓ CONFIRM: "
+  };
+  
+  return confirm(`${prefixes[type]}${title}\n\n${message}`);
+}
+
+// ✅ FIXED: Subject view change listener
+if (subjectView) {
+  subjectView.addEventListener("change", () => {
+    const subject = subjectView.value;
+    const registerTable = document.getElementById("registerTable");
+    const saveBtn = document.getElementById("saveChangesBtn");
+    const exportExcelBtn = document.getElementById("exportExcelBtn");
+
+    if (registerTable) registerTable.classList.add("hidden");
+    if (saveBtn) saveBtn.classList.add("hidden");
+    if (exportExcelBtn) exportExcelBtn.classList.add("hidden");
+  });
+}
+
+// ✅ FIXED: Load Register Button - Proper response handling
+document.getElementById("loadRegisterBtn").addEventListener("click", async () => {
+  const subject = subjectView.value;
+  const registerTable = document.getElementById("registerTable");
+  const saveBtn = document.getElementById("saveChangesBtn");
+  const exportExcelBtn = document.getElementById("exportExcelBtn");
+  const loadBtn = document.getElementById("loadRegisterBtn");
+
+  if (!subject) {
+    showAlert("Missing Subject", "Please select a subject.", "error");
+    return;
+  }
+
+  try {
+    // Show loading state
+    loadBtn.disabled = true;
+    loadBtn.innerHTML = '<span class="loading-spinner"></span> Loading...';
+
+    console.log(`📊 Loading register for: ${subject}`);
+
+    const res = await fetch(`/api/attendance-register/${selectedStream}/sem${selectedSem}/${encodeURIComponent(subject)}`);
+    
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+
+    const data = await res.json();
+    console.log('📊 Register response:', data);
+
+    // ✅ Handle both old and new response formats
+    let students, attendanceMap, subjectInfo;
+    
+    if (data.success && data.data) {
+      // New format
+      ({ students, attendanceMap, subjectInfo } = data.data);
+    } else if (data.students && data.attendanceMap) {
+      // Old format
+      ({ students, attendanceMap } = data);
+      subjectInfo = data.subjectInfo;
+    } else {
+      throw new Error(data.message || 'Failed to load register');
+    }
+
+    const dates = Object.keys(attendanceMap).sort();
+
+    console.log(`✅ Loaded: ${students.length} students, ${dates.length} dates`);
+
+    if (students.length === 0) {
+      const message = subjectInfo?.isLanguageSubject ? 
+        `No students found who chose ${subjectInfo.languageType} language` :
+        'No students found for this subject';
+      showAlert("No Students", message, "warning");
+      return;
+    }
+
+    // ✅ Render table properly
+    await renderAttendanceTableSilently(students, dates, attendanceMap);
+
+    // Show UI elements
+    if (registerTable) registerTable.classList.remove("hidden");
+    if (saveBtn) saveBtn.classList.remove("hidden");
     if (exportExcelBtn) exportExcelBtn.classList.remove("hidden");
 
-    // Show success message
-    const totalStudents = students.length;
+    // ✅ Show single success message
     const avgAttendance = students.length > 0 ?
       (students.reduce((sum, stu) => {
         const attendedCount = dates.filter(date => attendanceMap[date]?.includes(stu.studentID)).length;
         return sum + (dates.length > 0 ? (attendedCount / dates.length) * 100 : 0);
       }, 0) / students.length).toFixed(1) : 0;
 
-    alert(`SUCCESS: Register loaded successfully!\n\nStudents: ${totalStudents}\nDays: ${dates.length}\nAverage Attendance: ${avgAttendance}%`);
+    let successMessage = `Register loaded successfully!\n\n`;
+    successMessage += `Subject: ${subject}\n`;
+    if (subjectInfo?.isLanguageSubject) {
+      successMessage += `Language: ${subjectInfo.languageType} students only\n`;
+    }
+    successMessage += `Students: ${students.length}\n`;
+    successMessage += `Days: ${dates.length}\n`;
+    successMessage += `Average Attendance: ${avgAttendance}%`;
+
+    showAlert("Success", successMessage, "success");
 
   } catch (err) {
     console.error("Error loading attendance register:", err);
-    alert("ERROR: Something went wrong while loading the register. Please try again.");
+    showAlert("Loading Error", `Failed to load register: ${err.message}`, "error");
   } finally {
     // Reset button state
     loadBtn.disabled = false;
-    loadBtn.innerHTML = 'Load Register';
+    loadBtn.innerHTML = '<i class="fas fa-table mr-2"></i>Load Register';
   }
 });
 
-// Helper function to mark unsaved changes
+// ✅ FIXED: Helper function to mark unsaved changes
 function markUnsavedChanges() {
   const saveBtn = document.getElementById("saveChangesBtn");
   if (saveBtn) {
     saveBtn.classList.remove("hidden");
-    saveBtn.classList.add("animate-pulse", "bg-orange-500", "hover:bg-orange-600");
-    saveBtn.classList.remove("bg-indigo-500", "hover:bg-indigo-600");
-    saveBtn.innerHTML = 'Save Changes *';
+    saveBtn.classList.add("animate-pulse", "bg-red-500", "hover:bg-red-600");
+    saveBtn.classList.remove("bg-yellow-500", "hover:bg-yellow-600", "bg-indigo-500", "hover:bg-indigo-600");
+    saveBtn.innerHTML = '<i class="fas fa-save mr-1"></i>Save Changes *';
   }
 }
 
-  
-  // Excel export functionality
+
+// ✅ Make functions globally available
+window.saveAttendanceChanges = saveAttendanceChanges;
+window.silentReloadRegister = silentReloadRegister;
+window.renderAttendanceTableSilently = renderAttendanceTableSilently;
+window.showAlert = showAlert;
+window.showConfirmDialog = showConfirmDialog;
+window.markUnsavedChanges = markUnsavedChanges;
+
+console.log("✅ Fixed attendance system - no more double messages");
+
+  // ✅ FIXED: Excel export without CloudFlare dependency
+function initializeExcelExport() {
   const exportExcelBtn = document.getElementById("exportExcelBtn");
   
-  if (exportExcelBtn) {
-    exportExcelBtn.addEventListener("click", () => {
-      const table = document.querySelector("#registerTable table");
-      if (!table) {
-        alert("No table found to export!");
+  if (!exportExcelBtn) {
+    console.warn("⚠️ Export Excel button not found");
+    return;
+  }
+
+  exportExcelBtn.addEventListener("click", async () => {
+    console.log("🚀 Excel export started");
+    
+    const originalText = exportExcelBtn.innerHTML;
+    exportExcelBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Exporting...';
+    exportExcelBtn.disabled = true;
+
+    try {
+      // ✅ Check for XLSX library (without requiring CloudFlare)
+      if (typeof XLSX === 'undefined') {
+        // ✅ Alternative: Create CSV instead of Excel
+        console.log("📄 XLSX not available, creating CSV export instead");
+        await exportToCSV();
         return;
       }
-  
-      const originalText = exportExcelBtn.innerHTML;
-      exportExcelBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Exporting...';
-      exportExcelBtn.disabled = true;
-  
-      try {
-        const clonedTable = table.cloneNode(true);
-        
-        // Process headers and dates
-        const headerRows = clonedTable.querySelectorAll("thead tr");
-        
-        // Update subject header row
-        if (headerRows[0]) {
-          const subjectCell = headerRows.querySelector("th");
-          if (subjectCell) {
-            subjectCell.textContent = `${subjectView.value} - ${selectedStream} Semester ${selectedSem}`;
-            subjectCell.style.fontWeight = 'bold';
-            subjectCell.style.fontSize = '16px';
-            subjectCell.style.textAlign = 'center';
-            subjectCell.style.backgroundColor = '#4F46E5';
-            subjectCell.style.color = 'white';
+      console.log("✅ XLSX library found");
+
+      // ✅ Find table
+      const table = document.querySelector("#registerTable table") || 
+                   document.querySelector("#registerTable") ||
+                   document.querySelector("table");
+      
+      if (!table) {
+        throw new Error("No attendance table found. Please load the register first.");
+      }
+
+      // ✅ Check for data
+      const tbody = table.querySelector("tbody");
+      const rows = tbody ? tbody.querySelectorAll("tr") : [];
+      
+      if (rows.length === 0) {
+        throw new Error("No student data found. Please load attendance register first.");
+      }
+
+      // ✅ Get subject info
+      const subject = (window.subjectView && subjectView.value) ? subjectView.value : "Attendance";
+      const stream = window.selectedStream || "Unknown";
+      const sem = window.selectedSem || "0";
+
+      // ✅ Process table data
+      const studentStats = [];
+      const processedData = [];
+      
+      // Create header row
+      const headerRow = ["#", "Student ID", "Name"];
+      const dateHeaders = table.querySelectorAll("th[data-date]");
+      
+      dateHeaders.forEach(header => {
+        if (header.dataset.date) {
+          const date = new Date(header.dataset.date);
+          if (!isNaN(date.getTime())) {
+            headerRow.push(date.toLocaleDateString('en-GB', {
+              day: '2-digit',
+              month: '2-digit',
+              year: '2-digit'
+            }));
           }
         }
-        
-        // Show only date without day name
-        if (headerRows[1]) {
-          const dateHeaders = headerRows[1].querySelectorAll("th");
-          dateHeaders.forEach((cell, index) => {
-            if (index > 1 && cell.dataset?.date) {
-              const date = new Date(cell.dataset.date);
-              if (!isNaN(date.getTime())) {
-                // Show only DD/MM/YY format without day name
-                cell.textContent = date.toLocaleDateString('en-IN', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: '2-digit'
-                });
-              }
-            }
-          });
-        }
-  
-        // Process data rows with enhanced formatting
-        const rows = clonedTable.querySelectorAll("tbody tr");
-        const studentStats = [];
-        
-        rows.forEach((row, rowIndex) => {
+      });
+      
+      headerRow.push("Total", "Present", "Percentage");
+      processedData.push(headerRow);
+
+      // Process student rows
+      rows.forEach((row, rowIndex) => {
+        try {
           const cells = row.querySelectorAll("td");
+          if (cells.length < 3) return;
+
+          let studentID = `Student_${rowIndex + 1}`;
+          let studentName = "Unknown";
           let attended = 0;
           let totalDays = 0;
-          
+
           // Extract student info
-          const studentIDElement = cells[0]?.querySelector('span:last-child');
-          const studentNameElement = cells[1]?.querySelector('span:last-child');
-          
-          const studentID = studentIDElement?.textContent?.trim() || `Student ${rowIndex + 1}`;
-          const studentName = studentNameElement?.textContent?.trim() || 'Unknown';
-  
-          // Clean up student ID and name cells for Excel
-          if (cells[0]) {
-            cells[0].textContent = studentID;
-            cells.style.fontWeight = 'bold';
-            cells.style.textAlign = 'center';
-          }
           if (cells[1]) {
-            cells[1].textContent = studentName;
-            cells[1].style.textAlign = 'left';
+            const span = cells.querySelector('span');
+            studentID = span ? span.textContent.trim() : cells.textContent.trim();
           }
-  
-          // Process attendance cells - show "Present"/"Absent"
-          cells.forEach((cell, cellIndex) => {
-            const checkbox = cell.querySelector("input[type='checkbox']");
-            
-            if (checkbox) {
-              totalDays++;
-              const isPresent = checkbox.checked;
-              if (isPresent) attended++;
-              
-              // Show "Present" or "Absent" instead of tick marks
-              cell.textContent = isPresent ? "Present" : "Absent";
-              cell.style.textAlign = 'center';
-              cell.style.fontWeight = 'bold';
-              
-              // Color coding for better visibility
-              if (isPresent) {
-                cell.style.color = 'green';
-                cell.style.backgroundColor = '#f0f9ff';
-              } else {
-                cell.style.color = 'red';
-                cell.style.backgroundColor = '#fef2f2';
-              }
-            }
-          });
-  
-          // Calculate percentage properly for 100%
-          const percentage = totalDays > 0 ? ((attended / totalDays) * 100) : 0;
           
+          if (cells) {
+            const span = cells.querySelector('span');
+            studentName = span ? span.textContent.trim() : cells.textContent.trim();
+          }
+
+          // Create data row
+          const dataRow = [rowIndex + 1, studentID, studentName];
+
+          // Process checkboxes
+          const checkboxes = row.querySelectorAll("input[type='checkbox']");
+          checkboxes.forEach(checkbox => {
+            totalDays++;
+            const isPresent = checkbox.checked;
+            if (isPresent) attended++;
+            dataRow.push(isPresent ? "Present" : "Absent");
+          });
+
+          // Calculate percentage
+          const percentage = totalDays > 0 ? (attended / totalDays) * 100 : 0;
+          
+          dataRow.push(totalDays, attended, `${percentage.toFixed(1)}%`);
+          processedData.push(dataRow);
+
           studentStats.push({
             studentID,
             studentName,
@@ -1516,136 +1833,160 @@ function markUnsavedChanges() {
             attended,
             percentage: percentage.toFixed(1)
           });
-  
-          // Clean up and format summary cells
-          const totalCell = cells[cells.length - 3]; // Total classes
-          const attendedCell = cells[cells.length - 2]; // Attended classes
-          const percentCell = cells[cells.length - 1]; // Percentage
-  
-          if (totalCell) {
-            totalCell.textContent = totalDays;
-            totalCell.style.fontWeight = 'bold';
-            totalCell.style.textAlign = 'center';
-            totalCell.style.backgroundColor = '#f3f4f6';
-          }
-          
-          if (attendedCell) {
-            attendedCell.textContent = attended;
-            attendedCell.style.fontWeight = 'bold';
-            attendedCell.style.textAlign = 'center';
-            attendedCell.style.color = 'green';
-            attendedCell.style.backgroundColor = '#f0f9ff';
-          }
-          
-          if (percentCell) {
-            // Show percentage out of 100% with proper formatting
-            const percentText = `${percentage.toFixed(1)}%`;
-            percentCell.textContent = percentText;
-            percentCell.style.fontWeight = 'bold';
-            percentCell.style.textAlign = 'center';
-            
-            // Color coding based on percentage ranges
-            if (percentage >= 90) {
-              percentCell.style.color = 'green';
-              percentCell.style.backgroundColor = '#f0f9ff';
-            } else if (percentage >= 75) {
-              percentCell.style.color = 'orange';
-              percentCell.style.backgroundColor = '#fffbeb';
-            } else {
-              percentCell.style.color = 'red';
-              percentCell.style.backgroundColor = '#fef2f2';
-            }
-          }
-        });
-  
-        // Generate filename and export
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('en-IN').replace(/\//g, '-');
-        const timeStr = now.toLocaleTimeString('en-IN', { 
-          hour12: false, 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        }).replace(/:/g, '');
-        
-        const filename = `${subjectView.value.replace(/[^\w\s]/g, '').replace(/\s+/g, '_')}_${selectedStream}_S${selectedSem}_${dateStr}_${timeStr}.xlsx`;
-        
-        // Create valid sheet name (max 31 characters)
-        const cleanSubject = subjectView.value.replace(/[^\w\s]/g, '').replace(/\s+/g, '_');
-        const sheetName = `${cleanSubject.substring(0, 20)}_${selectedStream}`.substring(0, 31);
-        
-        // Create workbook with enhanced formatting
-        const wb = XLSX.utils.table_to_book(clonedTable, { sheet: sheetName });
-        
-        // Add some styling to the worksheet
-        const ws = wb.Sheets[sheetName];
-        
-        // Set column widths for better readability
-        const colWidths = [
-          { wch: 15 }, // Student ID
-          { wch: 25 }, // Student Name
-          ...Array(studentStats[0]?.totalDays || 0).fill({ wch: 10 }), // Date columns
-          { wch: 8 },  // Total
-          { wch: 10 }, // Attended  
-          { wch: 10 }  // Percentage
-        ];
-        ws['!cols'] = colWidths;
-        
-        // Export the file
-        XLSX.writeFile(wb, filename);
-        
-        // Success notification with detailed stats
-        const avgAttendance = studentStats.length > 0 ? 
-          (studentStats.reduce((sum, s) => sum + parseFloat(s.percentage), 0) / studentStats.length).toFixed(1) : 0;
-        
-        const excellentStudents = studentStats.filter(s => parseFloat(s.percentage) >= 90).length;
-        const goodStudents = studentStats.filter(s => parseFloat(s.percentage) >= 75 && parseFloat(s.percentage) < 90).length;
-        const needImprovementStudents = studentStats.filter(s => parseFloat(s.percentage) < 75).length;
-        
-        const successMsg = `✅ Excel exported successfully!
-  
-  📚 Subject: ${subjectView.value}
-  📊 Statistics:
-  • Total Students: ${studentStats.length}
-  • Total Classes: ${studentStats[0]?.totalDays || 0}
-  • Average Attendance: ${avgAttendance}%
-  
-  📈 Performance Breakdown:
-  • Excellent (≥90%): ${excellentStudents} students
-  • Good (75-89%): ${goodStudents} students  
-  • Need Improvement (<75%): ${needImprovementStudents} students
-  
-  📁 File: ${filename}
-  
-  ✨ Export Features:
-  • Shows "Present"/"Absent" (not tick marks)
-  • Date format: DD/MM/YY only
-  • Percentage calculated out of 100%
-  • Color-coded cells for easy reading`;
-        
-        if (typeof showNotification === 'function') {
-          showNotification(successMsg, 'success');
-        } else {
-          alert(successMsg);
+
+        } catch (e) {
+          console.warn(`⚠️ Error processing row ${rowIndex}:`, e);
         }
-  
-        console.log(`📊 Excel Export Completed:
-        - File: ${filename}
-        - Sheet: ${sheetName}
-        - Students: ${studentStats.length}
-        - Classes: ${studentStats[0]?.totalDays || 0}
-        - Average Attendance: ${avgAttendance}%
-        - Performance: ${excellentStudents} excellent, ${goodStudents} good, ${needImprovementStudents} need improvement`);
-        
-      } catch (error) {
-        console.error('❌ Error exporting Excel:', error);
-        alert('❌ Error exporting Excel file: ' + error.message);
-      } finally {
-        exportExcelBtn.innerHTML = originalText;
-        exportExcelBtn.disabled = false;
+      });
+
+      if (studentStats.length === 0) {
+        throw new Error("No valid student data found.");
       }
-    });
+
+      // ✅ Create Excel workbook
+      const ws = XLSX.utils.aoa_to_sheet(processedData);
+      
+      // Set column widths
+      ws['!cols'] = [
+        { wch: 5 },  // #
+        { wch: 15 }, // Student ID
+        { wch: 25 }, // Name
+        ...Array(dateHeaders.length).fill({ wch: 10 }), // Dates
+        { wch: 8 },  // Total
+        { wch: 10 }, // Present
+        { wch: 10 }  // %
+      ];
+
+      const wb = XLSX.utils.book_new();
+      const sheetName = `${subject.substring(0, 15)}_Attendance`.substring(0, 31);
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+      // ✅ Generate filename
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-GB').replace(/\//g, '-');
+      const timeStr = now.toLocaleTimeString('en-GB', { 
+        hour12: false, 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      }).replace(/:/g, '');
+      
+      const filename = `${subject.replace(/[^\w]/g, '_')}_${stream.replace(/\s/g, '_')}_S${sem}_${dateStr}_${timeStr}.xlsx`;
+
+      // ✅ Download file
+      XLSX.writeFile(wb, filename);
+
+      // ✅ Success message
+      const avgAttendance = studentStats.length > 0 ? 
+        (studentStats.reduce((sum, s) => sum + parseFloat(s.percentage), 0) / studentStats.length).toFixed(1) : '0.0';
+      
+      showAlert("Export Success", `✅ Excel exported successfully!\n\n📚 Subject: ${subject}\n📊 Students: ${studentStats.length}\n📈 Average: ${avgAttendance}%\n📁 File: ${filename}`, "success");
+
+    } catch (error) {
+      console.error("❌ Excel export error:", error);
+      
+      // ✅ Fallback to CSV if Excel fails
+      console.log("📄 Falling back to CSV export");
+      await exportToCSV();
+      
+    } finally {
+      exportExcelBtn.innerHTML = originalText;
+      exportExcelBtn.disabled = false;
+    }
+  });
+
+  // ✅ CSV Export Fallback Function
+  async function exportToCSV() {
+    try {
+      const table = document.querySelector("#registerTable table");
+      if (!table) throw new Error("No table found");
+
+      const rows = table.querySelectorAll("tbody tr");
+      if (rows.length === 0) throw new Error("No data found");
+
+      let csvContent = "data:text/csv;charset=utf-8,";
+      
+      // Add headers
+      csvContent += "#,Student ID,Name";
+      const dateHeaders = table.querySelectorAll("th[data-date]");
+      dateHeaders.forEach(header => {
+        if (header.dataset.date) {
+          const date = new Date(header.dataset.date);
+          csvContent += "," + date.toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: '2-digit'
+          });
+        }
+      });
+      csvContent += ",Total,Present,Percentage\n";
+
+      // Add data rows
+      rows.forEach((row, index) => {
+        const cells = row.querySelectorAll("td");
+        if (cells.length < 3) return;
+
+        let studentID = cells[1] ? cells[1].textContent.trim() : `Student_${index + 1}`;
+        let studentName = cells ? cells.textContent.trim() : "Unknown";
+        let attended = 0;
+        let totalDays = 0;
+
+        // Clean student info
+        studentID = studentID.replace(/,/g, ' ');
+        studentName = studentName.replace(/,/g, ' ');
+
+        let rowData = `${index + 1},"${studentID}","${studentName}"`;
+
+        // Process checkboxes
+        const checkboxes = row.querySelectorAll("input[type='checkbox']");
+        checkboxes.forEach(checkbox => {
+          totalDays++;
+          const isPresent = checkbox.checked;
+          if (isPresent) attended++;
+          rowData += "," + (isPresent ? "Present" : "Absent");
+        });
+
+        const percentage = totalDays > 0 ? (attended / totalDays) * 100 : 0;
+        rowData += `,${totalDays},${attended},${percentage.toFixed(1)}%\n`;
+        
+        csvContent += rowData;
+      });
+
+      // ✅ Download CSV
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      
+      const subject = (window.subjectView && subjectView.value) ? subjectView.value : "Attendance";
+      const stream = window.selectedStream || "Unknown";
+      const sem = window.selectedSem || "0";
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-GB').replace(/\//g, '-');
+      
+      const filename = `${subject.replace(/[^\w]/g, '_')}_${stream.replace(/\s/g, '_')}_S${sem}_${dateStr}.csv`;
+      link.setAttribute("download", filename);
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showAlert("CSV Export Success", `✅ Data exported as CSV!\n\n📚 Subject: ${subject}\n📁 File: ${filename}`, "success");
+
+    } catch (error) {
+      console.error("❌ CSV export error:", error);
+      showAlert("Export Error", `❌ Export failed: ${error.message}`, "error");
+    }
   }
-  
+}
+
+// ✅ Initialize export
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeExcelExport);
+} else {
+  initializeExcelExport();
+}
+
+console.log("✅ Excel/CSV export initialized (no external CDN required)");
+
   // Subject management functionality
   let subjectsToAdd = [];
   
