@@ -88,7 +88,15 @@
               <span>Dashboard</span>
             </button>
           </li>
-        
+          <li>
+            <a href="/auth.html" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-50 text-gray-700 hover:text-purple-600 transition block">
+              <div class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
+                <i class="fas fa-comments text-sm"></i>
+            </div>
+            <span>My class</span>
+            </a>
+          </li>
+          
         
           <!-- ✅ NEW: Promote Students Button -->
           <li>
@@ -348,6 +356,108 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script>
+  // Add this to your existing DOMContentLoaded event listener in your main page
+document.addEventListener("DOMContentLoaded", () => {
+  // Check if we're coming from myclass.html with a selected class
+  const selectedClassInfo = sessionStorage.getItem('selectedClass');
+  if (selectedClassInfo) {
+    try {
+      const classInfo = JSON.parse(selectedClassInfo);
+      console.log('🎯 Auto-selecting class from myclass.html:', classInfo);
+      
+      // Clear the session storage
+      sessionStorage.removeItem('selectedClass');
+      
+      // Auto-navigate to the selected stream and semester
+      setTimeout(() => {
+        autoSelectStreamAndSemester(classInfo);
+      }, 500);
+    } catch (error) {
+      console.error('❌ Error parsing selected class info:', error);
+    }
+  }
+
+  // Your existing initialization code continues here...
+  addMenuClickListener();
+  // ... rest of your existing code
+});
+
+// Add this new function to your main page JavaScript
+async function autoSelectStreamAndSemester(classInfo) {
+  const { stream, semester, subject } = classInfo;
+  
+  try {
+    console.log(`🚀 Auto-selecting: ${stream} Semester ${semester} - ${subject}`);
+    
+    // Update global variables
+    selectedStream = stream;
+    selectedSem = semester;
+    
+    // Update UI display
+    updateCurrentSelectionDisplay(stream, semester);
+    
+    // Hide home page and show tabs
+    document.getElementById("homePage").classList.add("hidden");
+    semesterSection.classList.add("hidden");
+    tabs.classList.remove("hidden");
+    showTab("markTab");
+    
+    // Load subjects and students
+    await loadSubjectsAndStudents(stream, semester);
+    
+    // Auto-select the subject after a brief delay
+    setTimeout(() => {
+      // Find and select the subject in the dropdown
+      const subjectOption = Array.from(subjectMark.options).find(
+        option => option.value === subject
+      );
+      
+      if (subjectOption) {
+        subjectMark.value = subject;
+        subjectView.value = subject; // Sync both dropdowns
+        
+        // Trigger the change event to filter students
+        subjectMark.dispatchEvent(new Event('change'));
+        
+        console.log(`✅ Auto-selected subject: ${subject}`);
+        
+        // Show success message
+        showAutoSelectMessage(stream, semester, subject);
+      } else {
+        console.warn(`⚠️ Subject "${subject}" not found in dropdown`);
+        alert(`⚠️ Subject "${subject}" not found. Please select manually.`);
+      }
+    }, 1000);
+    
+  } catch (error) {
+    console.error('❌ Error auto-selecting class:', error);
+    alert('❌ Error loading class data. Please try selecting manually.');
+  }
+}
+
+// Add this helper function for success message
+function showAutoSelectMessage(stream, semester, subject) {
+  const messageDiv = document.createElement('div');
+  messageDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 max-w-sm';
+  messageDiv.innerHTML = `
+    <div class="flex items-center">
+      <i class="fas fa-check-circle mr-2"></i>
+      <div>
+        <div class="font-semibold">Class Auto-Selected!</div>
+        <div class="text-sm">${stream} Sem ${semester} - ${subject}</div>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(messageDiv);
+  
+  setTimeout(() => {
+    if (document.body.contains(messageDiv)) {
+      document.body.removeChild(messageDiv);
+    }
+  }, 4000);
+}
+
 // ✅ DOM Element References
 // ✅ Global DOM elements
 // ✅ Global DOM elements
@@ -2374,4 +2484,3 @@ console.log("✅ Excel/CSV export initialized (no external CDN required)");
 
 </body>
 </html>
-
