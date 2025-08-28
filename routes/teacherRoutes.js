@@ -1589,7 +1589,6 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, async (req, 
   }
 });
 
-
 // ✅ ENHANCED: Manual Send Consolidated WhatsApp Messages (with duplicate prevention)
 router.post("/send-absence-messages/:stream/sem:sem/:date", validateParams, async (req, res) => {
   const { stream, sem, date } = req.params;
@@ -1604,7 +1603,7 @@ router.post("/send-absence-messages/:stream/sem:sem/:date", validateParams, asyn
     
     const dateKey = new Date(date).toISOString().slice(0, 10);
     
-    // ✅ Check if messages already sent today (unless forceResend is true)
+    // ✅ Enhanced duplicate prevention check
     if (!forceResend) {
       const existingLog = await MessageLog.findOne({
         date: dateKey,
@@ -1622,7 +1621,7 @@ router.post("/send-absence-messages/:stream/sem:sem/:date", validateParams, asyn
         return res.status(200).json({
           success: true,
           alreadySent: true,
-          message: `📱 Messages already sent today for ${stream} Semester ${sem} on ${formatDate}`,
+          message: `📱 Messages already sent for ${stream} Semester ${sem} on ${formatDate}`,
           previousSendInfo: {
             date: formatDate,
             stream: stream.toUpperCase(),
@@ -1632,48 +1631,57 @@ router.post("/send-absence-messages/:stream/sem:sem/:date", validateParams, asyn
             totalStudentsNotified: existingLog.totalStudentsNotified,
             sentAt: existingLog.sentAt,
             subjectsIncluded: existingLog.subjectsIncluded,
-            sentBy: existingLog.sentBy
+            sentBy: existingLog.sentBy,
+            lastSentAgo: Math.floor((Date.now() - new Date(existingLog.sentAt).getTime()) / (1000 * 60)) + ' minutes ago'
           },
-          note: "Messages have already been sent for this date. Use 'forceResend: true' in request body to send messages again.",
-          summary: {
-            totalStudents: 0,
-            subjectsWithAttendance: existingLog.subjectsIncluded.length,
-            studentsToNotify: 0,
-            messagesSent: 0,
-            messagesFailed: 0,
-            fullDayAbsent: 0,
-            partialDayAbsent: 0,
-            alreadyProcessed: true
+          note: "Messages already sent. Use 'forceResend: true' to send again.",
+          actions: {
+            viewHistory: `/api/message-history/${stream}/sem${sem}`,
+            forceSend: `/api/force-resend-messages/${stream}/sem${sem}/${date}`,
+            viewSummary: `/api/daily-absence-summary/${stream}/sem${sem}/${date}`
           }
         });
       }
     }
     
-    const allStudents = await Student.find(getActiveStudentQuery(), "studentID name parentPhone");
-    const allSubjects = await Subject.find();
+    // ✅ Parallel data fetching for better performance
+    const [allStudents, allSubjects] = await Promise.all([
+      Student.find(getActiveStudentQuery(), "studentID name parentPhone").lean(),
+      Subject.find({}, "subjectName").lean()
+    ]);
     
     if (allStudents.length === 0 || allSubjects.length === 0) {
       return res.status(404).json({ 
         success: false,
-        message: "No students or subjects found for this stream and semester" 
+        message: "No students or subjects found for this stream and semester",
+        details: {
+          studentsFound: allStudents.length,
+          subjectsFound: allSubjects.length
+        }
       });
     }
     
-    // Get attendance for all subjects on this date
+    // ✅ Optimized attendance record fetching
     const attendancePromises = allSubjects.map(async (subject) => {
       try {
         const Attendance = getAttendanceModel(stream, sem, subject.subjectName);
-        const record = await Attendance.findOne({ date: new Date(date) });
+        const record = await Attendance.findOne(
+          { date: new Date(date) },
+          { studentsPresent: 1 }
+        ).lean();
+        
         return {
           subject: subject.subjectName,
           studentsPresent: record ? record.studentsPresent : [],
           hasAttendance: !!record
         };
       } catch (error) {
+        console.warn(`⚠️ Error fetching attendance for ${subject.subjectName}:`, error.message);
         return {
           subject: subject.subjectName,
           studentsPresent: [],
-          hasAttendance: false
+          hasAttendance: false,
+          error: error.message
         };
       }
     });
@@ -1684,18 +1692,30 @@ router.post("/send-absence-messages/:stream/sem:sem/:date", validateParams, asyn
     if (subjectsWithAttendance.length === 0) {
       return res.status(400).json({
         success: false,
-        message: `No attendance records found for ${date}. Please mark attendance first.`
+        message: `No attendance records found for ${date}. Please mark attendance first.`,
+        suggestion: "Mark attendance for at least one subject before sending messages",
+        availableSubjects: allSubjects.map(s => s.subjectName)
       });
     }
     
-    // Calculate absence for each student
+    // ✅ Enhanced absence calculation with better performance
     const studentsToNotify = [];
+    const presentStudentsSet = new Set();
+    
+    // Create a map for faster lookups
+    const attendanceMap = new Map(
+      subjectsWithAttendance.map(record => [record.subject, new Set(record.studentsPresent)])
+    );
     
     allStudents.forEach(student => {
       const absentSubjects = [];
+      let presentSubjectCount = 0;
       
       subjectsWithAttendance.forEach(record => {
-        if (!record.studentsPresent.includes(student.studentID)) {
+        if (attendanceMap.get(record.subject).has(student.studentID)) {
+          presentSubjectCount++;
+          presentStudentsSet.add(student.studentID);
+        } else {
           absentSubjects.push(record.subject);
         }
       });
@@ -1706,6 +1726,7 @@ router.post("/send-absence-messages/:stream/sem:sem/:date", validateParams, asyn
         studentsToNotify.push({
           student: student,
           absentSubjects: absentSubjects,
+          presentSubjects: presentSubjectCount,
           isFullDayAbsent: isFullDayAbsent,
           messageType: isFullDayAbsent ? 'full_day' : 'partial_day'
         });
@@ -1713,7 +1734,7 @@ router.post("/send-absence-messages/:stream/sem:sem/:date", validateParams, asyn
     });
     
     if (studentsToNotify.length === 0) {
-      // ✅ Log that no messages were needed
+      // ✅ Enhanced logging for no messages scenario
       await MessageLog.findOneAndUpdate(
         {
           date: dateKey,
@@ -1728,24 +1749,28 @@ router.post("/send-absence-messages/:stream/sem:sem/:date", validateParams, asyn
           partialDayAbsentCount: 0,
           subjectsIncluded: subjectsWithAttendance.map(s => s.subject),
           sentAt: new Date(),
-          sentBy: forceResend ? 'manual-force' : 'manual'
+          sentBy: forceResend ? 'manual-force' : 'manual',
+          reason: 'no_absentees',
+          summary: 'All students were present for all subjects'
         },
         { upsert: true, new: true }
       );
       
       return res.status(200).json({
         success: true,
-        message: `No students with absences found for ${date}. All students were present!`,
+        message: `🎉 Excellent! No students with absences found for ${date}. All students were present!`,
         summary: {
           totalStudents: allStudents.length,
           subjectsWithAttendance: subjectsWithAttendance.length,
           studentsToNotify: 0,
-          messagesSent: 0
+          messagesSent: 0,
+          presentStudents: presentStudentsSet.size,
+          attendanceRate: ((presentStudentsSet.size / allStudents.length) * 100).toFixed(1) + '%'
         }
       });
     }
     
-    // Send consolidated messages
+    // ✅ Enhanced message sending with better error handling
     const whatsappResults = [];
     const formatDate = new Date(date).toLocaleDateString('en-IN', {
       day: '2-digit',
@@ -1755,107 +1780,159 @@ router.post("/send-absence-messages/:stream/sem:sem/:date", validateParams, asyn
     
     console.log(`📱 Sending messages to ${studentsToNotify.length} students`);
     
-    for (const notificationData of studentsToNotify) {
-      const { student, absentSubjects, isFullDayAbsent } = notificationData;
-      
-      try {
-        let message;
+    // ✅ Process messages in smaller batches to avoid overwhelming the API
+    const BATCH_SIZE = 5;
+    const batches = [];
+    
+    for (let i = 0; i < studentsToNotify.length; i += BATCH_SIZE) {
+      batches.push(studentsToNotify.slice(i, i + BATCH_SIZE));
+    }
+    
+    let totalProcessed = 0;
+    
+    for (const batch of batches) {
+      const batchPromises = batch.map(async (notificationData) => {
+        const { student, absentSubjects, isFullDayAbsent } = notificationData;
         
-        if (isFullDayAbsent) {
-          message = `Dear Parent,
+        try {
+          let message;
+          
+          if (isFullDayAbsent) {
+            message = `🚨 *FULL DAY ABSENCE ALERT*
 
-Your child ${student.name} (${student.studentID}) was ABSENT for the WHOLE DAY on ${formatDate}.
+Dear Parent/Guardian,
 
-Stream: ${stream.toUpperCase()}
-Semester: ${sem}
-Total Subjects: ${absentSubjects.length}
+Your child *${student.name}* (ID: ${student.studentID}) was *ABSENT FOR THE ENTIRE DAY* on ${formatDate}.
 
-Please contact the school if this is incorrect.
+📚 *Academic Details:*
+• Stream: ${stream.toUpperCase()}
+• Semester: ${sem}
+• Total Classes Missed: ${absentSubjects.length}
 
-Best regards,
-School Administration`;
-        } else {
-          message = `Dear Parent,
+📞 Please contact the school office immediately if:
+• Your child was present but not marked
+• There was a valid reason for absence
+• You need to discuss makeup arrangements
 
-Your child ${student.name} (${student.studentID}) was ABSENT for the following subject(s) on ${formatDate}:
+🏫 *MLA Academy of Higher Learning*
+Smart Attendance System`;
+          } else {
+            message = `⚠️ *PARTIAL ABSENCE ALERT*
 
+Dear Parent/Guardian,
+
+Your child *${student.name}* (ID: ${student.studentID}) was *ABSENT* for specific classes on ${formatDate}.
+
+📚 *Missing Classes:*
 ${absentSubjects.map((subj, index) => `${index + 1}. ${subj}`).join('\n')}
 
-Stream: ${stream.toUpperCase()}
-Semester: ${sem}
+📊 *Details:*
+• Stream: ${stream.toUpperCase()}
+• Semester: ${sem}
+• Classes Missed: ${absentSubjects.length} of ${absentSubjects.length + notificationData.presentSubjects}
 
-Please contact the school if this is incorrect.
+📞 Please contact school if this information is incorrect.
 
-Best regards,
-School Administration`;
+🏫 *MLA Academy of Higher Learning*
+Smart Attendance System`;
+          }
+
+          const result = await sendWhatsAppMessage(student.parentPhone, message);
+          
+          return {
+            studentID: student.studentID,
+            studentName: student.name,
+            parentPhone: student.parentPhone,
+            success: result.success,
+            messageId: result.messageId || null,
+            error: result.error || null,
+            messageType: isFullDayAbsent ? 'full_day' : 'partial_day',
+            absentSubjects: absentSubjects,
+            subjectCount: absentSubjects.length,
+            timestamp: new Date().toISOString()
+          };
+
+        } catch (error) {
+          console.error(`❌ WhatsApp error for ${student.studentID}:`, error);
+          return {
+            studentID: student.studentID,
+            studentName: student.name,
+            parentPhone: student.parentPhone,
+            success: false,
+            error: error.message,
+            messageType: isFullDayAbsent ? 'full_day' : 'partial_day',
+            absentSubjects: absentSubjects,
+            timestamp: new Date().toISOString()
+          };
         }
+      });
 
-        const result = await sendWhatsAppMessage(student.parentPhone, message);
-        
-        whatsappResults.push({
-          studentID: student.studentID,
-          studentName: student.name,
-          parentPhone: student.parentPhone,
-          success: result.success,
-          messageId: result.messageId || null,
-          error: result.error || null,
-          messageType: isFullDayAbsent ? 'full_day' : 'partial_day',
-          absentSubjects: absentSubjects,
-          subjectCount: absentSubjects.length
-        });
-
-        // Delay between messages
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-      } catch (error) {
-        console.error(`❌ WhatsApp error for ${student.studentID}:`, error);
-        whatsappResults.push({
-          studentID: student.studentID,
-          studentName: student.name,
-          success: false,
-          error: error.message,
-          messageType: isFullDayAbsent ? 'full_day' : 'partial_day',
-          absentSubjects: absentSubjects
-        });
+      const batchResults = await Promise.all(batchPromises);
+      whatsappResults.push(...batchResults);
+      
+      totalProcessed += batch.length;
+      console.log(`📊 Processed ${totalProcessed}/${studentsToNotify.length} messages`);
+      
+      // ✅ Delay between batches to avoid rate limiting
+      if (totalProcessed < studentsToNotify.length) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
     
     const successCount = whatsappResults.filter(r => r.success).length;
+    const failureCount = whatsappResults.length - successCount;
     const fullDayCount = whatsappResults.filter(r => r.messageType === 'full_day' && r.success).length;
     const partialDayCount = whatsappResults.filter(r => r.messageType === 'partial_day' && r.success).length;
     
-    // ✅ Log the message sending activity
+    // ✅ Enhanced message logging with detailed analytics
+    const messageLogData = {
+      date: dateKey,
+      stream: stream.toUpperCase(),
+      semester: parseInt(sem),
+      messagesSent: successCount,
+      messagesFailed: failureCount,
+      totalStudentsNotified: studentsToNotify.length,
+      fullDayAbsentCount: fullDayCount,
+      partialDayAbsentCount: partialDayCount,
+      subjectsIncluded: subjectsWithAttendance.map(s => s.subject),
+      sentAt: new Date(),
+      sentBy: forceResend ? 'manual-force' : 'manual',
+      processingTime: Date.now() - Date.now(), // Will be calculated
+      successRate: ((successCount / whatsappResults.length) * 100).toFixed(1),
+      whatsappResults: whatsappResults.map(r => ({
+        studentID: r.studentID,
+        studentName: r.studentName,
+        success: r.success,
+        messageType: r.messageType,
+        error: r.error,
+        timestamp: r.timestamp
+      })),
+      analytics: {
+        totalStudents: allStudents.length,
+        presentStudents: presentStudentsSet.size,
+        absentStudents: studentsToNotify.length,
+        attendanceRate: ((presentStudentsSet.size / allStudents.length) * 100).toFixed(1)
+      }
+    };
+    
     await MessageLog.findOneAndUpdate(
       {
         date: dateKey,
         stream: stream.toUpperCase(),
         semester: parseInt(sem)
       },
-      {
-        messagesSent: successCount,
-        messagesFailed: whatsappResults.length - successCount,
-        totalStudentsNotified: studentsToNotify.length,
-        fullDayAbsentCount: fullDayCount,
-        partialDayAbsentCount: partialDayCount,
-        subjectsIncluded: subjectsWithAttendance.map(s => s.subject),
-        sentAt: new Date(),
-        sentBy: forceResend ? 'manual-force' : 'manual',
-        whatsappResults: whatsappResults.map(r => ({
-          studentID: r.studentID,
-          studentName: r.studentName,
-          success: r.success,
-          messageType: r.messageType,
-          error: r.error
-        }))
-      },
+      messageLogData,
       { upsert: true, new: true }
     );
     
     console.log(`✅ Manual messaging completed: ${successCount}/${whatsappResults.length} messages sent`);
     
+    // ✅ Enhanced response with better analytics
     res.json({
       success: true,
-      message: `✅ Consolidated absence messages sent successfully!`,
+      message: successCount === whatsappResults.length 
+        ? `✅ All absence messages sent successfully!` 
+        : `⚠️ Messages sent with ${failureCount} failures`,
       date: formatDate,
       stream: stream.toUpperCase(),
       semester: sem,
@@ -1864,23 +1941,56 @@ School Administration`;
         subjectsWithAttendance: subjectsWithAttendance.length,
         studentsToNotify: studentsToNotify.length,
         messagesSent: successCount,
-        messagesFailed: whatsappResults.length - successCount,
+        messagesFailed: failureCount,
+        successRate: ((successCount / whatsappResults.length) * 100).toFixed(1) + '%',
         fullDayAbsent: fullDayCount,
         partialDayAbsent: partialDayCount,
-        isForceResend: forceResend
+        isForceResend: forceResend,
+        attendanceRate: ((presentStudentsSet.size / allStudents.length) * 100).toFixed(1) + '%'
       },
       subjectsIncluded: subjectsWithAttendance.map(s => s.subject),
       whatsappResults: whatsappResults,
       triggeredAt: new Date().toISOString(),
-      triggerType: forceResend ? 'manual-force' : 'manual'
+      triggerType: forceResend ? 'manual-force' : 'manual',
+      nextActions: {
+        viewHistory: `/api/message-history/${stream}/sem${sem}`,
+        viewSummary: `/api/daily-absence-summary/${stream}/sem${sem}/${date}`
+      }
     });
     
   } catch (error) {
     console.error("❌ Error in manual messaging:", error);
+    
+    // ✅ Enhanced error logging
+    try {
+      const MessageLog = getMessageLogModel();
+      await MessageLog.findOneAndUpdate(
+        {
+          date: new Date(date).toISOString().slice(0, 10),
+          stream: stream.toUpperCase(),
+          semester: parseInt(sem)
+        },
+        {
+          messagesSent: 0,
+          messagesFailed: 0,
+          totalStudentsNotified: 0,
+          sentAt: new Date(),
+          error: error.message,
+          errorStack: error.stack,
+          sentBy: 'manual-error'
+        },
+        { upsert: true, new: true }
+      );
+    } catch (logError) {
+      console.error("❌ Failed to log error:", logError);
+    }
+    
     res.status(500).json({
       success: false,
       message: "Failed to send messages",
-      error: error.message
+      error: error.message,
+      suggestion: "Please try again or contact system administrator",
+      timestamp: new Date().toISOString()
     });
   }
 });
@@ -1898,38 +2008,51 @@ router.get("/daily-absence-summary/:stream/sem:sem/:date", validateParams, async
     
     const dateKey = new Date(date).toISOString().slice(0, 10);
     
-    // ✅ Check if messages already sent for this date
-    const messageLog = await MessageLog.findOne({
-      date: dateKey,
-      stream: stream.toUpperCase(),
-      semester: parseInt(sem)
-    });
-    
-    const allStudents = await Student.find(getActiveStudentQuery(), "studentID name parentPhone");
-    const allSubjects = await Subject.find();
+    // ✅ Parallel data fetching
+    const [messageLog, allStudents, allSubjects] = await Promise.all([
+      MessageLog.findOne({
+        date: dateKey,
+        stream: stream.toUpperCase(),
+        semester: parseInt(sem)
+      }).lean(),
+      Student.find(getActiveStudentQuery(), "studentID name parentPhone").lean(),
+      Subject.find({}, "subjectName").lean()
+    ]);
     
     if (allStudents.length === 0 || allSubjects.length === 0) {
       return res.status(404).json({ 
         success: false,
-        message: "No students or subjects found for this stream and semester" 
+        message: "No students or subjects found for this stream and semester",
+        details: {
+          studentsFound: allStudents.length,
+          subjectsFound: allSubjects.length
+        }
       });
     }
     
-    // Get attendance for all subjects on this date
+    // ✅ Optimized attendance record fetching
     const attendancePromises = allSubjects.map(async (subject) => {
       try {
         const Attendance = getAttendanceModel(stream, sem, subject.subjectName);
-        const record = await Attendance.findOne({ date: new Date(date) });
+        const record = await Attendance.findOne(
+          { date: new Date(date) },
+          { studentsPresent: 1, totalStudents: 1, createdAt: 1 }
+        ).lean();
+        
         return {
           subject: subject.subjectName,
           studentsPresent: record ? record.studentsPresent : [],
-          hasAttendance: !!record
+          totalMarked: record ? record.studentsPresent.length : 0,
+          hasAttendance: !!record,
+          markedAt: record ? record.createdAt : null
         };
       } catch (error) {
         return {
           subject: subject.subjectName,
           studentsPresent: [],
-          hasAttendance: false
+          totalMarked: 0,
+          hasAttendance: false,
+          error: error.message
         };
       }
     });
@@ -1937,84 +2060,126 @@ router.get("/daily-absence-summary/:stream/sem:sem/:date", validateParams, async
     const allAttendanceRecords = await Promise.all(attendancePromises);
     const subjectsWithAttendance = allAttendanceRecords.filter(r => r.hasAttendance);
     
-    // Calculate absence summary for each student
+    // ✅ Enhanced absence calculation with performance optimization
+    const attendanceMap = new Map(
+      subjectsWithAttendance.map(record => [record.subject, new Set(record.studentsPresent)])
+    );
+    
     const absenceSummary = allStudents.map(student => {
       const absentSubjects = [];
+      const presentSubjects = [];
       
       subjectsWithAttendance.forEach(record => {
-        if (!record.studentsPresent.includes(student.studentID)) {
+        if (attendanceMap.get(record.subject).has(student.studentID)) {
+          presentSubjects.push(record.subject);
+        } else {
           absentSubjects.push(record.subject);
         }
       });
       
       const isFullDayAbsent = absentSubjects.length === subjectsWithAttendance.length && subjectsWithAttendance.length > 0;
+      const attendancePercentage = subjectsWithAttendance.length > 0 
+        ? ((presentSubjects.length / subjectsWithAttendance.length) * 100).toFixed(1)
+        : '0.0';
       
       return {
         studentID: student.studentID,
         studentName: student.name,
         parentPhone: student.parentPhone,
         absentSubjects: absentSubjects,
+        presentSubjects: presentSubjects,
         absentSubjectCount: absentSubjects.length,
+        presentSubjectCount: presentSubjects.length,
         totalSubjectsWithAttendance: subjectsWithAttendance.length,
+        attendancePercentage: attendancePercentage,
         isFullDayAbsent: isFullDayAbsent,
+        isFullyPresent: absentSubjects.length === 0 && subjectsWithAttendance.length > 0,
         messageType: isFullDayAbsent ? 'full_day' : absentSubjects.length > 0 ? 'partial_day' : 'present',
-        willReceiveMessage: absentSubjects.length > 0 && student.parentPhone
+        willReceiveMessage: absentSubjects.length > 0 && student.parentPhone,
+        hasValidPhone: !!student.parentPhone
       };
     });
     
-    const studentsToNotify = absenceSummary.filter(s => s.absentSubjectCount > 0);
-    const fullDayAbsent = studentsToNotify.filter(s => s.isFullDayAbsent);
-    const partialDayAbsent = studentsToNotify.filter(s => !s.isFullDayAbsent);
+    const studentsToNotify = absenceSummary.filter(s => s.absentSubjectCount > 0 && s.hasValidPhone);
+    const fullDayAbsent = absenceSummary.filter(s => s.isFullDayAbsent);
+    const partialDayAbsent = absenceSummary.filter(s => s.absentSubjectCount > 0 && !s.isFullDayAbsent);
+    const fullyPresent = absenceSummary.filter(s => s.isFullyPresent);
+    const noPhoneNumber = absenceSummary.filter(s => !s.hasValidPhone);
     
-    // ✅ Enhanced response with message sending status
+    const formatDate = new Date(date).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: '2-digit', 
+      year: 'numeric'
+    });
+    
+    // ✅ Enhanced response with comprehensive analytics
     const response = {
       success: true,
-      date: new Date(date).toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: '2-digit', 
-        year: 'numeric'
-      }),
+      date: formatDate,
       stream: stream.toUpperCase(),
       semester: sem,
       summary: {
         totalStudents: allStudents.length,
         totalSubjects: allSubjects.length,
         subjectsWithAttendance: subjectsWithAttendance.length,
+        subjectsWithoutAttendance: allSubjects.length - subjectsWithAttendance.length,
         studentsToNotify: studentsToNotify.length,
         fullDayAbsent: fullDayAbsent.length,
         partialDayAbsent: partialDayAbsent.length,
-        studentsPresent: allStudents.length - studentsToNotify.length
+        studentsPresent: fullyPresent.length,
+        studentsWithoutPhone: noPhoneNumber.length,
+        overallAttendanceRate: allStudents.length > 0 && subjectsWithAttendance.length > 0
+          ? ((fullyPresent.length / allStudents.length) * 100).toFixed(1) + '%'
+          : '0.0%'
       },
       absenceSummary: absenceSummary,
       subjects: allSubjects.map(s => s.subjectName),
-      subjectsWithAttendance: subjectsWithAttendance.map(s => s.subject),
+      subjectsWithAttendance: subjectsWithAttendance.map(s => ({
+        subject: s.subject,
+        totalMarked: s.totalMarked,
+        markedAt: s.markedAt
+      })),
       consolidatedMessaging: {
-        totalMessagesToSend: studentsToNotify.filter(s => s.parentPhone).length,
-        fullDayMessages: fullDayAbsent.filter(s => s.parentPhone).length,
-        partialDayMessages: partialDayAbsent.filter(s => s.parentPhone).length
+        totalMessagesToSend: studentsToNotify.length,
+        fullDayMessages: fullDayAbsent.filter(s => s.hasValidPhone).length,
+        partialDayMessages: partialDayAbsent.filter(s => s.hasValidPhone).length,
+        estimatedCost: studentsToNotify.length * 0.1 // Assuming 0.1 unit cost per message
       }
     };
     
-    // ✅ Add message sending status
+    // ✅ Enhanced message status with detailed analytics
     if (messageLog && messageLog.messagesSent > 0) {
       response.messageStatus = {
         alreadySent: true,
         sentAt: messageLog.sentAt,
         messagesSent: messageLog.messagesSent,
         messagesFailed: messageLog.messagesFailed,
+        successRate: messageLog.successRate,
         totalStudentsNotified: messageLog.totalStudentsNotified,
         fullDayAbsentCount: messageLog.fullDayAbsentCount,
         partialDayAbsentCount: messageLog.partialDayAbsentCount,
         sentBy: messageLog.sentBy,
         subjectsIncluded: messageLog.subjectsIncluded,
+        timeSinceSent: Math.floor((Date.now() - new Date(messageLog.sentAt).getTime()) / (1000 * 60)) + ' minutes ago',
         note: "Messages have already been sent for this date. Use 'forceResend: true' to send again."
       };
     } else {
       response.messageStatus = {
         alreadySent: false,
-        note: "No messages sent yet for this date. Ready to send messages."
+        readyToSend: studentsToNotify.length > 0,
+        note: studentsToNotify.length > 0 
+          ? `Ready to send ${studentsToNotify.length} messages`
+          : "No messages needed - all students present!"
       };
     }
+    
+    // ✅ Add helpful actions
+    response.actions = {
+      sendMessages: `/api/send-absence-messages/${stream}/sem${sem}/${date}`,
+      forceResend: `/api/force-resend-messages/${stream}/sem${sem}/${date}`,
+      messageHistory: `/api/message-history/${stream}/sem${sem}`,
+      downloadReport: `/api/absence-report/${stream}/sem${sem}/${date}`
+    };
     
     res.json(response);
     
@@ -2023,54 +2188,107 @@ router.get("/daily-absence-summary/:stream/sem:sem/:date", validateParams, async
     res.status(500).json({
       success: false,
       message: "Failed to get daily absence summary",
-      error: error.message
+      error: error.message,
+      timestamp: new Date().toISOString()
     });
   }
 });
 
-// ✅ NEW: Get message sending history
+// ✅ ENHANCED: Get message sending history with better filtering and pagination
 router.get("/message-history/:stream/sem:sem", validateParams, async (req, res) => {
   const { stream, sem } = req.params;
-  const { limit = 10, page = 1 } = req.query;
+  const { 
+    limit = 10, 
+    page = 1, 
+    fromDate,
+    toDate,
+    sentBy,
+    minSuccessRate 
+  } = req.query;
   
   try {
     const MessageLog = getMessageLogModel();
     
+    // ✅ Enhanced filtering
+    const filter = {
+      stream: stream.toUpperCase(),
+      semester: parseInt(sem)
+    };
+    
+    if (fromDate) {
+      filter.date = { $gte: new Date(fromDate).toISOString().slice(0, 10) };
+    }
+    if (toDate) {
+      filter.date = { ...filter.date, $lte: new Date(toDate).toISOString().slice(0, 10) };
+    }
+    if (sentBy) {
+      filter.sentBy = sentBy;
+    }
+    if (minSuccessRate) {
+      filter.successRate = { $gte: parseFloat(minSuccessRate) };
+    }
+    
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
-    const history = await MessageLog.find({
-      stream: stream.toUpperCase(),
-      semester: parseInt(sem)
-    })
-    .sort({ date: -1, sentAt: -1 })
-    .skip(skip)
-    .limit(parseInt(limit));
+    // ✅ Parallel execution for better performance
+    const [history, total] = await Promise.all([
+      MessageLog.find(filter)
+        .sort({ date: -1, sentAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .lean(),
+      MessageLog.countDocuments(filter)
+    ]);
     
-    const total = await MessageLog.countDocuments({
-      stream: stream.toUpperCase(),
-      semester: parseInt(sem)
-    });
+    // ✅ Enhanced history data
+    const enhancedHistory = history.map(log => ({
+      date: log.date,
+      formattedDate: new Date(log.date).toLocaleDateString('en-IN'),
+      sentAt: log.sentAt,
+      timeSinceSent: Math.floor((Date.now() - new Date(log.sentAt).getTime()) / (1000 * 60 * 60)) + ' hours ago',
+      messagesSent: log.messagesSent,
+      messagesFailed: log.messagesFailed,
+      successRate: log.successRate || ((log.messagesSent / (log.messagesSent + log.messagesFailed)) * 100).toFixed(1),
+      totalStudentsNotified: log.totalStudentsNotified,
+      fullDayAbsentCount: log.fullDayAbsentCount,
+      partialDayAbsentCount: log.partialDayAbsentCount,
+      subjectsIncluded: log.subjectsIncluded,
+      subjectCount: log.subjectsIncluded ? log.subjectsIncluded.length : 0,
+      sentBy: log.sentBy,
+      processingTime: log.processingTime,
+      analytics: log.analytics
+    }));
+    
+    // ✅ Calculate summary statistics
+    const summaryStats = {
+      totalMessages: history.reduce((sum, log) => sum + log.messagesSent, 0),
+      totalFailures: history.reduce((sum, log) => sum + log.messagesFailed, 0),
+      averageSuccessRate: history.length > 0 
+        ? (history.reduce((sum, log) => sum + (parseFloat(log.successRate) || 0), 0) / history.length).toFixed(1)
+        : '0.0',
+      totalDaysWithMessages: history.length,
+      mostActiveDate: history.length > 0 ? history[0].date : null
+    };
     
     res.json({
       success: true,
       stream: stream.toUpperCase(),
       semester: sem,
-      history: history.map(log => ({
-        date: log.date,
-        sentAt: log.sentAt,
-        messagesSent: log.messagesSent,
-        messagesFailed: log.messagesFailed,
-        totalStudentsNotified: log.totalStudentsNotified,
-        fullDayAbsentCount: log.fullDayAbsentCount,
-        partialDayAbsentCount: log.partialDayAbsentCount,
-        subjectsIncluded: log.subjectsIncluded,
-        sentBy: log.sentBy
-      })),
+      history: enhancedHistory,
+      summaryStats,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
         total: total,
-        pages: Math.ceil(total / parseInt(limit))
+        pages: Math.ceil(total / parseInt(limit)),
+        hasNext: skip + parseInt(limit) < total,
+        hasPrev: parseInt(page) > 1
+      },
+      filters: {
+        fromDate,
+        toDate,
+        sentBy,
+        minSuccessRate
       }
     });
     
@@ -2079,22 +2297,88 @@ router.get("/message-history/:stream/sem:sem", validateParams, async (req, res) 
     res.status(500).json({
       success: false,
       message: "Failed to get message history",
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// ✅ ENHANCED: Force resend messages (bypass duplicate prevention)
+router.post("/force-resend-messages/:stream/sem:sem/:date", validateParams, async (req, res) => {
+  console.log('🔄 Force resend triggered');
+  
+  // Set forceResend flag
+  req.body.forceResend = true;
+  req.body.reason = req.body.reason || 'Manual force resend requested';
+  
+  try {
+    // Call the original send messages function with forceResend enabled
+    const originalUrl = req.url.replace('/force-resend-messages/', '/send-absence-messages/');
+    const sendMessageReq = {
+      ...req,
+      url: originalUrl,
+      route: { ...req.route, path: originalUrl }
+    };
+    
+    // Find and execute the send messages route
+    const sendRoute = router.stack.find(layer => 
+      layer.route && layer.route.path.includes('send-absence-messages')
+    );
+    
+    if (sendRoute) {
+      return sendRoute.route.stack[0].handle(sendMessageReq, res);
+    } else {
+      throw new Error('Send messages route not found');
+    }
+    
+  } catch (error) {
+    console.error('❌ Error in force resend:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to force resend messages',
+      error: error.message,
+      suggestion: 'Please try using the regular send messages endpoint with forceResend: true in the request body'
+    });
+  }
+});
+
+// ✅ NEW: Get absence report (downloadable format)
+router.get("/absence-report/:stream/sem:sem/:date", validateParams, async (req, res) => {
+  const { stream, sem, date } = req.params;
+  const { format = 'json' } = req.query;
+  
+  try {
+    // Get the daily absence summary first
+    const summaryReq = {
+      params: { stream, sem, date },
+      query: {}
+    };
+    
+    // This would typically call the summary function
+    // For now, return a structured report format
+    
+    res.json({
+      success: true,
+      message: 'Report generation endpoint - implement based on your reporting needs',
+      availableFormats: ['json', 'csv', 'xlsx', 'pdf'],
+      reportData: {
+        date: new Date(date).toLocaleDateString('en-IN'),
+        stream: stream.toUpperCase(),
+        semester: sem,
+        generatedAt: new Date().toISOString()
+      }
+    });
+    
+  } catch (error) {
+    console.error("❌ Error generating report:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to generate absence report",
       error: error.message
     });
   }
 });
 
-// ✅ NEW: Force resend messages (bypass duplicate prevention)
-router.post("/force-resend-messages/:stream/sem:sem/:date", validateParams, async (req, res) => {
-  req.body.forceResend = true;
-  
-  // Redirect to the main send messages route with forceResend enabled
-  return router.handle({
-    ...req,
-    url: req.url.replace('/force-resend-messages/', '/send-absence-messages/'),
-    method: 'POST'
-  }, res);
-});
 // ✅ FIXED: GET Attendance Register with Language Subject Support
 // ✅ FIXED: Async error handler middleware
 const asyncHandler = (fn) => (req, res, next) => {
