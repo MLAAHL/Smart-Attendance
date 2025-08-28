@@ -212,6 +212,14 @@
       
       <!-- Header -->
       <div class="text-center mb-12 animate-fade-in">
+        <!-- Back Button -->
+        <div class="flex justify-start mb-6">
+          <a href="index.html" class="inline-flex items-center px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-200 hover:scale-105 backdrop-blur-sm border border-white/20">
+            <i class="fas fa-arrow-left mr-2"></i>
+            <span class="font-medium">Back to Dashboard</span>
+          </a>
+        </div>
+      
         <div class="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full shadow-lg mb-6">
           <i class="fas fa-paper-plane text-3xl text-purple-600"></i>
         </div>
@@ -219,6 +227,8 @@
         <p class="text-xl text-purple-100 max-w-3xl mx-auto">
           Send consolidated absence notifications to parents on-demand - anytime, any date, any semester
         </p>
+      </div>
+      
         
         <!-- System Status -->
         <div class="mt-6 inline-flex items-center bg-white bg-opacity-20 rounded-lg px-4 py-2">
@@ -386,22 +396,50 @@
     }
 
     // Server connection check
-    async function checkServerConnection() {
+    async function checkServerConnectionDebug() {
+      console.log('🔍 Starting server connection check...');
+      
       try {
-        updateSystemStatus('loading', 'Checking server connection...');
+        // ✅ Check if endpoint exists first
+        console.log('📡 Testing basic connectivity...');
         
-        const response = await fetch('/api/promotion-options');
+        const response = await fetch('/api/promotion-options', {
+          method: 'HEAD', // Just check if endpoint exists
+          cache: 'no-cache'
+        });
+        
+        console.log('📊 Response details:', {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok,
+          type: response.type,
+          url: response.url,
+          headers: Object.fromEntries(response.headers.entries())
+        });
+        
         if (response.ok) {
+          // Now try GET request
+          const fullResponse = await fetch('/api/promotion-options');
+          console.log('📄 Full response:', fullResponse);
+          
           updateSystemStatus('connected', 'Server connected - Ready for messaging');
           showNotification('✅ Server connected successfully', 'success');
         } else {
-          throw new Error(`Server responded with ${response.status}`);
+          console.error('❌ Server returned error:', response.status, response.statusText);
+          updateSystemStatus('disconnected', `Server error: ${response.status}`);
+          showNotification(`❌ Server error: ${response.status} ${response.statusText}`, 'error');
         }
+        
       } catch (error) {
-        updateSystemStatus('disconnected', 'Server connection failed');
-        showNotification('❌ Server connection failed. Please check your connection.', 'error');
+        console.error('❌ Fetch failed completely:', error);
+        console.error('Error type:', error.constructor.name);
+        console.error('Error message:', error.message);
+        
+        updateSystemStatus('disconnected', 'Connection failed');
+        showNotification(`❌ Connection failed: ${error.message}`, 'error');
       }
     }
+    
 
     // Validation
     function validateForm() {
@@ -563,271 +601,800 @@
         isLoading = false;
       }
     }
-
-    // ENHANCED: Display preview with message status
-    function displayPreview(data) {
-      const resultsSection = document.getElementById('resultsSection');
-      const statsCards = document.getElementById('statsCards');
-      const resultsContent = document.getElementById('resultsContent');
-      
-      if (!resultsSection || !statsCards || !resultsContent) return;
-      
-      // Show results section
-      resultsSection.classList.remove('hidden');
-      
-      // Update statistics cards
-      statsCards.innerHTML = `
-        <div class="stats-card rounded-2xl p-6 text-center shadow-lg">
-          <div class="text-3xl font-bold text-blue-600 mb-2">${data.summary.totalStudents}</div>
-          <div class="text-sm text-gray-600">Total Students</div>
-        </div>
-        
-        <div class="stats-card rounded-2xl p-6 text-center shadow-lg">
-          <div class="text-3xl font-bold text-orange-600 mb-2">${data.summary.studentsToNotify}</div>
-          <div class="text-sm text-gray-600">Will Get Messages</div>
-        </div>
-        
-        <div class="stats-card rounded-2xl p-6 text-center shadow-lg">
-          <div class="text-3xl font-bold text-red-600 mb-2">${data.summary.fullDayAbsent}</div>
-          <div class="text-sm text-gray-600">Full Day Absent</div>
-        </div>
-        
-        <div class="stats-card rounded-2xl p-6 text-center shadow-lg">
-          <div class="text-3xl font-bold text-yellow-600 mb-2">${data.summary.partialDayAbsent}</div>
-          <div class="text-sm text-gray-600">Partial Day Absent</div>
-        </div>
-      `;
-      
-      // Add message status alert if already sent
-      let messageStatusAlert = '';
-      if (data.messageStatus && data.messageStatus.alreadySent) {
-        messageStatusAlert = `
-          <div class="bg-orange-50 border-l-4 border-orange-400 p-6 mb-6">
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <i class="fas fa-exclamation-triangle text-orange-400 text-xl"></i>
-              </div>
-              <div class="ml-3">
-                <h3 class="text-lg font-semibold text-orange-800">⚠️ Messages Already Sent Today!</h3>
-                <div class="mt-2 text-sm text-orange-700">
-                  <p><strong>Sent at:</strong> ${new Date(data.messageStatus.sentAt).toLocaleString()}</p>
-                  <p><strong>Messages sent:</strong> ${data.messageStatus.messagesSent}</p>
-                  <p><strong>Students notified:</strong> ${data.messageStatus.totalStudentsNotified}</p>
-                  <p><strong>Subjects:</strong> ${data.messageStatus.subjectsIncluded?.join(', ') || 'N/A'}</p>
-                </div>
-                <div class="mt-3">
-                  <p class="text-sm text-orange-600 font-medium">
-                    Clicking "Send Messages Now" will ask if you want to send duplicate messages.
-                  </p>
-                </div>
-              </div>
+// ✅ ENHANCED: Display preview with message status and better formatting
+function displayPreview(data) {
+  const resultsSection = document.getElementById('resultsSection');
+  const statsCards = document.getElementById('statsCards');
+  const resultsContent = document.getElementById('resultsContent');
+  
+  if (!resultsSection || !statsCards || !resultsContent) {
+    console.error('Required DOM elements not found');
+    return;
+  }
+  
+  // Show results section with animation
+  resultsSection.classList.remove('hidden');
+  resultsSection.classList.add('slide-in');
+  
+  // ✅ Enhanced statistics cards with better styling
+  statsCards.innerHTML = `
+    <div class="stats-card bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl p-6 text-center shadow-xl transform hover:scale-105 transition-all duration-300">
+      <div class="text-4xl font-bold mb-2">${data.summary.totalStudents}</div>
+      <div class="text-sm opacity-90">Total Students</div>
+      <div class="mt-2">
+        <i class="fas fa-users text-2xl opacity-75"></i>
+      </div>
+    </div>
+    
+    <div class="stats-card bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-2xl p-6 text-center shadow-xl transform hover:scale-105 transition-all duration-300">
+      <div class="text-4xl font-bold mb-2">${data.summary.studentsToNotify}</div>
+      <div class="text-sm opacity-90">Will Get Messages</div>
+      <div class="mt-2">
+        <i class="fas fa-paper-plane text-2xl opacity-75"></i>
+      </div>
+    </div>
+    
+    <div class="stats-card bg-gradient-to-br from-red-500 to-red-600 text-white rounded-2xl p-6 text-center shadow-xl transform hover:scale-105 transition-all duration-300">
+      <div class="text-4xl font-bold mb-2">${data.summary.fullDayAbsent}</div>
+      <div class="text-sm opacity-90">Full Day Absent</div>
+      <div class="mt-2">
+        <i class="fas fa-exclamation-triangle text-2xl opacity-75"></i>
+      </div>
+    </div>
+    
+    <div class="stats-card bg-gradient-to-br from-yellow-500 to-yellow-600 text-white rounded-2xl p-6 text-center shadow-xl transform hover:scale-105 transition-all duration-300">
+      <div class="text-4xl font-bold mb-2">${data.summary.partialDayAbsent}</div>
+      <div class="text-sm opacity-90">Partial Day Absent</div>
+      <div class="mt-2">
+        <i class="fas fa-clock text-2xl opacity-75"></i>
+      </div>
+    </div>
+  `;
+  
+  // ✅ Enhanced message status alert
+  let messageStatusAlert = '';
+  if (data.messageStatus && data.messageStatus.alreadySent) {
+    const timeSinceSent = data.messageStatus.timeSinceSent || 'Unknown time ago';
+    const successRate = data.messageStatus.successRate || '0';
+    
+    messageStatusAlert = `
+      <div class="bg-gradient-to-r from-orange-50 to-yellow-50 border-l-4 border-orange-400 rounded-r-xl p-6 mb-6 shadow-lg">
+        <div class="flex items-start">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+              <i class="fas fa-exclamation-triangle text-orange-500 text-xl"></i>
             </div>
           </div>
-        `;
-      }
-      
-      // Display preview content
-      if (data.summary.studentsToNotify > 0) {
-        resultsContent.innerHTML = messageStatusAlert + `
-          <div class="bg-white rounded-2xl shadow-xl p-8">
-            <h4 class="text-2xl font-bold text-gray-800 mb-6">
-              <i class="fas fa-eye mr-3 text-blue-600"></i>Message Preview for ${data.date}
-            </h4>
-            
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-              <h5 class="font-semibold text-blue-800 mb-3">
-                <i class="fas fa-info-circle mr-2"></i>Attendance Summary:
-              </h5>
-              <div class="text-blue-700 space-y-1">
-                <p><strong>Subjects with attendance:</strong> ${data.subjectsWithAttendance.join(', ')}</p>
-                <p><strong>Messages ready to send:</strong> ${data.consolidatedMessaging?.totalMessagesToSend || data.summary.studentsToNotify}</p>
-                <p><strong>Full day absent:</strong> ${data.summary.fullDayAbsent} | <strong>Partial day absent:</strong> ${data.summary.partialDayAbsent}</p>
+          <div class="ml-4 flex-1">
+            <h3 class="text-xl font-bold text-orange-800 mb-3">
+              ⚠️ Messages Already Sent Today!
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div class="bg-white bg-opacity-60 rounded-lg p-3">
+                <div class="text-sm text-orange-700 mb-1">
+                  <strong>📅 Sent:</strong> ${timeSinceSent}
+                </div>
+                <div class="text-xs text-orange-600">
+                  ${new Date(data.messageStatus.sentAt).toLocaleString()}
+                </div>
+              </div>
+              <div class="bg-white bg-opacity-60 rounded-lg p-3">
+                <div class="text-sm text-orange-700">
+                  <strong>📊 Success Rate:</strong> ${successRate}%
+                </div>
               </div>
             </div>
-            
-            <div class="space-y-4">
-              <h5 class="font-semibold text-gray-800 mb-3">Students who will receive messages:</h5>
-              
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
-                ${data.absenceSummary.filter(s => s.willReceiveMessage).map(student => `
-                  <div class="message-${student.isFullDayAbsent ? 'full' : 'partial'}-day p-4 rounded-lg">
-                    <div class="flex justify-between items-start mb-2">
-                      <div>
-                        <div class="font-semibold text-gray-800">${student.studentID}</div>
-                        <div class="text-sm text-gray-700">${student.studentName}</div>
-                        <div class="text-xs text-gray-600">${student.parentPhone || 'No phone'}</div>
-                      </div>
-                      <div class="text-right">
-                        <span class="text-sm font-semibold ${student.isFullDayAbsent ? 'text-red-600' : 'text-yellow-600'}">
-                          ${student.isFullDayAbsent ? '🔴 Full Day' : `🟡 ${student.absentSubjectCount} subject(s)`}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    ${!student.isFullDayAbsent ? `
-                      <div class="text-xs text-gray-600 mb-2">
-                        <strong>Absent in:</strong> ${student.absentSubjects.join(', ')}
-                      </div>
-                    ` : ''}
-                    
-                    <!-- Sample Message Preview -->
-                    <details class="mt-3">
-                      <summary class="text-xs text-blue-600 cursor-pointer hover:text-blue-800">Preview message</summary>
-                      <div class="message-preview mt-2">
-${student.isFullDayAbsent ? 
-`Dear Parent,
-
-Your child ${student.studentName} (${student.studentID}) was ABSENT for the WHOLE DAY on ${data.date}.
-
-Stream: ${data.stream}
-Semester: ${data.semester}
-Total Subjects: ${student.absentSubjectCount}
-
-Please contact the school if this is incorrect.
-
-Best regards,
-School Administration` :
-`Dear Parent,
-
-Your child ${student.studentName} (${student.studentID}) was ABSENT for the following subject(s) on ${data.date}:
-
-${student.absentSubjects.map((subj, index) => `${index + 1}. ${subj}`).join('\n')}
-
-Stream: ${data.stream}
-Semester: ${data.semester}
-
-Please contact the school if this is incorrect.
-
-Best regards,
-School Administration`}
-                      </div>
-                    </details>
-                  </div>
-                `).join('')}
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              <div class="text-center">
+                <div class="font-semibold text-orange-800">${data.messageStatus.messagesSent}</div>
+                <div class="text-xs text-orange-600">Sent</div>
+              </div>
+              <div class="text-center">
+                <div class="font-semibold text-orange-800">${data.messageStatus.messagesFailed || 0}</div>
+                <div class="text-xs text-orange-600">Failed</div>
+              </div>
+              <div class="text-center">
+                <div class="font-semibold text-orange-800">${data.messageStatus.fullDayAbsentCount || 0}</div>
+                <div class="text-xs text-orange-600">Full Day</div>
+              </div>
+              <div class="text-center">
+                <div class="font-semibold text-orange-800">${data.messageStatus.partialDayAbsentCount || 0}</div>
+                <div class="text-xs text-orange-600">Partial</div>
               </div>
             </div>
-            
-            <div class="mt-8 bg-green-50 border border-green-200 rounded-lg p-4">
-              <p class="text-green-800 font-semibold">
-                <i class="fas fa-check-circle mr-2"></i>Ready to send ${data.consolidatedMessaging?.totalMessagesToSend || data.summary.studentsToNotify} consolidated messages
+            <div class="bg-white bg-opacity-60 rounded-lg p-3 mb-4">
+              <div class="text-sm text-orange-700">
+                <strong>📚 Subjects:</strong> ${data.messageStatus.subjectsIncluded?.join(', ') || 'N/A'}
+              </div>
+            </div>
+            <div class="bg-orange-100 rounded-lg p-3">
+              <p class="text-sm text-orange-800 font-semibold flex items-center">
+                <i class="fas fa-info-circle mr-2"></i>
+                Clicking "Send Messages Now" will ask if you want to send duplicate messages.
               </p>
             </div>
           </div>
-        `;
-      } else {
-        resultsContent.innerHTML = messageStatusAlert + `
-          <div class="bg-white rounded-2xl shadow-xl p-8 text-center">
-            <div class="text-6xl text-green-500 mb-6">
-              <i class="fas fa-check-circle"></i>
+        </div>
+      </div>
+    `;
+  }
+  
+  // ✅ Enhanced preview content display
+  if (data.summary.studentsToNotify > 0) {
+    const studentsToShow = data.absenceSummary.filter(s => s.willReceiveMessage);
+    
+    resultsContent.innerHTML = messageStatusAlert + `
+      <div class="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
+        <div class="flex items-center justify-between mb-6">
+          <h4 class="text-2xl font-bold text-gray-800 flex items-center">
+            <i class="fas fa-eye mr-3 text-blue-600"></i>
+            Message Preview for ${data.date}
+          </h4>
+          <div class="flex items-center space-x-2 text-sm text-gray-500">
+            <i class="fas fa-calendar-alt"></i>
+            <span>${data.stream} • Semester ${data.semester}</span>
+          </div>
+        </div>
+        
+        <!-- ✅ Enhanced attendance summary -->
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 mb-8">
+          <h5 class="font-bold text-blue-800 mb-4 flex items-center">
+            <i class="fas fa-info-circle mr-2"></i>
+            Attendance Summary
+          </h5>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white bg-opacity-70 rounded-lg p-4">
+              <div class="text-blue-700 space-y-2">
+                <div class="flex justify-between">
+                  <span class="font-medium">📚 Subjects with attendance:</span>
+                  <span class="font-semibold">${data.subjectsWithAttendance.length}</span>
+                </div>
+                <div class="text-xs text-blue-600">
+                  ${data.subjectsWithAttendance.join(', ')}
+                </div>
+              </div>
             </div>
-            <h4 class="text-2xl font-bold text-gray-800 mb-4">🎉 Perfect Attendance!</h4>
-            <p class="text-lg text-gray-600 mb-4">
-              All students were present on ${data.date}. No messages to send.
-            </p>
-            <div class="bg-green-50 border border-green-200 rounded-lg p-6">
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-green-700">
-                <div>
-                  <div class="text-2xl font-bold">${data.summary.totalStudents}</div>
-                  <div class="text-sm">Total Students</div>
+            <div class="bg-white bg-opacity-70 rounded-lg p-4">
+              <div class="text-blue-700 space-y-2">
+                <div class="flex justify-between">
+                  <span class="font-medium">📱 Messages to send:</span>
+                  <span class="font-semibold">${data.consolidatedMessaging?.totalMessagesToSend || data.summary.studentsToNotify}</span>
                 </div>
-                <div>
-                  <div class="text-2xl font-bold">${data.summary.subjectsWithAttendance}</div>
-                  <div class="text-sm">Subjects with Attendance</div>
-                </div>
-                <div>
-                  <div class="text-2xl font-bold">100%</div>
-                  <div class="text-sm">Attendance Rate</div>
+                <div class="flex justify-between text-sm">
+                  <span>🔴 Full day: ${data.summary.fullDayAbsent}</span>
+                  <span>🟡 Partial: ${data.summary.partialDayAbsent}</span>
                 </div>
               </div>
             </div>
           </div>
-        `;
-      }
-    }
-
-    // ENHANCED: Send messages with alert for already sent
-    async function sendMessages() {
-      const inputs = validateForm();
-      if (!inputs) {
-        showNotification('❌ Please fill in all fields', 'error');
-        return;
-      }
-      
-      if (!currentPreviewData) {
-        showNotification('❌ Please preview messages first', 'error');
-        return;
-      }
-      
-      const { stream, semester, date } = inputs;
-      
-      if (isLoading) return;
-      isLoading = true;
-      
-      const sendBtn = document.getElementById('sendBtn');
-      const originalText = sendBtn.innerHTML;
-      sendBtn.innerHTML = '<div class="loading-spinner"></div>Checking message status...';
-      sendBtn.disabled = true;
-      
-      updateSystemStatus('loading', 'Checking if messages were already sent...');
-      
-      try {
-        const response = await fetch(`/api/send-absence-messages/${stream}/sem${semester}/${date}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        });
+        </div>
         
-        const result = await response.json();
-        
-        if (response.ok) {
-          // Check if messages were already sent
-          if (result.alreadySent) {
-            // Show alert for already sent messages
-            const alertMsg = `🚨 MESSAGES ALREADY SENT TODAY!
+        <!-- ✅ Enhanced student list with better organization -->
+        <div class="space-y-6">
+          <div class="flex items-center justify-between">
+            <h5 class="text-lg font-bold text-gray-800">Students Receiving Messages:</h5>
+            <div class="text-sm text-gray-600">
+              Showing ${Math.min(studentsToShow.length, 10)} of ${studentsToShow.length}
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+            ${studentsToShow.slice(0, 10).map((student, index) => `
+              <div class="student-card ${student.isFullDayAbsent ? 'full-day-absent' : 'partial-day-absent'} bg-white rounded-xl border-2 ${student.isFullDayAbsent ? 'border-red-200 hover:border-red-300' : 'border-yellow-200 hover:border-yellow-300'} p-5 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                
+                <!-- Student Header -->
+                <div class="flex justify-between items-start mb-4">
+                  <div class="flex-1">
+                    <div class="flex items-center mb-2">
+                      <div class="w-8 h-8 bg-gradient-to-r ${student.isFullDayAbsent ? 'from-red-500 to-red-600' : 'from-yellow-500 to-yellow-600'} rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
+                        ${index + 1}
+                      </div>
+                      <div>
+                        <div class="font-bold text-gray-800 text-lg">${student.studentID}</div>
+                        <div class="text-sm text-gray-600">${student.studentName}</div>
+                      </div>
+                    </div>
+                    <div class="flex items-center text-xs text-gray-500">
+                      <i class="fas fa-phone mr-1"></i>
+                      ${student.parentPhone || 'No phone number'}
+                    </div>
+                  </div>
+                  
+                  <!-- Status Badge -->
+                  <div class="text-center">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${student.isFullDayAbsent ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}">
+                      ${student.isFullDayAbsent ? '🔴 Full Day' : `🟡 ${student.absentSubjectCount} subject(s)`}
+                    </span>
+                    ${student.attendancePercentage ? `
+                      <div class="text-xs text-gray-500 mt-1">
+                        ${student.attendancePercentage}% present
+                      </div>
+                    ` : ''}
+                  </div>
+                </div>
+                
+                <!-- Absence Details -->
+                ${!student.isFullDayAbsent && student.absentSubjects.length > 0 ? `
+                  <div class="bg-yellow-50 rounded-lg p-3 mb-4 border border-yellow-200">
+                    <div class="text-xs font-semibold text-yellow-800 mb-2">
+                      <i class="fas fa-exclamation-triangle mr-1"></i>
+                      Absent in:
+                    </div>
+                    <div class="flex flex-wrap gap-1">
+                      ${student.absentSubjects.map(subject => `
+                        <span class="bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-xs font-medium">
+                          ${subject}
+                        </span>
+                      `).join('')}
+                    </div>
+                  </div>
+                ` : ''}
+                
+                <!-- Message Preview -->
+                <details class="mt-4">
+                  <summary class="text-sm text-blue-600 cursor-pointer hover:text-blue-800 font-medium flex items-center">
+                    <i class="fas fa-eye mr-2"></i>
+                    Preview WhatsApp Message
+                    <i class="fas fa-chevron-down ml-auto transition-transform duration-200"></i>
+                  </summary>
+                  <div class="message-preview mt-3 bg-gray-50 rounded-lg p-4 border-l-4 ${student.isFullDayAbsent ? 'border-red-500' : 'border-yellow-500'}">
+                    <div class="text-sm text-gray-700 whitespace-pre-line font-mono leading-relaxed">
+${student.isFullDayAbsent ? 
+`🚨 *FULL DAY ABSENCE ALERT*
 
-Date: ${result.previousSendInfo.date}
-Stream: ${result.previousSendInfo.stream}
-Semester: ${result.previousSendInfo.semester}
+Dear Parent/Guardian,
 
-Previous Send Details:
-✅ Messages Sent: ${result.previousSendInfo.messagesSent}
-❌ Messages Failed: ${result.previousSendInfo.messagesFailed}
-👥 Students Notified: ${result.previousSendInfo.totalStudentsNotified}
-📚 Subjects: ${result.previousSendInfo.subjectsIncluded.join(', ')}
-🕒 Sent At: ${new Date(result.previousSendInfo.sentAt).toLocaleString()}
+Your child *${student.studentName}* (ID: ${student.studentID}) was *ABSENT FOR THE ENTIRE DAY* on ${data.date}.
 
-❓ Do you want to send messages again anyway?
-(This will send duplicate messages to parents)`;
+📚 *Academic Details:*
+• Stream: ${data.stream}
+• Semester: ${data.semester}
+• Total Classes Missed: ${student.absentSubjectCount}
 
-            const confirmResend = confirm(alertMsg);
+📞 Please contact the school office if this information is incorrect.
+
+🏫 *MLA Academy of Higher Learning*
+Smart Attendance System` :
+`⚠️ *PARTIAL ABSENCE ALERT*
+
+Dear Parent/Guardian,
+
+Your child *${student.studentName}* (ID: ${student.studentID}) was *ABSENT* for specific classes on ${data.date}.
+
+📚 *Missing Classes:*
+${student.absentSubjects.map((subj, i) => `${i + 1}. ${subj}`).join('\n')}
+
+📊 *Details:*
+• Stream: ${data.stream}
+• Semester: ${data.semester}
+• Classes Missed: ${student.absentSubjectCount}
+
+📞 Please contact school if incorrect.
+
+🏫 *MLA Academy of Higher Learning*
+Smart Attendance System`}
+                    </div>
+                  </div>
+                </details>
+              </div>
+            `).join('')}
             
-            if (confirmResend) {
-              // User confirmed to resend - call with forceResend
-              await sendMessagesForce(stream, semester, date);
-            } else {
-              // User cancelled - show the already sent results
-              displayAlreadySentResults(result);
-              updateSystemStatus('connected', 'Messages were already sent today');
-              showNotification('ℹ️ No new messages sent - already processed today', 'info');
-            }
-          } else {
-            // Normal send - messages were sent successfully
-            displaySendResults(result);
-            updateSystemStatus('connected', 'Messages sent successfully');
-            showNotification(`✅ Successfully sent ${result.summary.messagesSent} messages!`, 'success');
-          }
+            ${studentsToShow.length > 10 ? `
+              <div class="col-span-full text-center p-4 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                <p class="text-gray-600 mb-2">
+                  <i class="fas fa-plus-circle mr-2"></i>
+                  ${studentsToShow.length - 10} more students will receive messages
+                </p>
+                <button onclick="showAllStudents()" class="text-blue-600 hover:text-blue-800 font-medium text-sm">
+                  View All Students
+                </button>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+        
+        <!-- ✅ Enhanced ready-to-send indicator -->
+        <div class="mt-8 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                <i class="fas fa-check-circle text-green-600 text-xl"></i>
+              </div>
+              <div>
+                <p class="text-green-800 font-bold text-lg">
+                  Ready to Send Messages
+                </p>
+                <p class="text-green-600 text-sm">
+                  ${data.consolidatedMessaging?.totalMessagesToSend || data.summary.studentsToNotify} consolidated WhatsApp messages
+                </p>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-2xl font-bold text-green-700">
+                ${data.consolidatedMessaging?.totalMessagesToSend || data.summary.studentsToNotify}
+              </div>
+              <div class="text-xs text-green-600">Messages</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  } else {
+    // ✅ Enhanced perfect attendance display
+    const attendanceRate = data.summary.overallAttendanceRate || '100%';
+    
+    resultsContent.innerHTML = messageStatusAlert + `
+      <div class="bg-white rounded-2xl shadow-2xl p-8 text-center border border-gray-100">
+        <div class="mb-8">
+          <div class="w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
+            <i class="fas fa-trophy text-white text-4xl"></i>
+          </div>
+          <h4 class="text-3xl font-bold text-gray-800 mb-4">🎉 Perfect Attendance!</h4>
+          <p class="text-xl text-gray-600 mb-2">
+            All students were present on ${data.date}
+          </p>
+          <p class="text-lg text-green-600 font-semibold">
+            No absence messages needed today!
+          </p>
+        </div>
+        
+        <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-8">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="text-center">
+              <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-users text-green-600 text-2xl"></i>
+              </div>
+              <div class="text-3xl font-bold text-green-700">${data.summary.totalStudents}</div>
+              <div class="text-sm text-green-600 font-medium">Total Students</div>
+            </div>
+            <div class="text-center">
+              <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-book text-green-600 text-2xl"></i>
+              </div>
+              <div class="text-3xl font-bold text-green-700">${data.summary.subjectsWithAttendance}</div>
+              <div class="text-sm text-green-600 font-medium">Subjects Marked</div>
+            </div>
+            <div class="text-center">
+              <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-chart-line text-green-600 text-2xl"></i>
+              </div>
+              <div class="text-3xl font-bold text-green-700">${attendanceRate}</div>
+              <div class="text-sm text-green-600 font-medium">Attendance Rate</div>
+            </div>
+          </div>
+          
+          <div class="mt-6 pt-6 border-t border-green-200">
+            <p class="text-green-700 font-medium mb-2">
+              <i class="fas fa-star mr-2 text-yellow-500"></i>
+              Excellent work by all students and teachers!
+            </p>
+            <div class="text-sm text-green-600">
+              Subjects with perfect attendance: <strong>${data.subjectsWithAttendance.join(', ')}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+}
+
+// ✅ ENHANCED: Send messages with comprehensive duplicate handling
+async function sendMessages() {
+  const inputs = validateForm();
+  if (!inputs) {
+    showNotification('❌ Please fill in all fields correctly', 'error');
+    return;
+  }
+  
+  if (!currentPreviewData) {
+    showNotification('❌ Please preview messages first to verify the data', 'error');
+    return;
+  }
+  
+  const { stream, semester, date } = inputs;
+  
+  if (isLoading) {
+    showNotification('⏳ Please wait for the current operation to complete', 'warning');
+    return;
+  }
+  
+  isLoading = true;
+  
+  const sendBtn = document.getElementById('sendBtn');
+  const originalText = sendBtn.innerHTML;
+  
+  try {
+    // ✅ Enhanced loading states
+    sendBtn.innerHTML = '<div class="loading-spinner"></div>Checking message status...';
+    sendBtn.disabled = true;
+    
+    updateSystemStatus('loading', 'Checking if messages were already sent...');
+    
+    const response = await fetch(`/api/send-absence-messages/${stream}/sem${semester}/${date}`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({
+        forceResend: false,
+        source: 'manual_trigger',
+        timestamp: new Date().toISOString()
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok) {
+      // ✅ Handle already sent scenario
+      if (result.alreadySent) {
+        const confirmResult = await showDuplicateMessageDialog(result);
+        
+        if (confirmResult === 'resend') {
+          // User confirmed to resend - call with forceResend
+          await sendMessagesWithForce(stream, semester, date);
+        } else if (confirmResult === 'view') {
+          // User wants to view previous results
+          displayAlreadySentResults(result);
+          updateSystemStatus('connected', 'Showing previous message results');
+          showNotification('📋 Showing previous message sending results', 'info');
         } else {
-          throw new Error(result.message || 'Failed to send messages');
+          // User cancelled
+          updateSystemStatus('connected', 'Message sending cancelled by user');
+          showNotification('❌ Message sending cancelled', 'info');
         }
-      } catch (error) {
-        console.error('Error sending messages:', error);
-        updateSystemStatus('disconnected', 'Failed to send messages');
-        showNotification('❌ Error sending messages: ' + error.message, 'error');
-      } finally {
-        sendBtn.innerHTML = originalText;
-        sendBtn.disabled = false;
-        isLoading = false;
+      } else {
+        // ✅ Normal send - messages were sent successfully
+        displaySendResults(result);
+        updateSystemStatus('connected', 'Messages sent successfully');
+        
+        const successMessage = result.summary.messagesFailed > 0
+          ? `⚠️ Sent ${result.summary.messagesSent} messages with ${result.summary.messagesFailed} failures`
+          : `✅ Successfully sent all ${result.summary.messagesSent} messages!`;
+        
+        showNotification(successMessage, result.summary.messagesFailed > 0 ? 'warning' : 'success');
+        
+        // ✅ Auto-refresh preview data
+        setTimeout(() => {
+          loadPreview();
+        }, 2000);
       }
+    } else {
+      throw new Error(result.message || `Server error: ${response.status}`);
     }
+  } catch (error) {
+    console.error('❌ Error sending messages:', error);
+    updateSystemStatus('disconnected', 'Failed to send messages');
+    
+    let errorMessage = 'Unknown error occurred';
+    if (error.message.includes('Failed to fetch')) {
+      errorMessage = 'Network connection failed. Please check your internet connection.';
+    } else if (error.message.includes('500')) {
+      errorMessage = 'Server error. Please try again later or contact support.';
+    } else {
+      errorMessage = error.message;
+    }
+    
+    showNotification(`❌ Error: ${errorMessage}`, 'error');
+  } finally {
+    sendBtn.innerHTML = originalText;
+    sendBtn.disabled = false;
+    isLoading = false;
+  }
+}
+
+// ✅ NEW: Enhanced duplicate message dialog
+async function showDuplicateMessageDialog(data) {
+  return new Promise((resolve) => {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    
+    modal.innerHTML = `
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white p-6 rounded-t-2xl">
+          <div class="flex items-center">
+            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-4">
+              <i class="fas fa-exclamation-triangle text-2xl"></i>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold">Messages Already Sent Today!</h3>
+              <p class="text-orange-100 text-sm">Duplicate message confirmation required</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="p-6">
+          <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6">
+            <h4 class="font-semibold text-orange-800 mb-3">Previous Send Summary:</h4>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <strong>📅 Date:</strong> ${data.previousSendInfo.date}<br>
+                <strong>🏫 Stream:</strong> ${data.previousSendInfo.stream}<br>
+                <strong>📚 Semester:</strong> ${data.previousSendInfo.semester}
+              </div>
+              <div>
+                <strong>⏰ Sent:</strong> ${data.previousSendInfo.lastSentAgo}<br>
+                <strong>✅ Success:</strong> ${data.previousSendInfo.messagesSent}<br>
+                <strong>❌ Failed:</strong> ${data.previousSendInfo.messagesFailed}
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+            <h4 class="font-semibold text-blue-800 mb-2">
+              <i class="fas fa-info-circle mr-2"></i>
+              What happens if you continue?
+            </h4>
+            <ul class="text-blue-700 text-sm space-y-1">
+              <li>• Parents will receive <strong>duplicate messages</strong></li>
+              <li>• This may cause confusion or annoyance</li>
+              <li>• Use only if the previous send had errors</li>
+              <li>• Consider contacting parents directly instead</li>
+            </ul>
+          </div>
+          
+          <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
+            <h4 class="font-semibold text-yellow-800 mb-2">
+              <i class="fas fa-lightbulb mr-2"></i>
+              Subjects included in previous send:
+            </h4>
+            <div class="text-yellow-700 text-sm">
+              ${data.previousSendInfo.subjectsIncluded.join(', ')}
+            </div>
+          </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="bg-gray-50 px-6 py-4 rounded-b-2xl flex flex-col sm:flex-row gap-3">
+          <button id="cancelBtn" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 px-4 rounded-xl font-semibold transition-colors">
+            ❌ Cancel
+          </button>
+          <button id="viewBtn" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold transition-colors">
+            📋 View Previous Results
+          </button>
+          <button id="resendBtn" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 px-4 rounded-xl font-semibold transition-colors">
+            🔄 Send Duplicate Messages
+          </button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Add event listeners
+    document.getElementById('cancelBtn').onclick = () => {
+      document.body.removeChild(modal);
+      resolve('cancel');
+    };
+    
+    document.getElementById('viewBtn').onclick = () => {
+      document.body.removeChild(modal);
+      resolve('view');
+    };
+    
+    document.getElementById('resendBtn').onclick = () => {
+      document.body.removeChild(modal);
+      resolve('resend');
+    };
+    
+    // Close on backdrop click
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        document.body.removeChild(modal);
+        resolve('cancel');
+      }
+    };
+  });
+}
+
+// ✅ NEW: Send messages with force resend
+async function sendMessagesWithForce(stream, semester, date) {
+  const sendBtn = document.getElementById('sendBtn');
+  const originalText = sendBtn.innerHTML;
+  
+  try {
+    sendBtn.innerHTML = '<div class="loading-spinner"></div>Force sending messages...';
+    sendBtn.disabled = true;
+    
+    updateSystemStatus('loading', 'Force sending messages...');
+    
+    const response = await fetch(`/api/send-absence-messages/${stream}/sem${semester}/${date}`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({
+        forceResend: true,
+        source: 'manual_force_trigger',
+        reason: 'User confirmed duplicate send',
+        timestamp: new Date().toISOString()
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok) {
+      displaySendResults(result);
+      updateSystemStatus('connected', 'Force send completed');
+      
+      const message = result.summary.messagesFailed > 0
+        ? `⚠️ Force sent ${result.summary.messagesSent} messages with ${result.summary.messagesFailed} failures`
+        : `✅ Successfully force sent all ${result.summary.messagesSent} messages!`;
+      
+      showNotification(message, result.summary.messagesFailed > 0 ? 'warning' : 'success');
+      
+      // Auto-refresh preview data
+      setTimeout(() => loadPreview(), 2000);
+    } else {
+      throw new Error(result.message || 'Force send failed');
+    }
+  } catch (error) {
+    console.error('❌ Error in force send:', error);
+    updateSystemStatus('disconnected', 'Force send failed');
+    showNotification(`❌ Force send error: ${error.message}`, 'error');
+  } finally {
+    sendBtn.innerHTML = originalText;
+    sendBtn.disabled = false;
+  }
+}
+
+// ✅ NEW: Display already sent results
+function displayAlreadySentResults(data) {
+  const resultsContent = document.getElementById('resultsContent');
+  if (!resultsContent) return;
+  
+  resultsContent.innerHTML = `
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+      <h4 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+        <i class="fas fa-history mr-3 text-blue-600"></i>
+        Previous Message Results
+      </h4>
+      
+      <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="text-center">
+            <div class="text-2xl font-bold text-blue-700">${data.previousSendInfo.messagesSent}</div>
+            <div class="text-sm text-blue-600">Messages Sent</div>
+          </div>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-red-700">${data.previousSendInfo.messagesFailed}</div>
+            <div class="text-sm text-red-600">Messages Failed</div>
+          </div>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-green-700">${data.previousSendInfo.totalStudentsNotified}</div>
+            <div class="text-sm text-green-600">Students Notified</div>
+          </div>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-purple-700">${((data.previousSendInfo.messagesSent / (data.previousSendInfo.messagesSent + data.previousSendInfo.messagesFailed)) * 100).toFixed(1)}%</div>
+            <div class="text-sm text-purple-600">Success Rate</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="text-center text-gray-600">
+        <p class="mb-2">Messages were sent on <strong>${data.previousSendInfo.date}</strong></p>
+        <p class="text-sm">at ${new Date(data.previousSendInfo.sentAt).toLocaleString()}</p>
+      </div>
+    </div>
+  `;
+}
+
+// ✅ NEW: Display send results
+function displaySendResults(data) {
+  const resultsContent = document.getElementById('resultsContent');
+  if (!resultsContent) return;
+  
+  const successRate = data.summary.successRate || ((data.summary.messagesSent / (data.summary.messagesSent + data.summary.messagesFailed)) * 100).toFixed(1);
+  
+  resultsContent.innerHTML = `
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+      <h4 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+        <i class="fas fa-paper-plane mr-3 text-green-600"></i>
+        Message Sending Results
+      </h4>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="text-center bg-green-50 rounded-xl p-4">
+          <div class="text-3xl font-bold text-green-700">${data.summary.messagesSent}</div>
+          <div class="text-sm text-green-600">Successfully Sent</div>
+        </div>
+        <div class="text-center bg-red-50 rounded-xl p-4">
+          <div class="text-3xl font-bold text-red-700">${data.summary.messagesFailed}</div>
+          <div class="text-sm text-red-600">Failed to Send</div>
+        </div>
+        <div class="text-center bg-blue-50 rounded-xl p-4">
+          <div class="text-3xl font-bold text-blue-700">${data.summary.studentsToNotify}</div>
+          <div class="text-sm text-blue-600">Total Students</div>
+        </div>
+        <div class="text-center bg-purple-50 rounded-xl p-4">
+          <div class="text-3xl font-bold text-purple-700">${successRate}%</div>
+          <div class="text-sm text-purple-600">Success Rate</div>
+        </div>
+      </div>
+      
+      ${data.summary.messagesFailed > 0 ? `
+        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
+          <h5 class="font-semibold text-yellow-800 mb-2">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            Some Messages Failed
+          </h5>
+          <p class="text-yellow-700 text-sm">
+            ${data.summary.messagesFailed} messages could not be delivered. This may be due to invalid phone numbers or network issues.
+          </p>
+        </div>
+      ` : ''}
+      
+      <div class="bg-gray-50 rounded-xl p-6">
+        <h5 class="font-semibold text-gray-800 mb-4">Summary:</h5>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div>
+            <p><strong>Date:</strong> ${data.date}</p>
+            <p><strong>Stream:</strong> ${data.stream}</p>
+            <p><strong>Semester:</strong> ${data.semester}</p>
+          </div>
+          <div>
+            <p><strong>Full Day Absent:</strong> ${data.summary.fullDayAbsent}</p>
+            <p><strong>Partial Day Absent:</strong> ${data.summary.partialDayAbsent}</p>
+            <p><strong>Subjects:</strong> ${data.subjectsIncluded.join(', ')}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ✅ NEW: Show all students function
+function showAllStudents() {
+  if (!currentPreviewData || !currentPreviewData.absenceSummary) return;
+  
+  const studentsToShow = currentPreviewData.absenceSummary.filter(s => s.willReceiveMessage);
+  
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+  
+  modal.innerHTML = `
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 rounded-t-2xl">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xl font-bold">All Students Receiving Messages</h3>
+          <button onclick="this.closest('.fixed').remove()" class="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-opacity-30 transition-colors">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+          ${studentsToShow.map((student, index) => `
+            <div class="border rounded-lg p-4 ${student.isFullDayAbsent ? 'border-red-200 bg-red-50' : 'border-yellow-200 bg-yellow-50'}">
+              <div class="flex justify-between items-start mb-2">
+                <div>
+                  <div class="font-bold">${student.studentID}</div>
+                  <div class="text-sm text-gray-600">${student.studentName}</div>
+                  <div class="text-xs text-gray-500">${student.parentPhone}</div>
+                </div>
+                <span class="text-xs font-semibold px-2 py-1 rounded ${student.isFullDayAbsent ? 'bg-red-200 text-red-800' : 'bg-yellow-200 text-yellow-800'}">
+                  ${student.isFullDayAbsent ? 'Full Day' : `${student.absentSubjectCount} subjects`}
+                </span>
+              </div>
+              ${!student.isFullDayAbsent ? `
+                <div class="text-xs text-gray-600">
+                  <strong>Absent:</strong> ${student.absentSubjects.join(', ')}
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+}
+
 
     // NEW: Force send messages (for resending)
     async function sendMessagesForce(stream, semester, date) {
