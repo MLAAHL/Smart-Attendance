@@ -3,111 +3,149 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Teacher Login</title>
+  <title>Smart Attendance - MLA Academy Login</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   
   <style>
     body { 
       font-family: 'Poppins', sans-serif; 
-      background-color: #fef7ff;
+      background: linear-gradient(125deg, #fcf6ff 0%, #fcf3f5 95%);
+      min-height: 100vh;
       margin: 0;
-      padding: 15px;
-    }
-    
-    .section-title {
+      padding: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: #374151;
-      margin-bottom: 25px;
-      text-align: center;
     }
     
-    .section-title i {
-      color: #6c63ff;
-      margin-right: 8px;
-    }
-    
-    .login-card {
-      background: white;
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-      max-width: 400px;
-      margin: 0 auto;
+    .login-container {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      border-radius: 16px;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      max-width: 340px;
+      width: 100%;
+      padding: 24px;
       transition: all 0.3s ease;
     }
     
-    .login-card:hover {
-      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
-      transform: translateY(-2px);
+    .login-container:hover {
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+      transform: translateY(-1px);
     }
     
-    .welcome-icon {
+    /* Compact College Branding */
+    .college-branding {
+      text-align: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+    }
+    
+    .college-logo {
       width: 50px;
       height: 50px;
-      background: linear-gradient(135deg, #6c63ff 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 15px;
+      margin: 0 auto 10px;
       color: white;
-      font-size: 1.25rem;
+      font-size: 1.3rem;
+      animation: pulse 3s infinite;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .college-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #374151;
+      margin: 0 0 3px;
+      line-height: 1.2;
+    }
+    
+    .college-subtitle {
+      font-size: 0.7rem;
+      color: #6b7280;
+      margin: 0 0 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    
+    .system-name {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      display: inline-block;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
+    .welcome-section {
+      text-align: center;
+      margin-bottom: 18px;
     }
     
     .welcome-title {
-      font-size: 1.25rem;
+      font-size: 1.1rem;
       font-weight: 600;
       color: #374151;
-      margin: 0 0 5px;
-      text-align: center;
+      margin: 0 0 4px;
     }
     
-    .welcome-text {
+    .welcome-subtitle {
       color: #6b7280;
-      margin: 0 0 25px;
-      text-align: center;
-      font-size: 0.9rem;
+      margin: 0 0 12px;
+      font-size: 0.8rem;
     }
     
     .form-group {
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
     
     .form-label {
       display: block;
-      font-weight: 500;
+      font-weight: 600;
       color: #374151;
       margin-bottom: 6px;
-      font-size: 0.9rem;
+      font-size: 0.8rem;
     }
     
     .form-label i {
-      color: #6c63ff;
+      color: #667eea;
       margin-right: 6px;
+      width: 12px;
+      font-size: 0.8rem;
     }
     
     .form-input {
       width: 100%;
-      padding: 12px 16px;
-      border: 2px solid #e5e7eb;
-      border-radius: 12px;
-      font-size: 0.95rem;
+      padding: 12px;
+      border: 2px solid rgba(102, 126, 234, 0.2);
+      border-radius: 10px;
+      font-size: 0.9rem;
       transition: all 0.3s ease;
-      background: #f9fafb;
+      background: rgba(255, 255, 255, 0.8);
       box-sizing: border-box;
     }
     
     .form-input:focus {
       outline: none;
-      border-color: #6c63ff;
+      border-color: #667eea;
       background: white;
-      box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+      box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+      transform: translateY(-1px);
     }
     
     .password-container {
@@ -123,40 +161,52 @@
       border: none;
       color: #9ca3af;
       cursor: pointer;
+      transition: color 0.3s ease;
+      padding: 2px;
+      font-size: 0.9rem;
+    }
+    
+    .password-toggle:hover {
+      color: #667eea;
     }
     
     .remember-group {
       display: flex;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
     
     .remember-group input {
       margin-right: 6px;
+      transform: scale(0.9);
     }
     
     .remember-group label {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: #6b7280;
+      cursor: pointer;
     }
     
     .login-button {
       width: 100%;
-      background: linear-gradient(135deg, #6c63ff 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       border: none;
-      padding: 12px 20px;
-      border-radius: 12px;
-      font-size: 1rem;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
     }
     
     .login-button:hover {
       background: linear-gradient(135deg, #5a54eb 0%, #6b46c1 100%);
       transform: translateY(-1px);
-      box-shadow: 0 8px 15px rgba(108, 99, 255, 0.3);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
     }
     
     .login-button:disabled {
@@ -176,204 +226,348 @@
       margin-right: 6px;
     }
     
-    .auth-loading-spinner {
-      display: inline-block;
-      width: 40px;
-      height: 40px;
-      border: 4px solid #f3f4f6;
-      border-top: 4px solid #6c63ff;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
     
-    .pulse-animation {
-      animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
-    }
-    
     .alert {
-      padding: 12px 16px;
+      padding: 10px 12px;
       border-radius: 8px;
-      margin-bottom: 15px;
+      margin-bottom: 14px;
       display: flex;
-      align-items: flex-start;
-      font-size: 0.9rem;
+      align-items: center;
+      font-size: 0.8rem;
     }
     
     .alert i {
       margin-right: 8px;
-      margin-top: 1px;
+      font-size: 0.9rem;
     }
     
     .alert-error {
-      background: #fef2f2;
-      border: 1px solid #fecaca;
+      background: rgba(254, 242, 242, 0.9);
+      border: 1px solid rgba(254, 202, 202, 0.8);
       color: #dc2626;
     }
     
     .alert-success {
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
+      background: rgba(240, 253, 244, 0.9);
+      border: 1px solid rgba(187, 247, 208, 0.8);
       color: #16a34a;
     }
     
     .alert-warning {
-      background: #fffbeb;
-      border: 1px solid #fed7aa;
+      background: rgba(255, 251, 235, 0.9);
+      border: 1px solid rgba(254, 215, 170, 0.8);
       color: #d97706;
     }
     
     .footer {
       text-align: center;
-      margin-top: 20px;
-      padding-top: 15px;
-      border-top: 1px solid #e5e7eb;
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(229, 231, 235, 0.5);
     }
     
     .footer p {
       color: #9ca3af;
-      font-size: 0.8rem;
+      font-size: 0.7rem;
       margin: 2px 0;
     }
     
+    /* Enhanced Loading Screen */
     .auth-loading-screen {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: linear-gradient(135deg, #6c63ff 0%, #764ba2 100%);
+      background: linear-gradient(125deg, #fcf6ff 0%, #fcf3f5 95%);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 9999;
+      color: #374151;
+    }
+    
+    .auth-loading-spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(102, 126, 234, 0.2);
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    .loading-brand {
+      text-align: center;
+      max-width: 280px;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(15px);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+    }
+    
+    .loading-logo {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
       color: white;
+      font-size: 1.6rem;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    /* Enhanced Progress Bar */
+    .progress-container {
+      width: 220px;
+      height: 8px;
+      background: rgba(102, 126, 234, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 20px;
+      position: relative;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #667eea 100%);
+      border-radius: 4px;
+      animation: progressFlow 2.5s ease-in-out infinite;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    }
+    
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+      animation: progressShimmer 1.5s infinite;
+    }
+    
+    @keyframes progressFlow {
+      0% { width: 0%; transform: translateX(0); }
+      50% { width: 75%; transform: translateX(0); }
+      100% { width: 100%; transform: translateX(0); }
+    }
+    
+    @keyframes progressShimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(200%); }
+    }
+    
+    .progress-dots {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 15px;
+    }
+    
+    .progress-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(102, 126, 234, 0.3);
+      animation: dotPulse 1.5s infinite ease-in-out;
+    }
+    
+    .progress-dot:nth-child(1) { animation-delay: 0s; }
+    .progress-dot:nth-child(2) { animation-delay: 0.2s; }
+    .progress-dot:nth-child(3) { animation-delay: 0.4s; }
+    
+    @keyframes dotPulse {
+      0%, 60%, 100% {
+        background: rgba(102, 126, 234, 0.3);
+        transform: scale(1);
+      }
+      30% {
+        background: #667eea;
+        transform: scale(1.2);
+      }
     }
     
     @media (max-width: 480px) {
       body {
-        padding: 10px;
+        padding: 8px;
       }
       
-      .login-card {
+      .login-container {
         padding: 20px;
+        max-width: 320px;
+      }
+      
+      .college-name {
+        font-size: 1rem;
+      }
+      
+      .college-logo {
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+      }
+      
+      .form-input {
+        padding: 10px;
+        font-size: 0.85rem;
+      }
+      
+      .login-button {
+        padding: 11px 16px;
+        font-size: 0.9rem;
+      }
+      
+      .loading-brand {
+        padding: 25px;
+        max-width: 260px;
+      }
+      
+      .progress-container {
+        width: 200px;
+      }
+    }
+    
+    @media (min-width: 481px) and (max-width: 768px) {
+      .login-container {
+        max-width: 350px;
+        padding: 26px;
       }
     }
   </style>
 </head>
 
 <body>
-  <!-- Initial Loading Screen -->
+  <!-- Enhanced Loading Screen -->
   <div id="initialLoadingScreen" class="auth-loading-screen">
-    <div class="text-center">
-      <div class="auth-loading-spinner mb-4"></div>
-      <h2 class="text-2xl font-semibold mb-2">Teacher Portal</h2>
-      <p class="opacity-80">🔐 Checking authentication...</p>
-      <div class="mt-4">
-        <div class="w-48 h-1 bg-white/20 rounded-full mx-auto">
-          <div class="h-1 bg-white rounded-full animate-pulse" style="width: 60%;"></div>
-        </div>
+    <div class="loading-brand">
+      <div class="loading-logo">
+        <i class="fas fa-graduation-cap"></i>
       </div>
+      <h2 class="text-lg font-bold mb-1">MLA Academy of Higher Learning</h2>
+      <div class="system-name mb-3">Smart Attendance</div>
+      <p class="opacity-70 text-xs mb-2">Initializing secure portal...</p>
+      
+      <!-- Enhanced Progress Bar -->
+      <div class="progress-container">
+        <div class="progress-bar"></div>
+      </div>
+      
+      <!-- Progress Dots -->
+      <div class="progress-dots">
+        <div class="progress-dot"></div>
+        <div class="progress-dot"></div>
+        <div class="progress-dot"></div>
+      </div>
+      
+      <p class="text-xs opacity-60 mt-3">Please wait...</p>
     </div>
   </div>
 
-  <!-- Main Content -->
-  <div id="loginContent" style="display: none;">
-    <!-- Section Title -->
-    <div class="section-title">
-      <i class="fas fa-chalkboard-teacher pulse-animation"></i>
-      Teacher Login
+  <!-- Compact Main Login Form -->
+  <div id="loginContent" class="login-container" style="display: none;">
+    
+    <!-- Compact College Branding -->
+    <div class="college-branding">
+      <div class="college-logo">
+        <i class="fas fa-graduation-cap"></i>
+      </div>
+      <h1 class="college-name">MLA Academy of Higher Learning</h1>
+      <div class="system-name">
+        <i class="fas fa-clipboard-check mr-1"></i>Smart Attendance
+      </div>
     </div>
 
-    <!-- Login Card -->
-    <div class="login-card">
-      <!-- Security Alert -->
-      <div id="securityAlert" class="alert alert-warning" style="display: none;">
-        <i class="fas fa-exclamation-triangle"></i>
-        <div>
-          <strong>Security Notice</strong><br>
-          <span id="securityMessage"></span>
-        </div>
+    <!-- Compact Welcome Section -->
+    <div class="welcome-section">
+      <h2 class="welcome-title">Teacher Login</h2>
+      <p class="welcome-subtitle">Access your dashboard</p>
+    </div>
+
+    <!-- Compact Security Alert -->
+    <div id="securityAlert" class="alert alert-warning" style="display: none;">
+      <i class="fas fa-exclamation-triangle"></i>
+      <div>
+        <strong>Security:</strong><br>
+        <span id="securityMessage"></span>
+      </div>
+    </div>
+
+    <!-- Compact Login Form -->
+    <form id="loginForm">
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fas fa-envelope"></i>Email
+        </label>
+        <input 
+          type="email" 
+          id="email" 
+          class="form-input"
+          placeholder="Your email address"
+          required
+          autocomplete="email"
+        />
       </div>
 
-      <!-- Welcome Message -->
-      <div class="welcome-icon pulse-animation">
-        <i class="fas fa-user-graduate"></i>
-      </div>
-      <h2 class="welcome-title">Welcome Back!</h2>
-      <p class="welcome-text">Please sign in to access your dashboard</p>
-
-      <!-- Login Form -->
-      <form id="loginForm">
-        <div class="form-group">
-          <label class="form-label">
-            <i class="fas fa-envelope"></i>Email Address
-          </label>
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fas fa-lock"></i>Password
+        </label>
+        <div class="password-container">
           <input 
-            type="email" 
-            id="email" 
+            type="password" 
+            id="password" 
             class="form-input"
-            placeholder="Enter your email"
+            placeholder="Your password"
+            style="padding-right: 40px;"
             required
+            autocomplete="current-password"
           />
+          <button type="button" id="togglePassword" class="password-toggle">
+            <i class="fas fa-eye"></i>
+          </button>
         </div>
-
-        <div class="form-group">
-          <label class="form-label">
-            <i class="fas fa-lock"></i>Password
-          </label>
-          <div class="password-container">
-            <input 
-              type="password" 
-              id="password" 
-              class="form-input"
-              placeholder="Enter your password"
-              style="padding-right: 45px;"
-              required
-            />
-            <button type="button" id="togglePassword" class="password-toggle">
-              <i class="fas fa-eye"></i>
-            </button>
-          </div>
-        </div>
-
-        <div class="remember-group">
-          <input type="checkbox" id="rememberMe" checked>
-          <label for="rememberMe">Keep me signed in</label>
-        </div>
-
-        <button type="submit" id="loginButton" class="login-button">
-          <span id="loginButtonText">
-            <i class="fas fa-sign-in-alt"></i> Sign In
-          </span>
-        </button>
-      </form>
-
-      <!-- Alert Messages -->
-      <div id="errorMessage" class="alert alert-error" style="display: none;">
-        <i class="fas fa-exclamation-circle"></i>
-        <div id="errorText"></div>
       </div>
 
-      <div id="successMessage" class="alert alert-success" style="display: none;">
-        <i class="fas fa-check-circle"></i>
-        <div id="successText"></div>
+      <div class="remember-group">
+        <input type="checkbox" id="rememberMe" checked>
+        <label for="rememberMe">Keep me signed in</label>
       </div>
 
-      <!-- Footer -->
-      <div class="footer">
-        <p><i class="fas fa-shield-alt"></i> Secure Authentication</p>
-        <p>MLA Academy of Higher Learning © 2025</p>
-      </div>
+      <button type="submit" id="loginButton" class="login-button">
+        <span id="loginButtonText">
+          <i class="fas fa-sign-in-alt mr-1"></i>Sign In
+        </span>
+      </button>
+    </form>
+
+    <!-- Compact Alert Messages -->
+    <div id="errorMessage" class="alert alert-error" style="display: none;">
+      <i class="fas fa-exclamation-circle"></i>
+      <div id="errorText"></div>
+    </div>
+
+    <div id="successMessage" class="alert alert-success" style="display: none;">
+      <i class="fas fa-check-circle"></i>
+      <div id="successText"></div>
+    </div>
+
+    <!-- Compact Footer -->
+    <div class="footer">
+      <p><i class="fas fa-shield-alt mr-1"></i>Secure Portal</p>
+      <p>© 2025 MLA Academy of Higher Learning</p>
+      <p class="opacity-75">Smart Attendance v2.1</p>
     </div>
   </div>
 
@@ -463,7 +657,7 @@
         elements.loginButtonText.innerHTML = '<div class="loading-spinner"></div>Signing In...';
         elements.loginButton.disabled = true;
       } else {
-        elements.loginButtonText.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+        elements.loginButtonText.innerHTML = '<i class="fas fa-sign-in-alt mr-1"></i>Sign In';
         elements.loginButton.disabled = isLockedOut();
       }
     }
@@ -481,14 +675,14 @@
         localStorage.setItem("lockoutUntil", securityState.lockoutUntil.toString());
         
         const lockoutMinutes = Math.ceil(SECURITY_CONFIG.LOCKOUT_DURATION / 60000);
-        showError(`Account locked for ${lockoutMinutes} minutes.`);
-        showSecurityAlert(`Account locked for security.`);
+        showError(`Locked for ${lockoutMinutes} minutes.`);
+        showSecurityAlert(`Account locked. Contact support.`);
         elements.loginButton.disabled = true;
         
         setTimeout(() => location.reload(), SECURITY_CONFIG.LOCKOUT_DURATION);
       } else {
         const remaining = SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS - securityState.loginAttempts;
-        showSecurityAlert(`${remaining} attempts remaining.`);
+        showSecurityAlert(`${remaining} attempts left.`);
       }
     }
 
@@ -518,12 +712,12 @@
         localStorage.setItem(key, value.toString());
       });
 
-      showSuccess("Login successful! Redirecting...");
+      showSuccess("✅ Login successful! Redirecting...");
       resetSecurityState();
       
       setTimeout(() => {
-        window.location.replace("index.html");
-      }, 1500);
+        window.location.replace("/");
+      }, 1800);
     }
 
     // Password Toggle
@@ -548,7 +742,7 @@
       
       if (isLockedOut()) {
         const remainingMinutes = Math.ceil((securityState.lockoutUntil - Date.now()) / 60000);
-        showError(`Account locked. Try again in ${remainingMinutes} minutes.`);
+        showError(`Locked. Try in ${remainingMinutes} minutes.`);
         return;
       }
 
@@ -576,7 +770,7 @@
         
         switch (error.code) {
           case 'auth/user-not-found':
-            errorMessage = "No account found.";
+            errorMessage = "Account not found.";
             break;
           case 'auth/wrong-password':
             errorMessage = "Incorrect password.";
@@ -584,8 +778,11 @@
           case 'auth/invalid-email':
             errorMessage = "Invalid email format.";
             break;
+          case 'auth/too-many-requests':
+            errorMessage = "Too many attempts. Try later.";
+            break;
           default:
-            errorMessage = "Login failed.";
+            errorMessage = `Login failed.`;
         }
         
         recordFailedAttempt();
@@ -596,7 +793,7 @@
       }
     });
 
-    // Enhanced Auto-login check with loading
+    // Auto-login check with loading
     showInitialLoading();
 
     onAuthStateChanged(auth, (user) => {
@@ -605,23 +802,29 @@
           redirectToApp(user, user.email);
         } else {
           hideInitialLoading();
+          // Auto-focus email field
+          setTimeout(() => {
+            document.getElementById('email')?.focus();
+          }, 100);
         }
-      }, 1500);
+      }, 1200);
     });
 
     // Initialize security state
     setTimeout(() => {
       if (isLockedOut()) {
         const remainingMinutes = Math.ceil((securityState.lockoutUntil - Date.now()) / 60000);
-        showError(`Account locked. Try again in ${remainingMinutes} minutes.`);
-        showSecurityAlert("Account locked for security.");
+        showError(`Locked. Try in ${remainingMinutes} minutes.`);
+        showSecurityAlert("Account locked.");
         elements.loginButton.disabled = true;
       } else if (securityState.loginAttempts > 0) {
         const remaining = SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS - securityState.loginAttempts;
-        showSecurityAlert(`${remaining} attempts remaining.`);
+        showSecurityAlert(`${remaining} attempts left.`);
       }
-    }, 1600);
+    }, 1300);
+
   </script>
 
 </body>
 </html>
+
