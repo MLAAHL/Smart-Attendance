@@ -1478,14 +1478,31 @@ async function saveAttendanceChanges() {
 
     // Validate attendance data
     const invalidDates = Object.keys(attendanceMap).filter(dateStr => {
-      const date = new Date(dateStr);
-      return isNaN(date.getTime()) || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr);
+      // Check if the format matches DD/MM/YYYY
+      if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+        return true;
+      }
+      
+      // Parse DD/MM/YYYY format manually for reliable validation
+      const parts = dateStr.split('/');
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed in Date constructor
+      const year = parseInt(parts[2], 10);
+      
+      const date = new Date(year, month, day);
+      
+      // Check if the date is valid and matches the input values
+      return isNaN(date.getTime()) || 
+             date.getDate() !== day || 
+             date.getMonth() !== month || 
+             date.getFullYear() !== year;
     });
-
+    
     if (invalidDates.length > 0) {
       showAlert("Invalid Dates", `Found invalid date formats: ${invalidDates.join(', ')}`, "error");
       return;
     }
+    
 
     // Send to server
     const res = await fetch(`/api/update-attendance/${selectedStream}/sem${selectedSem}/${encodeURIComponent(subject)}`, {
