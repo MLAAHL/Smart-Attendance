@@ -215,11 +215,11 @@
       <div class="px-4 mb-6">
         <div class="flex bg-white rounded-full shadow-md p-1 max-w-sm mx-auto">
           <button onclick="showTab('markTab')" id="markBtn"
-            class="tablinks flex-1 px-4 py-2 text-white bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full transition-all duration-300 shadow-md text-sm font-medium">
+            class="tablinks flex-1 px-4 py-2 text-white bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full transition-all duration-300 shadow-md text-xs font-medium">
             Mark Attendance
           </button>
           <button onclick="showTab('viewTab')" id="viewBtn"
-            class="tablinks flex-1 px-4 py-2 text-gray-600 hover:text-indigo-600 hover:bg-indigo-100 rounded-full transition-all duration-300 text-sm font-medium">
+            class="tablinks flex-1 px-4 py-2 text-gray-600 hover:text-indigo-600 hover:bg-indigo-100 rounded-full transition-all duration-300 text-xs font-medium">
             View Attendance
           </button>
         </div>
@@ -588,18 +588,19 @@ function showTab(tabId) {
   document.getElementById(tabId).classList.remove("hidden");
   
   document.getElementById('markBtn').className =
-    "tablinks px-4 py-2 text-gray-600 hover:text-indigo-500 hover:bg-indigo-100 rounded-full transition-all duration-300";
+    "tablinks flex-1 px-2 py-1 text-gray-600 hover:text-indigo-600 hover:bg-indigo-100 rounded-full transition-all duration-300 text-[10px] font-medium";
   document.getElementById('viewBtn').className =
-    "tablinks px-4 py-2 text-gray-600 hover:text-indigo-500 hover:bg-indigo-100 rounded-full transition-all duration-300";
+    "tablinks flex-1 px-2 py-1 text-gray-600 hover:text-indigo-600 hover:bg-indigo-100 rounded-full transition-all duration-300 text-[10px] font-medium";
 
   if (tabId === 'markTab') {
     document.getElementById('markBtn').className =
-      "tablinks px-8 py-2 text-white bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full transition-all duration-300 shadow-md";
+      "tablinks flex-1 px-2 py-1 text-white bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full transition-all duration-300 shadow-sm text-[10px] font-medium";
   } else {
     document.getElementById('viewBtn').className =
-      "tablinks px-8 py-2 text-white bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full transition-all duration-300 shadow-md";
+      "tablinks flex-1 px-2 py-1 text-white bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full transition-all duration-300 shadow-sm text-[10px] font-medium";
   }
 }
+
 
 // ✅ FIXED: Load subjects and students function (no section mapping)
 async function loadSubjectsAndStudents(stream, sem) {
