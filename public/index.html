@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Teacher Panel</title>
+  <title>Smart Attendance</title>
   
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -89,7 +89,7 @@
             </button>
           </li>
           <li>
-            <a href="/auth.html" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-50 text-gray-700 hover:text-purple-600 transition block">
+            <a href="/myclass.html" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-50 text-gray-700 hover:text-purple-600 transition block">
               <div class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
                 <i class="fas fa-comments text-sm"></i>
             </div>
@@ -185,7 +185,7 @@
       <header class="w-full bg-white shadow-sm border-b border-gray-200 px-3 py-3 mb-4">
         <div class="flex items-center justify-between">
           <!-- Left: Back Button -->
-          <button onclick="backToSemesters()" class="w-8 h-8 rounded-full bg-gradient-to-r from-white to-blue-100 hover:from-blue-50 hover:to-blue-200 border border-blue-300 flex items-center justify-center transition-all duration-200 active:scale-95">
+          <button onclick="window.location.reload()"  class="w-8 h-8 rounded-full bg-gradient-to-r from-white to-blue-100 hover:from-blue-50 hover:to-blue-200 border border-blue-300 flex items-center justify-center transition-all duration-200 active:scale-95">
             <i class="fa-solid fa-angle-left text-blue-600 text-xs"></i>
           </button>
           
@@ -204,8 +204,8 @@
           </div>
           
           <!-- Right: Home Button -->
-          <button onclick="window.location.reload()" class="w-8 h-8 rounded-full bg-gradient-to-r from-white to-blue-100 hover:from-blue-50 hover:to-blue-200 border border-blue-300 flex items-center justify-center transition-all duration-200 active:scale-95">
-            <i class="fas fa-home text-blue-600 text-sm"></i>
+          <button onclick="window.location.reload()" ></button>
+       
           </button>
           
         </div>
@@ -2366,7 +2366,9 @@ console.log("✅ Excel/CSV export initialized (no external CDN required)");
   function updateUserInterface(user, email) {
     try {
       const userName = localStorage.getItem("userName") || user.displayName || email.split('@')[0];
-      const avatarURL = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=8b5cf6&color=fff&size=64`;
+      
+      // ✅ Use verified Google profile photo first, fallback to generated avatar
+      const profilePhoto = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=8b5cf6&color=fff&size=64`;
       
       const userNameElement = document.getElementById("userName");
       const userEmailElement = document.getElementById("userEmail");
@@ -2375,32 +2377,123 @@ console.log("✅ Excel/CSV export initialized (no external CDN required)");
       if (userNameElement) userNameElement.textContent = userName;
       if (userEmailElement) userEmailElement.textContent = email;
       if (profilePicElement) {
-        profilePicElement.src = avatarURL;
+        profilePicElement.src = profilePhoto;
         profilePicElement.onerror = () => {
-          profilePicElement.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect width="64" height="64" fill="%238b5cf6"/><text x="50%" y="50%" fill="white" text-anchor="middle" dy=".3em" font-family="Arial" font-size="24">👨‍🏫</text></svg>';
+          // ✅ Enhanced fallback: try generated avatar, then teacher emoji
+          const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=8b5cf6&color=fff&size=64`;
+          profilePicElement.src = fallbackAvatar;
+          
+          profilePicElement.onerror = () => {
+            // Final fallback to SVG emoji
+            profilePicElement.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect width="64" height="64" fill="%238b5cf6"/><text x="50%" y="50%" fill="white" text-anchor="middle" dy=".3em" font-family="Arial" font-size="24">👨‍🏫</text></svg>';
+          };
         };
       }
-
+  
       localStorage.setItem("userName", userName);
       localStorage.setItem("userEmail", email);
-
+  
     } catch (error) {
       console.error('❌ Error updating UI:', error);
     }
   }
+  
 
   window.logout = async () => {
     try {
+      // ✅ Show confirmation dialog
+      const confirmLogout = confirm(
+        "Are you sure you want to logout?\n\n" +
+        "• You will be signed out of Smart Attendance\n" +
+        "• Any unsaved changes may be lost\n" +
+        "• You'll need to login again to access the system"
+      );
+      
+      if (!confirmLogout) {
+        console.log('🔄 Logout cancelled by user');
+        return; // User cancelled, don't logout
+      }
+      
       console.log('👋 Logging out user...');
+      
+      // Show loading state (optional)
+      const loadingMessage = document.createElement('div');
+      loadingMessage.id = 'logoutLoading';
+      loadingMessage.innerHTML = `
+        <div style="
+          position: fixed; 
+          top: 0; 
+          left: 0; 
+          width: 100%; 
+          height: 100%; 
+          background: rgba(0,0,0,0.8); 
+          display: flex; 
+          align-items: center; 
+          justify-content: center; 
+          z-index: 9999;
+          color: white;
+          font-family: 'Poppins', sans-serif;
+        ">
+          <div style="text-align: center;">
+            <div style="
+              width: 40px; 
+              height: 40px; 
+              border: 3px solid rgba(255,255,255,0.3); 
+              border-top: 3px solid white; 
+              border-radius: 50%; 
+              animation: spin 1s linear infinite; 
+              margin: 0 auto 15px;
+            "></div>
+            <p style="margin: 0; font-size: 16px; font-weight: 500;">Signing out...</p>
+            <p style="margin: 5px 0 0; font-size: 12px; opacity: 0.8;">Please wait</p>
+          </div>
+          <style>
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          </style>
+        </div>
+      `;
+      document.body.appendChild(loadingMessage);
+      
+      // Wait a moment for better UX
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Sign out from Firebase
       await signOut(auth);
+      
+      // Clear all local storage
       localStorage.clear();
-      window.location.href = "login.html";
+      sessionStorage.clear();
+      
+      // Remove loading message
+      const loadingElement = document.getElementById('logoutLoading');
+      if (loadingElement) {
+        loadingElement.remove();
+      }
+      
+      // Redirect to login page
+      window.location.href = "/login.html";
+      
     } catch (error) {
       console.error('❌ Logout error:', error);
+      
+      // Clean up even if error occurs
       localStorage.clear();
-      window.location.href = "login.html";
+      sessionStorage.clear();
+      
+      // Remove loading message if it exists
+      const loadingElement = document.getElementById('logoutLoading');
+      if (loadingElement) {
+        loadingElement.remove();
+      }
+      
+      // Still redirect to login page
+      window.location.href = "/login.html";
     }
   };
+  
 
   // Initialize
   showAuthLoading();
