@@ -2878,73 +2878,131 @@ router.get("/reports/student-subject-report/:stream/sem:sem", validateParams, as
     });
   }
 }));
+// ✅ FIXED: Get Students for Selected Subject (Sorted by Student ID)
+router.get("/attendance-students/:stream/sem:sem/:subject", 
+  validateParams, 
+  asyncHandler(async (req, res) => {
+    const { stream, sem, subject } = req.params;
 
-// ✅ ADD THIS ROUTE to your backend (e.g., in routes/attendance.js)
-router.get("/attendance-students/:stream/sem:sem/:subject", validateParams, async (req, res) => {
-  const { stream, sem, subject } = req.params;
+    try {
+      console.log(`📊 Getting students for: ${subject} in ${stream} Sem ${sem}`);
+      
+      const Student = getStudentModel(stream, sem);
+      const Subject = getSubjectModel(stream, sem);
 
-  try {
-    console.log(`📊 Getting students for: ${subject} in ${stream} Sem ${sem}`);
-    
-    const Student = getStudentModel(stream, sem);
-    const Subject = getSubjectModel(stream, sem);
+      // ✅ Get subject details to determine filtering
+      const subjectDoc = await Subject.findOne({ 
+        subjectName: subject.toUpperCase(),
+        isActive: { $ne: false }
+      });
 
-    // Get subject details to determine filtering
-    const subjectDoc = await Subject.findOne({ 
-      subjectName: subject.toUpperCase(),
-      isActive: { $ne: false }
-    });
+      if (!subjectDoc) {
+        return res.status(404).json({ 
+          success: false,
+          message: `Subject "${subject}" not found in ${stream} Semester ${sem}`,
+          availableSubjects: await Subject.find({ isActive: { $ne: false } }, 'subjectName').lean()
+        });
+      }
 
-    if (!subjectDoc) {
-      return res.status(404).json({ 
+      // ✅ Build query based on subject type
+      let studentQuery = getActiveStudentQuery();
+      let studentsCount = 0;
+
+      if (subjectDoc.isLanguageSubject && subjectDoc.languageType) {
+        // Language Subject: Only get students who chose this language
+        studentQuery.languageSubject = subjectDoc.languageType;
+        console.log(`🔤 Filtering for ${subjectDoc.languageType} language students`);
+      }
+
+      // ✅ Fetch students with proper sorting by Student ID
+      let students = await Student.find(
+        studentQuery, 
+        "studentID name parentPhone languageSubject section isActive"
+      ).lean();
+
+      // ✅ Enhanced sorting for mixed alphanumeric Student IDs
+      students = students.sort((a, b) => {
+        const aNum = parseInt(a.studentID);
+        const bNum = parseInt(b.studentID);
+        
+        // If both are pure numbers, sort numerically
+        if (!isNaN(aNum) && !isNaN(bNum) && 
+            a.studentID === aNum.toString() && 
+            b.studentID === bNum.toString()) {
+          return aNum - bNum;
+        }
+        
+        // Otherwise, sort alphanumerically (handles mixed formats)
+        return a.studentID.localeCompare(b.studentID, undefined, {
+          numeric: true,
+          sensitivity: 'base'
+        });
+      });
+
+      studentsCount = students.length;
+
+      if (studentsCount === 0) {
+        return res.status(404).json({
+          success: false,
+          message: subjectDoc.isLanguageSubject 
+            ? `No students found for ${subjectDoc.languageType} language in ${stream} Semester ${sem}`
+            : `No active students found in ${stream} Semester ${sem}`,
+          subject: {
+            name: subjectDoc.subjectName,
+            type: subjectDoc.isLanguageSubject ? 'Language Subject' : 'Core Subject',
+            languageType: subjectDoc.languageType || null
+          }
+        });
+      }
+
+      console.log(`✅ Found ${studentsCount} students (sorted by Student ID)`);
+
+      // ✅ Enhanced response with sorting confirmation
+      res.json({
+        success: true,
+        students: students,
+        subject: {
+          name: subjectDoc.subjectName,
+          isLanguageSubject: subjectDoc.isLanguageSubject || false,
+          languageType: subjectDoc.languageType || null,
+          type: subjectDoc.subjectType || (subjectDoc.isLanguageSubject ? 'Language' : 'Core'),
+          isActive: subjectDoc.isActive !== false
+        },
+        metadata: {
+          totalStudents: studentsCount,
+          stream: stream.toUpperCase(),
+          semester: parseInt(sem),
+          sortedBy: 'studentID',
+          sortOrder: 'ascending',
+          message: subjectDoc.isLanguageSubject 
+            ? `${subjectDoc.languageType} language students only` 
+            : 'All active students',
+          appliedFilters: {
+            stream,
+            semester: sem,
+            subject: subject.toUpperCase(),
+            languageFilter: subjectDoc.languageType || 'None',
+            activeOnly: true
+          }
+        },
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error("❌ Error fetching students:", error);
+      res.status(500).json({ 
         success: false,
-        message: `Subject "${subject}" not found in ${stream} Semester ${sem}` 
+        message: "Failed to fetch students for subject",
+        error: error.message,
+        subject: subject,
+        stream,
+        semester: sem,
+        timestamp: new Date().toISOString()
       });
     }
+  })
+);
 
-    // Filter students based on subject type
-    let students;
-    if (subjectDoc.isLanguageSubject && subjectDoc.languageType) {
-      // Language Subject: Only get students who chose this language
-      students = await Student.find({
-        ...getActiveStudentQuery(),
-        languageSubject: subjectDoc.languageType
-      }, "studentID name languageSubject");
-      
-      console.log(`🔤 Found ${students.length} ${subjectDoc.languageType} students`);
-    } else {
-      // Core Subject: Get all students
-      students = await Student.find(
-        getActiveStudentQuery(), 
-        "studentID name languageSubject"
-      );
-      
-      console.log(`📚 Found ${students.length} total students`);
-    }
-
-    // Return JSON response
-    res.json({
-      success: true,
-      students,
-      subject: {
-        name: subjectDoc.subjectName,
-        isLanguageSubject: subjectDoc.isLanguageSubject,
-        languageType: subjectDoc.languageType,
-        type: subjectDoc.subjectType
-      },
-      message: subjectDoc.isLanguageSubject ? 
-        `${subjectDoc.languageType} language students only` : 
-        'All students'
-    });
-
-  } catch (error) {
-    console.error("❌ Error fetching students:", error);
-    res.status(500).json({ 
-      success: false,
-      message: "Failed to fetch students for subject",
-      error: error.message 
-    });
-  }
-});
 
 module.exports = router;
+
