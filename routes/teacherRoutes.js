@@ -466,8 +466,8 @@ const STREAM_MAPPINGS = {
   "BCA": "bca",
   "BBA": "bba", 
   "BCom": "bcom",
-  "BCom Section B": "bcom_section_b",  // ✅ Fixed naming
-  "BCom-BDA": "bcom_bda",              // ✅ Fixed hyphen
+  "BCom Section B": "bcomsectionb",  // ✅ Fixed naming
+  "BCom-BDA": "bcom-bda",              // ✅ Fixed hyphen
   "BCom A and F": "bcom_a_and_f"       // ✅ Consistent naming
 };
 
