@@ -55,11 +55,11 @@
     <!-- Header Section -->
     <header class="relative w-full px-5 py-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white overflow-hidden flex items-center justify-between h-20">
       
-      <!-- Toggle Button -->
-      <div class="menu-icon cursor-pointer" onclick="toggleMenu()">
-        <div class="line long bg-white h-1 w-6 mb-1 rounded"></div>
-        <div class="line short bg-white h-1 w-4 rounded"></div>
-      </div>
+      <!-- Back Button -->
+      <a href="myclass.html" class="inline-flex items-center px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-200">
+        <i class="fas fa-arrow-left mr-2"></i>
+        <span class="hidden sm:inline">Back</span>
+      </a>
 
       <!-- Header Title -->
       <div class="flex-1 text-center">
@@ -323,7 +323,7 @@
   <!-- Add authentication script here -->
   <script type="module">
     // Import configuration from separate file
-    import { firebaseConfig, AUTHORIZED_TEACHERS } from './firebase-config.js';
+    import { firebaseConfig } from './firebase-config.js';
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
@@ -333,7 +333,8 @@
     let authStateChecked = false;
 
     function isAuthorizedUser(email) {
-      return email && AUTHORIZED_TEACHERS.includes(email.toLowerCase());
+      // Allow all Firebase authenticated users
+      return email && email.length > 0;
     }
 
     onAuthStateChanged(auth, (user) => {

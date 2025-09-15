@@ -541,7 +541,7 @@
       </div>
 
       <div class="remember-group">
-        <input type="checkbox" id="rememberMe" checked>
+        <input type="checkbox" id="rememberMe">
         <label for="rememberMe">Keep me signed in</label>
       </div>
 
@@ -572,8 +572,8 @@
   </div>
 
   <script type="module">
-    // ✅ Import configuration from separate config file
-    import { firebaseConfig, AUTHORIZED_TEACHERS } from './firebase-config.js';
+    // Import configuration from separate config file
+    import { firebaseConfig } from './firebase-config.js';
     
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { 
@@ -581,13 +581,14 @@
       signInWithEmailAndPassword, 
       onAuthStateChanged,
       setPersistence,
-      browserLocalPersistence
+      browserLocalPersistence,
+      browserSessionPersistence
     } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
     // ✅ Use imported configuration
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    await setPersistence(auth, browserLocalPersistence);
+    // Note: Persistence will be set dynamically based on "Keep me signed in" checkbox
 
     // Security Configuration
     const SECURITY_CONFIG = {
@@ -695,29 +696,67 @@
     }
 
     function checkAuthorization(email) {
-      return AUTHORIZED_TEACHERS.includes(email.toLowerCase());
+      // Allow all Firebase authenticated users
+      return true;
     }
 
-    function redirectToApp(user, email) {
+    // Add a flag to prevent multiple redirections
+    let isRedirecting = false;
+
+    function redirectToApp(user, email, isAutoLogin = false) {
+      if (isRedirecting) return; // Prevent multiple redirections
+      isRedirecting = true;
+
       const userName = user.displayName || email.split('@')[0];
       const sessionData = {
         userName: userName,
         userEmail: email,
+        firebaseUid: user.uid, // Add Firebase UID
         loginTime: Date.now(),
         isAuthenticated: true,
         sessionExpiry: Date.now() + SECURITY_CONFIG.SESSION_TIMEOUT
       };
 
+      // For auto-login, check if data exists in either storage (user was already logged in)
+      // For manual login, use the checkbox state
+      let storage;
+      if (isAutoLogin) {
+        // Check if user data exists in localStorage (was remembered) or sessionStorage
+        const hasLocalData = localStorage.getItem('userName') || localStorage.getItem('userEmail');
+        storage = hasLocalData ? localStorage : sessionStorage;
+      } else {
+        // Manual login - check the checkbox
+        const rememberMe = document.getElementById("rememberMe")?.checked || false;
+        storage = rememberMe ? localStorage : sessionStorage;
+        
+        // Clear any existing data from the other storage type
+        if (rememberMe) {
+          Object.keys(sessionData).forEach(key => sessionStorage.removeItem(key));
+        } else {
+          Object.keys(sessionData).forEach(key => localStorage.removeItem(key));
+        }
+      }
+
+      // Store in the appropriate storage
       Object.entries(sessionData).forEach(([key, value]) => {
-        localStorage.setItem(key, value.toString());
+        storage.setItem(key, value.toString());
       });
 
-      showSuccess("✅ Login successful! Redirecting...");
-      resetSecurityState();
+      console.log('✅ Session data stored:', {
+        storage: storage === localStorage ? 'localStorage' : 'sessionStorage',
+        firebaseUid: user.uid,
+        userName: userName,
+        userEmail: email
+      });
+
+      if (!isAutoLogin) {
+        showSuccess("✅ Login successful! Redirecting...");
+        resetSecurityState();
+      }
       
       setTimeout(() => {
-        window.location.replace("/");
-      }, 1800);
+        window.location.replace("myclass.html");
+      }, isAutoLogin ? 100 : 1800);
     }
 
     // Password Toggle
@@ -760,10 +799,15 @@
       }
 
       try {
+        // Set persistence based on "Keep me signed in" checkbox
+        const rememberMe = document.getElementById("rememberMe").checked;
+        const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
+        await setPersistence(auth, persistence);
+        
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         
-        redirectToApp(user, email);
+        redirectToApp(user, email, false); // Pass false for manual login
 
       } catch (error) {
         let errorMessage = "Authentication failed";
@@ -799,7 +843,7 @@
     onAuthStateChanged(auth, (user) => {
       setTimeout(() => {
         if (user && user.email && checkAuthorization(user.email)) {
-          redirectToApp(user, user.email);
+          redirectToApp(user, user.email, true); // Pass true for auto-login
         } else {
           hideInitialLoading();
           // Auto-focus email field
@@ -807,7 +851,7 @@
             document.getElementById('email')?.focus();
           }, 100);
         }
-      }, 1200);
+      }, 1000);
     });
 
     // Initialize security state

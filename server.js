@@ -29,6 +29,16 @@ mongoose.connect(MONGODB_URI, {
 const teacherRoutes = require("./routes/teacherRoutes");
 app.use("/api", teacherRoutes);
 
+// Explicitly serve login.html for root URL
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
+// Redirect index.html to login.html
+app.get("/index.html", (req, res) => {
+  res.redirect("/");
+});
+
 // Serve frontend fallback
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));

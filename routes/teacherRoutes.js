@@ -2821,5 +2821,440 @@ router.get("/attendance-students/:stream/sem:sem/:subject",
   })
 );
 
+// ============================================================================
+// TEACHER MANAGEMENT ROUTES
+// ============================================================================
+
+const Teacher = require('../models/Teacher');
+
+// Create or update teacher profile
+router.post("/teacher/profile", asyncHandler(async (req, res) => {
+  try {
+    const { firebaseUid, name, email } = req.body;
+    
+    console.log("📝 Creating/updating teacher profile:", { firebaseUid, name, email });
+    
+    if (!firebaseUid || !name || !email) {
+      console.log("❌ Missing required fields:", { firebaseUid: !!firebaseUid, name: !!name, email: !!email });
+      return res.status(400).json({
+        success: false,
+        message: "Firebase UID, name, and email are required"
+      });
+    }
+
+    // Check if teacher already exists
+    let teacher = await Teacher.findByFirebaseUid(firebaseUid);
+    
+    if (teacher) {
+      // Update existing teacher
+      console.log("🔄 Updating existing teacher:", teacher._id);
+      teacher.name = name;
+      teacher.email = email;
+      await teacher.save();
+      
+      console.log("✅ Teacher profile updated successfully");
+      res.json({
+        success: true,
+        message: "Teacher profile updated successfully",
+        teacher: {
+          id: teacher._id,
+          firebaseUid: teacher.firebaseUid,
+          name: teacher.name,
+          email: teacher.email,
+          createdSubjects: teacher.createdSubjects
+        }
+      });
+    } else {
+      // Create new teacher
+      console.log("➕ Creating new teacher profile");
+      teacher = new Teacher({
+        firebaseUid,
+        name,
+        email,
+        createdSubjects: [],
+        attendanceQueue: [],
+        completedToday: []
+      });
+      
+      await teacher.save();
+      
+      console.log("✅ New teacher profile created successfully:", teacher._id);
+      res.status(201).json({
+        success: true,
+        message: "Teacher profile created successfully",
+        teacher: {
+          id: teacher._id,
+          firebaseUid: teacher.firebaseUid,
+          name: teacher.name,
+          email: teacher.email,
+          createdSubjects: teacher.createdSubjects
+        }
+      });
+    }
+  } catch (error) {
+    console.error("❌ Error managing teacher profile:", error);
+    
+    // Check for specific MongoDB errors
+    if (error.code === 11000) {
+      console.error("❌ Duplicate key error:", error.keyPattern);
+      
+      // If it's a duplicate email, try to find and update the existing record
+      if (error.keyPattern && error.keyPattern.email) {
+        try {
+          console.log("🔄 Attempting to update existing teacher with email:", email);
+          let existingTeacher = await Teacher.findOne({ email: email });
+          if (existingTeacher) {
+            existingTeacher.name = name;
+            existingTeacher.firebaseUid = firebaseUid;
+            await existingTeacher.save();
+            
+            console.log("✅ Updated existing teacher profile");
+            return res.json({
+              success: true,
+              message: "Teacher profile updated successfully",
+              teacher: {
+                id: existingTeacher._id,
+                firebaseUid: existingTeacher.firebaseUid,
+                name: existingTeacher.name,
+                email: existingTeacher.email,
+                createdSubjects: existingTeacher.createdSubjects
+              }
+            });
+          }
+        } catch (updateError) {
+          console.error("❌ Error updating existing teacher:", updateError);
+        }
+      }
+      
+      return res.status(409).json({
+        success: false,
+        message: "Teacher with this email or Firebase UID already exists",
+        error: "Duplicate entry"
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      message: "Failed to manage teacher profile",
+      error: error.message
+    });
+  }
+}));
+
+// Get teacher profile by Firebase UID
+router.get("/teacher/profile/:firebaseUid", asyncHandler(async (req, res) => {
+  try {
+    const { firebaseUid } = req.params;
+    
+    const teacher = await Teacher.findByFirebaseUid(firebaseUid);
+    
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found"
+      });
+    }
+    
+    res.json({
+      success: true,
+      teacher: {
+        id: teacher._id,
+        firebaseUid: teacher.firebaseUid,
+        name: teacher.name,
+        email: teacher.email,
+        createdSubjects: teacher.createdSubjects
+      }
+    });
+  } catch (error) {
+    console.error("❌ Error fetching teacher profile:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch teacher profile",
+      error: error.message
+    });
+  }
+}));
+
+// Add a created subject to teacher
+router.post("/teacher/:firebaseUid/subjects", asyncHandler(async (req, res) => {
+  try {
+    const { firebaseUid } = req.params;
+    const subjectData = req.body;
+    
+    const teacher = await Teacher.findByFirebaseUid(firebaseUid);
+    
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found"
+      });
+    }
+    
+    // Add the new subject to the teacher's createdSubjects array
+    teacher.createdSubjects.push(subjectData);
+    await teacher.save();
+    
+    res.json({
+      success: true,
+      message: "Subject added successfully",
+      createdSubjects: teacher.createdSubjects
+    });
+  } catch (error) {
+    console.error("❌ Error adding subject:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to add subject",
+      error: error.message
+    });
+  }
+}));
+
+// Update a created subject
+router.put("/teacher/:firebaseUid/subjects/:subjectId", asyncHandler(async (req, res) => {
+  try {
+    const { firebaseUid, subjectId } = req.params;
+    const updateData = req.body;
+    
+    const teacher = await Teacher.findByFirebaseUid(firebaseUid);
+    
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found"
+      });
+    }
+    
+    // Find and update the specific subject
+    const subjectIndex = teacher.createdSubjects.findIndex(
+      subject => subject._id.toString() === subjectId
+    );
+    
+    if (subjectIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Subject not found"
+      });
+    }
+    
+    // Update the subject
+    teacher.createdSubjects[subjectIndex] = {
+      ...teacher.createdSubjects[subjectIndex].toObject(),
+      ...updateData,
+      updatedAt: new Date()
+    };
+    
+    await teacher.save();
+    
+    res.json({
+      success: true,
+      message: "Subject updated successfully",
+      subject: teacher.createdSubjects[subjectIndex]
+    });
+  } catch (error) {
+    console.error("❌ Error updating subject:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update subject",
+      error: error.message
+    });
+  }
+}));
+
+// Delete a created subject
+router.delete("/teacher/:firebaseUid/subjects/:subjectId", asyncHandler(async (req, res) => {
+  try {
+    const { firebaseUid, subjectId } = req.params;
+    
+    const teacher = await Teacher.findByFirebaseUid(firebaseUid);
+    
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found"
+      });
+    }
+    
+    // Remove the subject from the array
+    teacher.createdSubjects = teacher.createdSubjects.filter(
+      subject => subject._id.toString() !== subjectId
+    );
+    
+    await teacher.save();
+    
+    res.json({
+      success: true,
+      message: "Subject deleted successfully",
+      createdSubjects: teacher.createdSubjects
+    });
+  } catch (error) {
+    console.error("❌ Error deleting subject:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete subject",
+      error: error.message
+    });
+  }
+}));
+
+// ===== ATTENDANCE QUEUE MANAGEMENT ENDPOINTS =====
+
+// Save attendance queue to teacher profile
+router.post("/queue", asyncHandler(async (req, res) => {
+  try {
+    const { teacherId, firebaseUid, queueData, timestamp } = req.body;
+    
+    if (!queueData) {
+      return res.status(400).json({
+        success: false,
+        message: "Queue data is required"
+      });
+    }
+
+    let teacher;
+    
+    // Try to find by Firebase UID first (preferred method)
+    if (firebaseUid) {
+      teacher = await Teacher.findByFirebaseUid(firebaseUid);
+    }
+    
+    // Fallback to finding by name if Firebase UID not provided or teacher not found
+    if (!teacher && teacherId) {
+      teacher = await Teacher.findOne({ name: teacherId });
+    }
+    
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found"
+      });
+    }
+
+    // Update teacher's attendance queue
+    teacher.attendanceQueue = queueData;
+    teacher.lastQueueUpdate = new Date(timestamp || Date.now());
+    await teacher.save();
+
+    res.json({
+      success: true,
+      message: "Queue saved successfully",
+      queueData: teacher.attendanceQueue
+    });
+  } catch (error) {
+    console.error("❌ Error saving queue:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to save queue",
+      error: error.message
+    });
+  }
+}));
+
+// Load attendance queue from teacher profile
+router.get("/queue/:identifier", asyncHandler(async (req, res) => {
+  try {
+    const { identifier } = req.params;
+    
+    let teacher;
+    
+    // Try to find by Firebase UID first (if identifier looks like a UID)
+    if (identifier.length > 10 && !identifier.includes('@')) {
+      teacher = await Teacher.findByFirebaseUid(identifier);
+    }
+    
+    // Fallback to finding by name or email
+    if (!teacher) {
+      teacher = await Teacher.findOne({ 
+        $or: [
+          { name: identifier },
+          { email: identifier }
+        ]
+      });
+    }
+    
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      queueData: teacher.attendanceQueue || [],
+      completedToday: teacher.completedToday || [],
+      lastQueueUpdate: teacher.lastQueueUpdate
+    });
+  } catch (error) {
+    console.error("❌ Error loading queue:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to load queue",
+      error: error.message
+    });
+  }
+}));
+
+// Delete queue item from teacher's attendance queue
+router.delete("/queue/item/:itemId", asyncHandler(async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    const { teacherId, firebaseUid } = req.body;
+    
+    if (!itemId) {
+      return res.status(400).json({
+        success: false,
+        message: "Item ID is required"
+      });
+    }
+
+    let teacher;
+    
+    // Try to find by Firebase UID first (preferred method)
+    if (firebaseUid) {
+      teacher = await Teacher.findByFirebaseUid(firebaseUid);
+    }
+    
+    // Fallback to finding by name if Firebase UID not provided or teacher not found
+    if (!teacher && teacherId) {
+      teacher = await Teacher.findOne({ name: teacherId });
+    }
+    
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found"
+      });
+    }
+
+    // Remove the item from attendance queue
+    const originalLength = teacher.attendanceQueue.length;
+    teacher.attendanceQueue = teacher.attendanceQueue.filter(item => item.id !== itemId);
+    
+    if (teacher.attendanceQueue.length === originalLength) {
+      return res.status(404).json({
+        success: false,
+        message: "Queue item not found"
+      });
+    }
+
+    // Update last queue update timestamp
+    teacher.lastQueueUpdate = new Date();
+    await teacher.save();
+
+    res.json({
+      success: true,
+      message: "Queue item deleted successfully",
+      queueData: teacher.attendanceQueue
+    });
+  } catch (error) {
+    console.error("❌ Error deleting queue item:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete queue item",
+      error: error.message
+    });
+  }
+}));
+
 
 module.exports = router;
