@@ -41,7 +41,7 @@
 
 <body>
   <!-- Main Wrapper -->
-  <div id="homePage">
+  <div id="homePage" class="hidden">
     
     <!-- Header Section -->
     <header class="relative w-full px-5 py-6 text-white overflow-hidden flex items-center justify-center h-[200vh]">
@@ -159,28 +159,11 @@
       </div>
     </div>
 
-    <!-- Stream Section -->
-    <div class="px-5 py-4">
-      <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-        <i class="fas fa-graduation-cap text-indigo-500 mr-2"></i>
-        Select Academic Stream
-      </h2>
-      <div id="streamSection" class="grid grid-cols-2 gap-4">
-        <!-- JS will populate stream cards here -->
-      </div>
-    </div>
 
   </div> <!-- End of #homePage -->
 
-    <!-- Semester Section (initially hidden) -->
-    <div id="semesterSection" class="hidden">
-      <div class="max-w-[800px] w-full grid grid-cols-2 gap-6 px-6 py-6 mx-auto">
-        
-        <!-- JS will append semester cards here -->
-      </div>
-    </div>
 
-    <div id="tabs" class="hidden">
+    <div id="tabs">
       <!-- ✅ MOBILE HEADER: Optimized spacing -->
       <header class="w-full bg-white shadow-sm border-b border-gray-200 px-3 py-3 mb-4">
         <div class="flex items-center justify-between">
@@ -190,23 +173,15 @@
           </button>
           
           
-          <!-- Center: Stream & Semester -->
+          <!-- Center: Title -->
           <div class="flex items-center space-x-3 rounded-lg px-3 py-2">
             <div class="text-center">
-              <p class="text-xs text-gray-500">Stream</p>
-              <p id="currentStream" class="font-semibold text-indigo-700 text-xs leading-tight"></p>
-            </div>
-            <div class="w-px h-6 bg-gray-300"></div>
-            <div class="text-center">
-              <p class="text-xs text-gray-500">Sem</p>
-              <p id="currentSemester" class="font-semibold text-blue-700 text-xs leading-tight"></p>
+              <p class="font-semibold text-indigo-700 text-sm">Attendance Management</p>
             </div>
           </div>
           
-          <!-- Right: Home Button -->
-          <button onclick="window.location.href = 'myclass.html'"></button>
-       
-          </button>
+          <!-- Right: Spacer -->
+          <div class="w-8 h-8"></div>
           
         </div>
       </header>
@@ -227,7 +202,7 @@
     </div>
     
     
-    <div id="markTab" class="tabcontent hidden p-3 sm:p-4">
+    <div id="markTab" class="tabcontent p-3 sm:p-4">
       <!-- ✅ COMPACT: Title with responsive spacing -->
       <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-3 flex items-center">
         <i class="fas fa-edit text-indigo-500 mr-2"></i>
@@ -480,8 +455,8 @@
           
           sessionStorage.removeItem('selectedClass');
           
-          setTimeout(() => {
-            autoSelectStreamAndSemester(classInfo);
+          setTimeout(async () => {
+            await autoSelectClass(classInfo);
           }, 500);
         } catch (error) {
           console.error('❌ Error parsing selected class info:', error);
@@ -492,7 +467,7 @@
     });
     
     // ✅ Auto-selection function from myclass.html
-    async function autoSelectStreamAndSemester(classInfo) {
+    async function autoSelectClass(classInfo) {
       const { stream, semester, subject } = classInfo;
       
       try {
@@ -501,10 +476,8 @@
         selectedStream = stream;
         selectedSem = semester;
         
-        updateCurrentSelectionDisplay(stream, semester);
         
         document.getElementById("homePage").classList.add("hidden");
-        semesterSection.classList.add("hidden");
         tabs.classList.remove("hidden");
         showTab("markTab");
         
@@ -560,236 +533,12 @@
     // ✅ SYSTEM INITIALIZATION
     function initializeSystem() {
       addMenuClickListener();
-      createStreamSelection();
       setupDateInput();
       setupSubmitButton();
       setupTabButtons();
       setupViewButtons();
       initializeExcelExport();
       console.log("✅ Attendance system initialized successfully");
-    }
-    
-    // ✅ STREAM CREATION WITH ENHANCED STRUCTURE
-    function createStreamSelection() {
-      const streams = [
-        {
-          name: "BCA",
-          icon: '<i class="fas fa-laptop-code text-indigo-500"></i>',
-          color: "bg-indigo-100",
-          textColor: "text-indigo-600"
-        },
-        {
-          name: "BBA",
-          icon: '<i class="fas fa-chart-line text-green-500"></i>',
-          color: "bg-green-100",
-          textColor: "text-green-600"
-        },
-        {
-          name: "BCom",
-          displayName: "BCom",
-          icon: '<i class="fas fa-money-bill-wave text-yellow-500"></i>',
-          color: "bg-yellow-100",
-          textColor: "text-yellow-600"
-        },
-        {
-          name: "BCom Section B",
-          displayName: "BCom B",
-          icon: '<i class="fas fa-money-bill-wave text-orange-500"></i>',
-          color: "bg-purple-100",
-          textColor: "text-purple-600",
-          limitedSemesters: [5, 6]
-        },
-        {
-          name: "BCom-BDA",
-          displayName: "BDA",
-          icon: '<i class="fas fa-chart-bar text-purple-500"></i>',
-          color: "bg-purple-100",
-          textColor: "text-purple-600"
-        },
-        {
-          name: "BCom A and F",
-          icon: '<i class="fas fa-calculator text-blue-500"></i>',
-          color: "bg-blue-100",
-          textColor: "text-blue-600"
-        }
-      ];
-    
-      streams.forEach((stream) => {
-        const streamBox = document.createElement("div");
-        streamBox.className = `bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:border-indigo-300 transition card-hover cursor-pointer`;
-    
-        const displayName = stream.displayName || stream.name;
-    
-        streamBox.innerHTML = `
-          <div class="flex items-center">
-            <div class="w-12 h-12 ${stream.color} rounded-lg flex items-center justify-center mr-4">
-              ${stream.icon}
-            </div>
-            <div>
-              <h3 class="font-semibold text-gray-800">${displayName}</h3>
-              <p class="text-sm text-gray-500">${stream.limitedSemesters ? 'Advanced Semesters' : 'Bachelor\'s Degree'}</p>
-            </div>
-          </div>
-          <div class="mt-4 flex justify-end">
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${stream.color} ${stream.textColor}">
-              Select <i class="fas fa-chevron-right ml-1 text-xs"></i>
-            </span>
-          </div>
-        `;
-    
-        streamBox.addEventListener("click", () => {
-          showSemesterSelection(stream);
-        });
-    
-        streamSection.appendChild(streamBox);
-      });
-    }
-    
-    // ✅ SEMESTER SELECTION WITH ENHANCED UI
-    function showSemesterSelection(stream) {
-      console.log("🔍 Stream clicked:", stream.name);
-      
-      selectedStream = stream.name;
-      
-      document.getElementById("homePage").classList.add("hidden");
-      semesterSection.classList.remove("hidden");
-      semesterSection.innerHTML = "";
-    
-      const displayName = stream.displayName || stream.name;
-    
-      // Create header
-      const header = document.createElement("header");
-      header.className = "w-full bg-white shadow-md border-b border-gray-200 px-4 py-3 mb-0";
-      header.innerHTML = `
-        <div class="flex items-center justify-between max-w-7xl mx-auto">
-          <button onclick="goToStreamsHome()" class="w-8 h-8 rounded-full bg-gradient-to-r from-white to-blue-100 hover:from-blue-50 hover:to-blue-200 border border-blue-300 flex items-center justify-center transition-all duration-200 active:scale-95">
-            <i class="fa-solid fa-angle-left text-blue-600 text-xs"></i>
-          </button>
-          <div class="flex items-center space-x-3">
-            <div class="text-center">
-              <p class="text-xs text-gray-500">Selected Stream</p>
-              <p class="text-sm font-bold text-gray-800">${displayName}</p>
-            </div>
-          </div>
-          <div class="w-8 h-8"></div>
-        </div>
-      `;
-    
-      const container = document.createElement("div");
-      container.className = "min-h-screen bg-gray-50 px-4 py-6";
-    
-      semesterSection.appendChild(header);
-      semesterSection.appendChild(container);
-    
-      const semesterGrid = document.createElement("div");
-      semesterGrid.className = "max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 px-2 sm:px-4";
-    
-      const semesterColors = [
-        { bg: 'bg-red-500', light: 'bg-red-50', border: 'border-red-200', text: 'text-red-600' },
-        { bg: 'bg-blue-500', light: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-600' },
-        { bg: 'bg-green-500', light: 'bg-green-50', border: 'border-green-200', text: 'text-green-600' },
-        { bg: 'bg-purple-500', light: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-600' },
-        { bg: 'bg-indigo-500', light: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-600' },
-        { bg: 'bg-pink-500', light: 'bg-pink-50', border: 'border-pink-200', text: 'text-pink-600' }
-      ];
-    
-      let semestersToShow;
-      if (stream.limitedSemesters) {
-        semestersToShow = stream.limitedSemesters;
-      } else {
-        semestersToShow = [1, 2, 3, 4, 5, 6];
-      }
-    
-      semestersToShow.forEach((sem, index) => {
-        const color = semesterColors[index];
-        const semBox = document.createElement("div");
-        
-        semBox.className = `group bg-white rounded-xl p-4 sm:p-6 shadow-md border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer ${color.light} hover:${color.border}`;
-    
-        semBox.innerHTML = `
-          <div class="flex items-center space-x-3 sm:space-x-4">
-            <div class="flex-shrink-0">
-              <div class="w-14 h-14 sm:w-16 sm:h-16 ${color.bg} rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300">
-                <span class="text-xl sm:text-2xl font-bold text-white">${sem}</span>
-              </div>
-            </div>
-            <div class="flex-1 min-w-0">
-              <h3 class="text-base sm:text-lg font-bold text-gray-800 mb-1">
-                Semester ${sem}
-              </h3>
-              <p class="text-xs sm:text-sm text-gray-600 mb-2">
-                ${stream.name === 'BCom Section B' ? 'Section B Stream' : (stream.name === 'BCom' ? 'Section A Stream' : stream.name + ' Program')}
-              </p>
-              <div class="flex items-center justify-end">
-                <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <i class="fas fa-arrow-right ${color.text} text-sm"></i>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-    
-        semBox.onclick = () => {
-          console.log(`📚 Semester clicked: ${sem}`);
-          selectStream(stream.name, sem);
-        };
-    
-        semesterGrid.appendChild(semBox);
-      });
-    
-      container.appendChild(semesterGrid);
-    
-      const footer = document.createElement("div");
-      footer.className = "mt-8 text-center";
-      footer.innerHTML = `
-        <p class="text-sm text-gray-500">
-          <i class="fas fa-graduation-cap mr-2"></i>
-          Select a semester to manage attendance
-        </p>
-      `;
-    
-      container.appendChild(footer);
-    }
-    
-    // ✅ STREAM SELECTION FUNCTION
-    function selectStream(stream, sem) {
-      selectedStream = stream;
-      selectedSem = sem;
-      
-      updateCurrentSelectionDisplay(stream, sem);
-      
-      semesterSection.classList.add("hidden");
-      tabs.classList.remove("hidden");
-      showTab("markTab");
-      loadSubjectsAndStudents(stream, sem);
-      
-      console.log(`✅ Selected: ${stream} - Semester ${sem}`);
-    }
-    
-    // ✅ CURRENT SELECTION DISPLAY
-    function updateCurrentSelectionDisplay(stream, semester) {
-      const currentStreamElement = document.getElementById('currentStream');
-      const currentSemesterElement = document.getElementById('currentSemester');
-      
-      if (currentStreamElement) {
-        currentStreamElement.textContent = stream;
-        console.log(`✅ Updated stream display: ${stream}`);
-      }
-      
-      if (currentSemesterElement) {
-        currentSemesterElement.textContent = `Semester ${semester}`;
-        console.log(`✅ Updated semester display: Semester ${semester}`);
-      }
-    }
-    
-    function clearCurrentSelectionDisplay() {
-      const currentStreamElement = document.getElementById('currentStream');
-      const currentSemesterElement = document.getElementById('currentSemester');
-      
-      if (currentStreamElement) currentStreamElement.textContent = '';
-      if (currentSemesterElement) currentSemesterElement.textContent = '';
-      
-      console.log('🧹 Cleared selection display');
     }
     
     // ✅ HOME NAVIGATION
@@ -2060,8 +1809,6 @@
     window.validateAttendanceDates = validateAttendanceDates;
     window.validateAttendanceDatesSimple = validateAttendanceDatesSimple;
     window.goToStreamsHome = goToStreamsHome;
-    window.updateCurrentSelectionDisplay = updateCurrentSelectionDisplay;
-    window.selectStream = selectStream;
     window.showTab = showTab;
     window.backToSemesters = backToSemesters;
     window.loadSubjectsAndStudents = loadSubjectsAndStudents;

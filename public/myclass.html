@@ -398,6 +398,26 @@
         </div>
       </div>
 
+      <!-- Compact Completed Section -->
+      <div id="completedSection" class="hidden slide-in">
+        <div class="glass-card rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center">
+              <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                <i class="fas fa-check text-green-600"></i>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-gray-800">Completed Today</h3>
+                <p class="text-xs text-gray-500">Successfully processed</p>
+              </div>
+            </div>
+            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold floating-badge" id="completedBadge">0</span>
+          </div>
+          <div id="completedList" class="space-y-3">
+            <!-- Completed items populated by JavaScript -->
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Enhanced Add Class Form with Stream Containers -->
@@ -547,6 +567,7 @@
 
     // Global variables
     let attendanceQueue = [];
+    let completedToday = [];
     let selectedStreamData = null;
     let userData = {
       userName: 'Teacher',
@@ -793,7 +814,8 @@
           if (response.status === 404) {
             console.log('Teacher not found in database, initializing empty queue');
             attendanceQueue = [];
-            return { queueData: [] };
+            completedToday = [];
+            return { queueData: [], completedToday: [] };
           }
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -801,10 +823,12 @@
         const result = await response.json();
         if (result.success) {
           attendanceQueue = result.queueData || [];
+          completedToday = result.completedToday || [];
           console.log(`📥 Loaded ${attendanceQueue.length} items from database`);
           
           // Update localStorage with database data
           localStorage.setItem('attendanceQueue', JSON.stringify(attendanceQueue));
+          localStorage.setItem('completedToday', JSON.stringify(completedToday));
           
           return result;
         } else {
@@ -931,6 +955,16 @@
       }
     }
 
+    function checkNewDay() {
+      const today = new Date().toDateString();
+      const lastClear = localStorage.getItem('lastClearDate');
+      
+      if (lastClear !== today) {
+        completedToday = [];
+        localStorage.setItem('completedToday', JSON.stringify(completedToday));
+        localStorage.setItem('lastClearDate', today);
+      }
+    }
 
     // Page navigation
     function showHomePage() {
@@ -954,15 +988,18 @@
       const queueSection = document.getElementById('queueSection');
       const emptyQueuePrompt = document.getElementById('emptyQueuePrompt');
       const queueList = document.getElementById('queueList');
+      const completedSection = document.getElementById('completedSection');
+      const completedList = document.getElementById('completedList');
 
       // Ensure all elements exist before updating
-      if (!queueSection || !emptyQueuePrompt || !queueList) {
+      if (!queueSection || !emptyQueuePrompt || !queueList || !completedSection || !completedList) {
         console.warn('Some DOM elements not found, retrying...');
         setTimeout(updateQueueDisplay, 100);
         return;
       }
 
       document.getElementById('queueCount').textContent = attendanceQueue.length;
+      document.getElementById('completedBadge').textContent = completedToday.length;
 
       if (attendanceQueue.length === 0) {
         emptyQueuePrompt.classList.remove('hidden');
@@ -1006,6 +1043,34 @@
             </div>
           `;
         }).join('');
+      }
+
+      if (completedToday.length > 0) {
+        completedSection.classList.remove('hidden');
+        completedList.innerHTML = completedToday.map(item => {
+          const streamData = streams.find(s => s.name === item.stream) || streams[0];
+          return `
+            <div class="bg-gradient-to-r from-green-50 to-green-100 border-l-4 border-green-500 rounded-lg p-3">
+              <div class="flex items-center">
+                <div class="w-8 h-8 bg-green-200 rounded-lg flex items-center justify-center mr-3">
+                  <i class="fas fa-check text-green-600 text-sm"></i>
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center mb-1">
+                    <div class="w-4 h-4 ${streamData.color} rounded mr-1 flex items-center justify-center">
+                      ${streamData.icon}
+                    </div>
+                    <h4 class="font-bold text-gray-800 text-sm">${item.subject}</h4>
+                  </div>
+                  <p class="text-xs text-gray-600 mb-1">${streamData.displayName || item.stream} • Sem ${item.semester}</p>
+                  <p class="text-xs text-green-600 font-semibold">Done: ${item.completedTime}</p>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        completedSection.classList.add('hidden');
       }
     }
 
@@ -1187,6 +1252,12 @@
         teacherEmail: userData.userEmail
       };
       
+      const completedItem = { 
+        ...item, 
+        completedTime: new Date().toLocaleTimeString(),
+        completedDate: new Date().toDateString()
+      };
+      completedToday.push(completedItem);
       
       const queueElement = document.querySelector(`[data-id="${itemId}"]`);
       if (queueElement) {
@@ -1196,6 +1267,7 @@
           
           // Update localStorage immediately
           localStorage.setItem('attendanceQueue', JSON.stringify(attendanceQueue));
+          localStorage.setItem('completedToday', JSON.stringify(completedToday));
           
           // Try to update database
           try {
@@ -1451,6 +1523,8 @@
         showNotification('Database connection issue (continuing offline)', 'warning');
       }
 
+      checkNewDay();
+      
       try {
         console.log('🔄 Loading queue from database...');
         await loadQueueFromDatabase();
@@ -1459,6 +1533,7 @@
       } catch (error) {
         console.log('⚠️ Database load failed, trying localStorage fallback');
         attendanceQueue = JSON.parse(localStorage.getItem('attendanceQueue') || '[]');
+        completedToday = JSON.parse(localStorage.getItem('completedToday') || '[]');
         updateQueueDisplay();
       }
       
