@@ -134,3 +134,20 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+#files for fixing
+check-indexes.js
+fix-indexes.js
+cleanup-indexes.js
+cleanup-database.js
+fix-duplicate-email.js
+force-cleanup.js
+investigate-db.js
+nuclear-reset.js
+reset-teachers-only.js
+test-login.html
+test-new-model.js
+test-teachers-clean.js
+test-teachers.js
+test.js
+ultimate-reset.js
