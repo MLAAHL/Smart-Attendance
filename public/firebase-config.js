@@ -16,6 +16,7 @@ export const firebaseConfig = {
     "preetiprasanna22@gmail.com",
     "sharmilaravishankar75@gmail.com",
     "shoba.mlafgcw@gmail.com",
-    "girishbl72@gmail.com"
+    "girishbl72@gmail.com",
+    "itzzpchere@gmail.com"
   ];
   

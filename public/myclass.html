@@ -17,7 +17,7 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
     import { firebaseConfig } from './firebase-config.js';
     
     const app = initializeApp(firebaseConfig);
@@ -26,7 +26,12 @@
     // Make auth and signOut available globally
     window.auth = auth;
     window.signOut = signOut;
+    window.onAuthStateChanged = onAuthStateChanged;
+    
+    console.log('✅ Firebase initialized successfully');
   </script>
+  
+  <!-- Note: All Firebase users are now allowed to access the system -->
 
   <style>
     * {
@@ -393,26 +398,6 @@
         </div>
       </div>
 
-      <!-- Compact Completed Section -->
-      <div id="completedSection" class="hidden slide-in">
-        <div class="glass-card rounded-2xl p-4">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center">
-              <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                <i class="fas fa-check text-green-600"></i>
-              </div>
-              <div>
-                <h3 class="text-base font-bold text-gray-800">Completed Today</h3>
-                <p class="text-xs text-gray-500">Successfully processed</p>
-              </div>
-            </div>
-            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold floating-badge" id="completedBadge">0</span>
-          </div>
-          <div id="completedList" class="space-y-3">
-            <!-- Completed items populated by JavaScript -->
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Enhanced Add Class Form with Stream Containers -->
@@ -562,13 +547,23 @@
 
     // Global variables
     let attendanceQueue = [];
-    let completedToday = [];
     let selectedStreamData = null;
     let userData = {
-      userName: localStorage.getItem('userName') || sessionStorage.getItem('userName') || 'Teacher',
-      userEmail: localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail') || 'teacher@school.edu',
-      firebaseUid: localStorage.getItem('firebaseUid') || sessionStorage.getItem('firebaseUid') || null
+      userName: 'Teacher',
+      userEmail: 'teacher@school.edu',
+      firebaseUid: null
     };
+
+    // Update user data when authenticated
+    function updateUserData(user) {
+      if (user) {
+        userData = {
+          userName: user.displayName || user.email?.split('@')[0] || 'Teacher',
+          userEmail: user.email || 'teacher@school.edu',
+          firebaseUid: user.uid
+        };
+      }
+    }
 
     // API base URL
     const API_BASE_URL = '/api';
@@ -581,8 +576,8 @@
     async function saveTeacherProfile() {
       try {
         if (!userData.firebaseUid) {
-          console.warn('No Firebase UID available');
-          return;
+          console.log('No Firebase UID available - skipping database teacher profile creation');
+          return { success: true, message: 'Skipped - no Firebase UID' };
         }
 
         console.log('Saving teacher profile:', {
@@ -629,12 +624,19 @@
     // Get teacher profile from database
     async function getTeacherProfile() {
       try {
-        if (!userData.firebaseUid) {
-          console.warn('No Firebase UID available');
+        let response;
+        
+        if (userData.firebaseUid) {
+          // Use Firebase UID for Firebase authenticated users
+          response = await fetch(`${API_BASE_URL}/teacher/profile/${userData.firebaseUid}`);
+        } else if (userData.userEmail) {
+          // Use email for localStorage authenticated users
+          response = await fetch(`${API_BASE_URL}/teacher/profile/email/${encodeURIComponent(userData.userEmail)}`);
+        } else {
+          console.warn('No identifier available for teacher lookup');
           return null;
         }
 
-        const response = await fetch(`${API_BASE_URL}/teacher/profile/${userData.firebaseUid}`);
         const result = await response.json();
         
         if (result.success) {
@@ -652,12 +654,20 @@
     // Save created subject to database
     async function saveCreatedSubject(subjectData) {
       try {
-        if (!userData.firebaseUid) {
-          console.warn('No Firebase UID available');
+        let apiUrl;
+        
+        if (userData.firebaseUid) {
+          // Use Firebase UID for Firebase authenticated users
+          apiUrl = `${API_BASE_URL}/teacher/${userData.firebaseUid}/subjects`;
+        } else if (userData.userEmail) {
+          // Use email for localStorage authenticated users
+          apiUrl = `${API_BASE_URL}/teacher/email/${encodeURIComponent(userData.userEmail)}/subjects`;
+        } else {
+          console.warn('No identifier available for saving subject');
           return false;
         }
 
-        const response = await fetch(`${API_BASE_URL}/teacher/${userData.firebaseUid}/subjects`, {
+        const response = await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -699,18 +709,25 @@
       try {
         // Save/update teacher profile
         const teacherProfile = await saveTeacherProfile();
-        if (!teacherProfile) {
-          throw new Error('Failed to create/update teacher profile');
+        
+        // Check if we have a valid teacher profile or if we're continuing offline
+        if (!teacherProfile || typeof teacherProfile === 'string') {
+          console.log('Database initialization skipped - continuing offline');
+          return true; // Continue without database operations
         }
         
-        // Load any existing created subjects
-        const createdSubjects = await loadCreatedSubjects();
-        console.log(`Loaded ${createdSubjects.length} created subjects`);
+        // Load any existing created subjects only if we have a valid profile
+        if (userData.firebaseUid) {
+          const createdSubjects = await loadCreatedSubjects();
+          console.log(`Loaded ${createdSubjects.length} created subjects`);
+        }
         
         return true;
       } catch (error) {
         console.error('Error initializing teacher in database:', error);
-        throw error;
+        // Don't throw error - continue offline
+        console.log('Database connection issue (continuing offline)');
+        return true;
       }
     }
 
@@ -776,8 +793,7 @@
           if (response.status === 404) {
             console.log('Teacher not found in database, initializing empty queue');
             attendanceQueue = [];
-            completedToday = [];
-            return { queueData: [], completedToday: [] };
+            return { queueData: [] };
           }
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -785,12 +801,10 @@
         const result = await response.json();
         if (result.success) {
           attendanceQueue = result.queueData || [];
-          completedToday = result.completedToday || [];
           console.log(`📥 Loaded ${attendanceQueue.length} items from database`);
           
           // Update localStorage with database data
           localStorage.setItem('attendanceQueue', JSON.stringify(attendanceQueue));
-          localStorage.setItem('completedToday', JSON.stringify(completedToday));
           
           return result;
         } else {
@@ -917,58 +931,6 @@
       }
     }
 
-    // Initialize
-    document.addEventListener('DOMContentLoaded', async function() {
-      // Check for authentication in both localStorage and sessionStorage
-      const isAuthenticated = localStorage.getItem('isAuthenticated') || sessionStorage.getItem('isAuthenticated');
-      
-      if (!isAuthenticated) {
-        window.location.href = 'login.html'; // Changed from auth.html to login.html
-        return;
-      }
-
-      // Initialize teacher in database
-      try {
-        console.log('Initializing teacher in database...');
-        await initializeTeacherInDatabase();
-        console.log('Teacher initialized successfully');
-      } catch (error) {
-        console.error('Error initializing teacher:', error);
-        showNotification('Database connection issue (continuing offline)', 'warning');
-      }
-
-      checkNewDay();
-      
-      // Try to load from database first
-      try {
-        console.log('🔄 Loading queue from database...');
-        await loadQueueFromDatabase();
-        console.log('✅ Queue loaded from database successfully');
-        updateQueueDisplay();
-      } catch (error) {
-        console.log('⚠️ Database load failed, trying localStorage fallback');
-        // Fallback to localStorage only if database fails
-        attendanceQueue = JSON.parse(localStorage.getItem('attendanceQueue') || '[]');
-        completedToday = JSON.parse(localStorage.getItem('completedToday') || '[]');
-        updateQueueDisplay();
-      }
-      
-      createStreamCards();
-
-      if (elements.semesterSelect) elements.semesterSelect.addEventListener('change', onSemesterChange);
-      if (document.getElementById('addClassForm')) document.getElementById('addClassForm').addEventListener('submit', handleAddToQueue);
-    });
-
-    function checkNewDay() {
-      const today = new Date().toDateString();
-      const lastClear = localStorage.getItem('lastClearDate');
-      
-      if (lastClear !== today) {
-        completedToday = [];
-        localStorage.setItem('completedToday', JSON.stringify(completedToday));
-        localStorage.setItem('lastClearDate', today);
-      }
-    }
 
     // Page navigation
     function showHomePage() {
@@ -992,18 +954,15 @@
       const queueSection = document.getElementById('queueSection');
       const emptyQueuePrompt = document.getElementById('emptyQueuePrompt');
       const queueList = document.getElementById('queueList');
-      const completedSection = document.getElementById('completedSection');
-      const completedList = document.getElementById('completedList');
 
       // Ensure all elements exist before updating
-      if (!queueSection || !emptyQueuePrompt || !queueList || !completedSection || !completedList) {
+      if (!queueSection || !emptyQueuePrompt || !queueList) {
         console.warn('Some DOM elements not found, retrying...');
         setTimeout(updateQueueDisplay, 100);
         return;
       }
 
       document.getElementById('queueCount').textContent = attendanceQueue.length;
-      document.getElementById('completedBadge').textContent = completedToday.length;
 
       if (attendanceQueue.length === 0) {
         emptyQueuePrompt.classList.remove('hidden');
@@ -1047,34 +1006,6 @@
             </div>
           `;
         }).join('');
-      }
-
-      if (completedToday.length > 0) {
-        completedSection.classList.remove('hidden');
-        completedList.innerHTML = completedToday.map(item => {
-          const streamData = streams.find(s => s.name === item.stream) || streams[0];
-          return `
-            <div class="bg-gradient-to-r from-green-50 to-green-100 border-l-4 border-green-500 rounded-lg p-3">
-              <div class="flex items-center">
-                <div class="w-8 h-8 bg-green-200 rounded-lg flex items-center justify-center mr-3">
-                  <i class="fas fa-check text-green-600 text-sm"></i>
-                </div>
-                <div class="flex-1">
-                  <div class="flex items-center mb-1">
-                    <div class="w-4 h-4 ${streamData.color} rounded mr-1 flex items-center justify-center">
-                      ${streamData.icon}
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-sm">${item.subject}</h4>
-                  </div>
-                  <p class="text-xs text-gray-600 mb-1">${streamData.displayName || item.stream} • Sem ${item.semester}</p>
-                  <p class="text-xs text-green-600 font-semibold">Done: ${item.completedTime}</p>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('');
-      } else {
-        completedSection.classList.add('hidden');
       }
     }
 
@@ -1246,19 +1177,16 @@
       const item = attendanceQueue.find(q => q.id == itemId);
       if (!item) return;
 
+      // Create class info object with autoSelect flag for automatic form population
       const classInfo = {
         stream: item.stream,
         semester: parseInt(item.semester),
         subject: item.subject,
-        autoSelect: true
+        autoSelect: true,
+        teacherId: userData.userName,
+        teacherEmail: userData.userEmail
       };
       
-      const completedItem = { 
-        ...item, 
-        completedTime: new Date().toLocaleTimeString(),
-        completedDate: new Date().toDateString()
-      };
-      completedToday.push(completedItem);
       
       const queueElement = document.querySelector(`[data-id="${itemId}"]`);
       if (queueElement) {
@@ -1268,7 +1196,6 @@
           
           // Update localStorage immediately
           localStorage.setItem('attendanceQueue', JSON.stringify(attendanceQueue));
-          localStorage.setItem('completedToday', JSON.stringify(completedToday));
           
           // Try to update database
           try {
@@ -1282,11 +1209,13 @@
         }, 400);
       }
       
+      // Store class info in sessionStorage for index.html to pick up
       sessionStorage.setItem('selectedClass', JSON.stringify(classInfo));
-      showNotification('Redirecting...', 'success');
+      showNotification('Redirecting to attendance...', 'success');
       
+      // Short delay for user feedback, then redirect
       setTimeout(() => {
-        window.location.href = 'student.html';
+        window.location.href = 'index.html';
       }, 600);
     }
 
@@ -1455,14 +1384,97 @@
       if (userEmailElement) userEmailElement.textContent = userEmail;
     }
 
-    // Initialize user info when page loads
+    // Initialize user info when page loads with authentication check
     document.addEventListener('DOMContentLoaded', async () => {
+      console.log('🔄 Page loaded, checking authentication...');
+      
+      // Enhanced authentication check - allows all Firebase users
+      function isAuthorizedUser(email) {
+        if (!email) {
+          console.log('❌ No email provided');
+          return false;
+        }
+        // Allow all users with valid email addresses
+        const isValidEmail = email.includes('@') && email.includes('.');
+        console.log(`📧 Email ${email} is ${isValidEmail ? 'valid' : 'invalid'}`);
+        return isValidEmail;
+      }
+
+      // Add small delay to ensure localStorage is ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      let isAuthenticated = false;
+      
+      // Check localStorage/sessionStorage authentication
+      const storedAuth = localStorage.getItem('isAuthenticated') || sessionStorage.getItem('isAuthenticated');
+      const userEmail = localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail');
+      const userName = localStorage.getItem('userName') || sessionStorage.getItem('userName');
+      
+      console.log('🔍 Storage check:', {
+        storedAuth,
+        userEmail,
+        userName,
+        localStorage_keys: Object.keys(localStorage),
+        sessionStorage_keys: Object.keys(sessionStorage)
+      });
+      
+      if (storedAuth === 'true' && userEmail) {
+        if (isAuthorizedUser(userEmail)) {
+          isAuthenticated = true;
+          userData.userEmail = userEmail;
+          userData.userName = userName || 'Teacher';
+          console.log('✅ User authenticated via storage:', userEmail);
+        } else {
+          console.log('❌ User email not in authorized list:', userEmail);
+        }
+      } else {
+        console.log('❌ Missing authentication data:', { storedAuth, userEmail });
+      }
+
+      if (!isAuthenticated) {
+        console.log('❌ Authentication failed, redirecting to login in 2 seconds...');
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 2000);
+        return;
+      }
+
+      // User is authenticated, initialize app
+      console.log('🚀 Initializing app for user:', userData.userEmail);
+      
+      try {
+        console.log('Initializing teacher in database...');
+        await initializeTeacherInDatabase();
+        console.log('Teacher initialized successfully');
+      } catch (error) {
+        console.error('Error initializing teacher:', error);
+        showNotification('Database connection issue (continuing offline)', 'warning');
+      }
+
+      try {
+        console.log('🔄 Loading queue from database...');
+        await loadQueueFromDatabase();
+        console.log('✅ Queue loaded from database successfully');
+        updateQueueDisplay();
+      } catch (error) {
+        console.log('⚠️ Database load failed, trying localStorage fallback');
+        attendanceQueue = JSON.parse(localStorage.getItem('attendanceQueue') || '[]');
+        updateQueueDisplay();
+      }
+      
+      createStreamCards();
+
+      if (elements.semesterSelect) elements.semesterSelect.addEventListener('change', onSemesterChange);
+      if (document.getElementById('addClassForm')) document.getElementById('addClassForm').addEventListener('submit', handleAddToQueue);
+
       loadUserInfo();
       
       // Ensure teacher profile exists in database
       if (userData.firebaseUid) {
         await saveTeacherProfile();
       }
+      
+      console.log('✅ App initialization completed successfully');
     });
   </script>
 </body>

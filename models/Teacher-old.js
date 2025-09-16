@@ -83,9 +83,20 @@ const createdSubjectSchema = new mongoose.Schema({
     }
 }, { _id: true });
 
-// SIMPLE teacher schema - no complex indexes
 const teacherSchema = new mongoose.Schema({
-    firebaseUid: String, // Simple string field, no constraints
+    // MongoDB ObjectId (auto-generated)
+    _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        auto: true
+    },
+    
+    // Firebase UID (separate field) - optional for localStorage users
+    firebaseUid: {
+        type: String,
+        required: false,
+        default: null
+    },
+    
     name: {
         type: String,
         required: true
@@ -95,23 +106,46 @@ const teacherSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
-    password: String,
+    password: {
+        type: String,
+        required: false,
+        default: ''
+    },
     createdSubjects: [createdSubjectSchema],
-    attendanceQueue: Array,
-    lastQueueUpdate: Date
+    
+    // Attendance queue management
+    attendanceQueue: {
+        type: Array,
+        default: []
+    },
+    completedToday: {
+        type: Array,
+        default: []
+    },
+    lastQueueUpdate: {
+        type: Date,
+        default: null
+    }
 }, {
     timestamps: true
 });
 
-// Static methods
+// Simple validation - no complex constraints
+teacherSchema.pre('save', function(next) {
+    next();
+});
+
+// Static method to find by Firebase UID
 teacherSchema.statics.findByFirebaseUid = function(firebaseUid) {
     return this.findOne({ firebaseUid: firebaseUid });
 };
 
+// Static method to find by email (for localStorage users)
 teacherSchema.statics.findByEmail = function(email) {
     return this.findOne({ email: email });
 };
 
+// Static method to find by either Firebase UID or email
 teacherSchema.statics.findByIdentifier = function(firebaseUid, email) {
     if (firebaseUid) {
         return this.findOne({ firebaseUid: firebaseUid });

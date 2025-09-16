@@ -2834,22 +2834,30 @@ router.post("/teacher/profile", asyncHandler(async (req, res) => {
     
     console.log("📝 Creating/updating teacher profile:", { firebaseUid, name, email });
     
-    if (!firebaseUid || !name || !email) {
+    if (!name || !email) {
       console.log("❌ Missing required fields:", { firebaseUid: !!firebaseUid, name: !!name, email: !!email });
       return res.status(400).json({
         success: false,
-        message: "Firebase UID, name, and email are required"
+        message: "Name and email are required"
       });
     }
 
-    // Check if teacher already exists
-    let teacher = await Teacher.findByFirebaseUid(firebaseUid);
+    // Check if teacher already exists (by firebaseUid if available, otherwise by email)
+    let teacher;
+    if (firebaseUid) {
+      teacher = await Teacher.findByFirebaseUid(firebaseUid);
+    } else {
+      teacher = await Teacher.findByEmail(email);
+    }
     
     if (teacher) {
       // Update existing teacher
       console.log("🔄 Updating existing teacher:", teacher._id);
       teacher.name = name;
       teacher.email = email;
+      if (firebaseUid) {
+        teacher.firebaseUid = firebaseUid;
+      }
       await teacher.save();
       
       console.log("✅ Teacher profile updated successfully");
@@ -2868,12 +2876,11 @@ router.post("/teacher/profile", asyncHandler(async (req, res) => {
       // Create new teacher
       console.log("➕ Creating new teacher profile");
       teacher = new Teacher({
-        firebaseUid,
+        firebaseUid: firebaseUid || null,
         name,
         email,
         createdSubjects: [],
         attendanceQueue: [],
-        completedToday: []
       });
       
       await teacher.save();
@@ -2975,13 +2982,81 @@ router.get("/teacher/profile/:firebaseUid", asyncHandler(async (req, res) => {
   }
 }));
 
-// Add a created subject to teacher
+// Get teacher profile by email (for localStorage users)
+router.get("/teacher/profile/email/:email", asyncHandler(async (req, res) => {
+  try {
+    const { email } = req.params;
+    
+    const teacher = await Teacher.findByEmail(decodeURIComponent(email));
+    
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found"
+      });
+    }
+    
+    res.json({
+      success: true,
+      teacher: {
+        id: teacher._id,
+        firebaseUid: teacher.firebaseUid,
+        name: teacher.name,
+        email: teacher.email,
+        createdSubjects: teacher.createdSubjects
+      }
+    });
+  } catch (error) {
+    console.error("❌ Error fetching teacher profile by email:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch teacher profile",
+      error: error.message
+    });
+  }
+}));
+
+// Add a created subject to teacher (by Firebase UID)
 router.post("/teacher/:firebaseUid/subjects", asyncHandler(async (req, res) => {
   try {
     const { firebaseUid } = req.params;
     const subjectData = req.body;
     
     const teacher = await Teacher.findByFirebaseUid(firebaseUid);
+    
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found"
+      });
+    }
+    
+    // Add the new subject to the teacher's createdSubjects array
+    teacher.createdSubjects.push(subjectData);
+    await teacher.save();
+    
+    res.json({
+      success: true,
+      message: "Subject added successfully",
+      createdSubjects: teacher.createdSubjects
+    });
+  } catch (error) {
+    console.error("❌ Error adding subject:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to add subject",
+      error: error.message
+    });
+  }
+}));
+
+// Add a created subject to teacher (by email)
+router.post("/teacher/email/:email/subjects", asyncHandler(async (req, res) => {
+  try {
+    const { email } = req.params;
+    const subjectData = req.body;
+    
+    const teacher = await Teacher.findByEmail(decodeURIComponent(email));
     
     if (!teacher) {
       return res.status(404).json({
@@ -3181,7 +3256,7 @@ router.get("/queue/:identifier", asyncHandler(async (req, res) => {
     res.json({
       success: true,
       queueData: teacher.attendanceQueue || [],
-      completedToday: teacher.completedToday || [],
+      
       lastQueueUpdate: teacher.lastQueueUpdate
     });
   } catch (error) {
