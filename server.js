@@ -35,7 +35,7 @@ app.get("/", (req, res) => {
 });
 
 // Redirect index.html to login.html
-app.get("/index.html", (req, res) => {
+app.get("/myclass.html", (req, res) => {
   res.redirect("/");
 });
 
