@@ -8,250 +8,152 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
+  
   <style>
+    /* ✅ LUXE NOIR & SOFT OAT VARIABLES */
+    :root {
+      --noir: #060D0C;
+      --oat: #F0EDE5;
+      --success: #4CAF50;
+      --error: #E63946;
+      --warning: #FF9800;
+      --info: #2196F3;
+    }
+
     body {
-      font-family: 'Poppins', sans-serif;
-      background: #f0fdf4;
+      font-family: 'Manrope', 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #F0EDE5 0%, #E8E4DB 100%);
       margin: 0;
-      padding: 12px;
-    }
-    
-    .container {
-      max-width: 400px;
-      margin: 0 auto;
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.1);
-    }
-    
-    .header {
-      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-      color: white;
       padding: 16px;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      font-weight: 400;
+      line-height: 1.6;
+    }
+    
+    /* ✅ SOPHISTICATED HEADER - NO CONTAINER */
+    .header {
+      background: linear-gradient(135deg, var(--noir) 0%, #1a1f1e 50%, #2d3231 100%);
+      color: var(--oat);
+      padding: 24px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 20px;
+      margin-bottom: 24px;
+      box-shadow: 
+        0 20px 40px rgba(6, 13, 12, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      animation: slideDown 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+      pointer-events: none;
     }
     
     .back-btn {
-      background: rgba(255, 255, 255, 0.2);
-      border: none;
-      color: white;
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
+      background: rgba(240, 237, 229, 0.15);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(240, 237, 229, 0.2);
+      color: var(--oat);
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.2s;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      z-index: 2;
     }
     
     .back-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
+      background: rgba(240, 237, 229, 0.25);
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .back-btn:active {
+      transform: translateY(0) scale(0.95);
     }
     
     .title {
-      font-size: 1.1rem;
-      font-weight: 600;
+      font-size: 1.3rem;
+      font-weight: 700;
       margin: 0;
-    }
-    
-    .form-section {
-      padding: 16px;
-    }
-    
-    .form-group {
-      margin-bottom: 12px;
-    }
-    
-    .label {
-      display: block;
-      font-weight: 600;
-      color: #15803d;
-      margin-bottom: 4px;
-      font-size: 0.9rem;
-    }
-    
-    .input, .select {
-      width: 100%;
-      padding: 10px;
-      border: 2px solid #bbf7d0;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      color: #15803d;
-      background: #f7fee7;
-      box-sizing: border-box;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    
-    .input:focus, .select:focus {
-      outline: none;
-      border-color: #22c55e;
-      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
-    }
-
-    /* ✅ NEW: Subject display styles */
-    .subject-display {
-      width: 100%;
-      padding: 12px;
-      border: 2px solid #22c55e;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #15803d;
-      background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%);
-      box-sizing: border-box;
+      letter-spacing: -0.02em;
+      position: relative;
+      z-index: 2;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 10px;
     }
 
-    .subject-badge {
-      background: #22c55e;
-      color: white;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-    
-    .stats {
-      display: flex;
-      justify-content: space-between;
-      background: #dcfce7;
-      padding: 12px 16px;
-      margin: 0;
-      font-weight: 600;
-      color: #15803d;
-      font-size: 0.9rem;
-    }
-    
-    .stat-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    
-    thead {
-      background: #22c55e;
-      color: white;
-    }
-    
-    th {
-      padding: 10px 6px;
-      font-weight: 600;
-      font-size: 0.85rem;
-      text-align: center;
-      border-right: 1px solid #16a34a;
-    }
-    
-    th:last-child {
-      border-right: none;
-    }
-    
-    td {
-      padding: 8px 6px;
-      border-bottom: 1px solid #dcfce7;
-      border-right: 1px solid #dcfce7;
-      font-size: 0.8rem;
-      color: #15803d;
-      text-align: center;
-    }
-    
-    td:last-child {
-      border-right: none;
-    }
-    
-    .student-name {
-      text-align: left !important;
-      font-weight: 500;
-    }
-    
-    .student-id {
-      font-weight: 600;
-      color: #059669;
-    }
-    
-    tbody tr:nth-child(even) {
-      background: #f7fee7;
-    }
-    
-    tbody tr:hover {
-      background: #ecfdf5;
-    }
-    
-    .checkbox {
-      width: 16px;
-      height: 16px;
-      accent-color: #22c55e;
-      cursor: pointer;
-    }
-    
-    .submit-section {
-      padding: 16px;
-    }
-    
-    .submit-btn {
-      width: 100%;
-      background: #22c55e;
-      color: white;
-      border: none;
-      padding: 12px;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: background 0.2s, transform 0.1s;
-    }
-    
-    .submit-btn:hover:not(:disabled) {
-      background: #16a34a;
-      transform: translateY(-1px);
-    }
-    
-    .submit-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    
-    .fa-spin {
-      animation: spin 1s linear infinite;
-    }
-
-    /* ✅ NEW: Class info card styles */
+    /* ✅ COMPACT CLASS INFO CARD */
     .class-info-card {
-      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-      color: white;
-      padding: 16px;
-      margin: 16px 16px 0 16px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+      background: linear-gradient(135deg, var(--noir) 0%, #1a1f1e 100%);
+      color: var(--oat);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      border-radius: 16px;
+      box-shadow: 
+        0 12px 24px rgba(6, 13, 12, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .class-info-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 
+        0 16px 32px rgba(6, 13, 12, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
     }
 
     .class-info-title {
       font-size: 1.1rem;
-      font-weight: 700;
+      font-weight: 600;
       margin: 0 0 8px 0;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+      letter-spacing: -0.01em;
+    }
+
+    .class-info-title i {
+      width: 28px;
+      height: 28px;
+      background: rgba(240, 237, 229, 0.15);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
     }
 
     .class-info-details {
@@ -261,99 +163,569 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      font-weight: 500;
+    }
+    
+    /* ✅ FORM SECTION - OPEN LAYOUT */
+    .form-section {
+      padding: 0;
+      margin-bottom: 24px;
+      animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+      position: relative;
+    }
+    
+    .label {
+      display: block;
+      font-weight: 600;
+      color: var(--noir);
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+      letter-spacing: 0.01em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Poppins', sans-serif;
     }
 
-    .hidden {
-      display: none;
+    .label i {
+      width: 18px;
+      height: 18px;
+      background: rgba(6, 13, 12, 0.08);
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      color: var(--noir);
+    }
+    
+    /* ✅ LUXURY INPUTS */
+    .input, .select {
+      width: 100%;
+      padding: 14px 18px;
+      border: 2px solid rgba(6, 13, 12, 0.15);
+      border-radius: 12px;
+      font-size: 0.9rem;
+      color: var(--noir);
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      box-sizing: border-box;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-weight: 500;
+      font-family: 'Manrope', sans-serif;
+    }
+    
+    .input:focus, .select:focus {
+      outline: none;
+      border-color: var(--noir);
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 
+        0 0 0 4px rgba(6, 13, 12, 0.08),
+        0 6px 20px rgba(6, 13, 12, 0.1);
+      transform: translateY(-1px);
+    }
+
+    /* ✅ COMPACT SUBJECT DISPLAY */
+    .subject-display {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid var(--noir);
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--noir);
+      background: linear-gradient(135deg, rgba(240, 237, 229, 0.9) 0%, rgba(255, 255, 255, 0.6) 100%);
+      backdrop-filter: blur(15px);
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+      cursor: default;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .subject-display:hover {
+      transform: translateY(-1px);
+      box-shadow: 
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        0 3px 12px rgba(6, 13, 12, 0.1);
+    }
+
+    .subject-badge {
+      background: linear-gradient(135deg, var(--noir) 0%, #1a1f1e 100%);
+      color: var(--oat);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
+    /* ✅ INTERACTIVE STATS BAR */
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      background: linear-gradient(135deg, rgba(6, 13, 12, 0.06) 0%, rgba(6, 13, 12, 0.03) 100%);
+      backdrop-filter: blur(10px);
+      padding: 18px 24px;
+      margin: 0 0 24px 0;
+      font-weight: 600;
+      color: var(--noir);
+      font-size: 0.9rem;
+      border-top: 1px solid rgba(6, 13, 12, 0.1);
+      border-bottom: 1px solid rgba(6, 13, 12, 0.1);
+      border-radius: 12px;
+      animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both;
+    }
+    
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(5px);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .stat-item:hover {
+      background: rgba(255, 255, 255, 0.7);
+      transform: translateY(-1px);
+    }
+
+    .stat-item i {
+      font-size: 1.1rem;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .stat-item.present i {
+      color: var(--success);
+      background: rgba(76, 175, 80, 0.1);
+    }
+
+    .stat-item.absent i {
+      color: var(--error);
+      background: rgba(230, 57, 70, 0.1);
+    }
+    
+    /* ✅ LUXURY TABLE DESIGN */
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(10px);
+      margin: 0 0 24px 0;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 20px rgba(6, 13, 12, 0.08);
+      animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.4s both;
+    }
+    
+    thead {
+      background: linear-gradient(135deg, var(--noir) 0%, #1a1f1e 100%);
+      color: var(--oat);
+    }
+    
+    th {
+      padding: 16px 10px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      text-align: center;
+      border-right: 1px solid rgba(240, 237, 229, 0.2);
+      letter-spacing: 0.02em;
+      position: relative;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    th::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    }
+    
+    th:last-child {
+      border-right: none;
+    }
+    
+    td {
+      padding: 14px 10px;
+      border-bottom: 1px solid rgba(6, 13, 12, 0.08);
+      border-right: 1px solid rgba(6, 13, 12, 0.08);
+      font-size: 0.8rem;
+      color: var(--noir);
+      text-align: center;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    
+    td:last-child {
+      border-right: none;
+    }
+    
+    .student-name {
+      text-align: left !important;
+      font-weight: 600;
+    }
+    
+    .student-id {
+      font-weight: 700;
+      color: #2d3231;
+      font-size: 0.85rem;
+    }
+    
+    tbody tr:nth-child(even) {
+      background: rgba(240, 237, 229, 0.3);
+    }
+    
+    tbody tr:hover {
+      background: rgba(6, 13, 12, 0.05);
+      transform: translateY(-1px);
+    }
+
+    tbody tr:hover td {
+      border-color: rgba(6, 13, 12, 0.15);
+    }
+    
+    /* ✅ INTERACTIVE CHECKBOX */
+    .checkbox {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--noir);
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+
+    .checkbox:hover {
+      transform: scale(1.1);
+      filter: drop-shadow(0 3px 6px rgba(6, 13, 12, 0.2));
+    }
+
+    .checkbox:checked {
+      animation: checkPop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    @keyframes checkPop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+    
+    /* ✅ PREMIUM SUBMIT SECTION */
+    .submit-section {
+      padding: 0;
+      animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.5s both;
+    }
+    
+    .submit-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--noir) 0%, #1a1f1e 50%, #2d3231 100%);
+      color: var(--oat);
+      border: none;
+      padding: 16px 24px;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      letter-spacing: 0.01em;
+      font-family: 'Poppins', sans-serif;
+      box-shadow: 
+        0 8px 20px rgba(6, 13, 12, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .submit-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .submit-btn:hover::before {
+      left: 100%;
+    }
+    
+    .submit-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #000000 0%, var(--noir) 50%, #1a1f1e 100%);
+      transform: translateY(-3px);
+      box-shadow: 
+        0 12px 30px rgba(6, 13, 12, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    .submit-btn:active:not(:disabled) {
+      transform: translateY(-1px);
+    }
+    
+    .submit-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .submit-btn i {
+      font-size: 1rem;
+      transition: transform 0.3s ease;
+    }
+
+    .submit-btn:hover:not(:disabled) i {
+      transform: translateX(2px);
+    }
+
+    /* ✅ LOADING STATES */
+    .loading-state {
+      background: linear-gradient(90deg, 
+        rgba(6, 13, 12, 0.1) 25%, 
+        rgba(6, 13, 12, 0.05) 50%, 
+        rgba(6, 13, 12, 0.1) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 2s infinite;
+      border-radius: 10px;
+      padding: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-weight: 600;
+      color: var(--noir);
+      font-family: 'Poppins', sans-serif;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    .loading-spinner {
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(6, 13, 12, 0.3);
+      border-top: 3px solid var(--noir);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* ✅ INTERACTIVE NOTIFICATIONS */
+    .notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      padding: 14px 20px;
+      border-radius: 12px;
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+      animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      max-width: 90vw;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+    }
+
+    /* ✅ RESPONSIVE DESIGN */
+    @media (max-width: 480px) {
+      body { padding: 12px; }
+      .header { padding: 18px; }
+      .form-section { padding: 0; }
+      .class-info-card { padding: 16px 20px; }
+      th, td { padding: 12px 6px; font-size: 0.75rem; }
+      .stats { padding: 14px 18px; }
+      .title { font-size: 1.1rem; }
+      .back-btn { width: 44px; height: 44px; }
+    }
+
+    .hidden { display: none; }
+
+    /* ✅ HOVER EFFECTS */
+    .interactive-hover {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .interactive-hover:hover {
+      transform: translateY(-1px);
+    }
+
+    /* ✅ SELECTION STYLING */
+    ::selection {
+      background: rgba(6, 13, 12, 0.2);
+      color: var(--noir);
+    }
+
+    /* ✅ SCROLLBAR */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(6, 13, 12, 0.05);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, var(--noir), #1a1f1e);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(135deg, #000000, var(--noir));
     }
   </style>
 </head>
 
 <body>
-  <div class="container">
-    <!-- Header with Back Button -->
-    <div class="header">
-      <button class="back-btn" onclick="window.location.href='myclass.html'">
-        <i class="fas fa-arrow-left"></i>
-      </button>
-      <h1 class="title">Mark Attendance</h1>
+  <!-- ✅ LUXE HEADER WITH ICONS -->
+  <div class="header">
+    <button class="back-btn interactive-hover" onclick="window.location.href='myclass.html'">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <h1 class="title">
+      <i class="fas fa-clipboard-check"></i>
+      Mark Attendance
+    </h1>
+  </div>
+
+  <!-- ✅ COMPACT CLASS INFO CARD -->
+  <div id="classInfoCard" class="class-info-card hidden interactive-hover">
+    <div class="class-info-title">
+      <i class="fas fa-chalkboard-teacher"></i>
+      <span id="classSubjectName">Loading...</span>
+    </div>
+    <div class="class-info-details">
+      <i class="fas fa-graduation-cap"></i>
+      <span id="classStreamSem">Loading...</span>
+      <span>•</span>
+      <i class="fas fa-calendar-day"></i>
+      <span id="classDate">Today</span>
+    </div>
+  </div>
+
+  <!-- ✅ ENHANCED FORM SECTION WITH ICONS -->
+  <div class="form-section">
+    <div class="form-group">
+      <label class="label">
+        <i class="fas fa-calendar-alt"></i>
+        Date
+      </label>
+      <input type="date" id="date" class="input interactive-hover" />
     </div>
 
-    <!-- ✅ NEW: Class Info Card (shows when coming from myclass.html) -->
-    <div id="classInfoCard" class="class-info-card hidden">
-      <div class="class-info-title">
-        <i class="fas fa-chalkboard-teacher"></i>
-        <span id="classSubjectName">Loading...</span>
+    <div class="form-group">
+      <label class="label">
+        <i class="fas fa-book-open"></i>
+        Subject
+      </label>
+      
+      <!-- ✅ COMPACT SUBJECT DISPLAY -->
+      <div id="subjectDisplay" class="subject-display hidden interactive-hover">
+        <span id="selectedSubjectName">Loading...</span>
+        <span class="subject-badge">
+          <i class="fas fa-check-circle"></i>
+          SELECTED
+        </span>
       </div>
-      <div class="class-info-details">
-        <span id="classStreamSem">Loading...</span>
-        <span>•</span>
-        <span id="classDate">Today</span>
-      </div>
+      
+      <!-- ✅ ENHANCED SUBJECT DROPDOWN -->
+      <select id="subject" class="select interactive-hover">
+        <option value="">Select Subject</option>
+      </select>
     </div>
+  </div>
 
-    <!-- Form Section -->
-    <div class="form-section">
-      <div class="form-group">
-        <label class="label">Date</label>
-        <input type="date" id="date" class="input" />
-      </div>
-
-      <!-- ✅ ENHANCED: Subject Section (dropdown OR display) -->
-      <div class="form-group">
-        <label class="label">Subject</label>
-        
-        <!-- ✅ Subject Display (shown when pre-selected) -->
-        <div id="subjectDisplay" class="subject-display hidden">
-          <span id="selectedSubjectName">Loading...</span>
-          <span class="subject-badge">SELECTED</span>
-        </div>
-        
-        <!-- ✅ Subject Dropdown (shown when not pre-selected) -->
-        <select id="subject" class="select">
-          <option value="">Select Subject</option>
-        </select>
-      </div>
+  <!-- ✅ INTERACTIVE STATS BAR -->
+  <div class="stats">
+    <div class="stat-item present" onclick="toggleAllPresent()">
+      <i class="fas fa-user-check"></i>
+      <span>Present: <span id="presentCount">0</span></span>
     </div>
-
-    <!-- Stats (Present and Absent Counts) -->
-    <div class="stats">
-      <div class="stat-item">
-        <i class="fas fa-user-check" style="color: #059669;"></i>
-        Present: <span id="presentCount">0</span>
-      </div>
-      <div class="stat-item">
-        <i class="fas fa-user-times" style="color: #dc2626;"></i>
-        Absent: <span id="absentCount">0</span>
-      </div>
+    <div class="stat-item absent" onclick="toggleAllAbsent()">
+      <i class="fas fa-user-times"></i>
+      <span>Absent: <span id="absentCount">0</span></span>
     </div>
+  </div>
 
-    <!-- Students Table -->
-    <table>
-      <thead>
-        <tr>
-          <th style="width: 10%;">#</th>
-          <th style="width: 25%;">ID</th>
-          <th style="width: 45%;">Name</th>
-          <th style="width: 20%;">Present</th>
-        </tr>
-      </thead>
-      <tbody id="students-list">
-        <tr>
-          <td colspan="4" style="padding: 20px; text-align: center; color: #6b7280; border-right: none;">
-            Loading students...
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- ✅ LUXURY TABLE WITH ENHANCED DESIGN -->
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 12%;">
+          <i class="fas fa-hashtag mr-1"></i>#
+        </th>
+        <th style="width: 28%;">
+          <i class="fas fa-id-card mr-1"></i>ID
+        </th>
+        <th style="width: 40%;">
+          <i class="fas fa-user mr-1"></i>Name
+        </th>
+        <th style="width: 20%;">
+          <i class="fas fa-check mr-1"></i>Present
+        </th>
+      </tr>
+    </thead>
+    <tbody id="students-list">
+      <tr>
+        <td colspan="4" style="padding: 28px; text-align: center; border-right: none;">
+          <div class="loading-state">
+            <div class="loading-spinner"></div>
+            <span>Loading students...</span>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 
-    <!-- Submit Section -->
-    <div class="submit-section">
-      <button id="submitAttendance" class="submit-btn">
-        <i class="fas fa-paper-plane"></i>
-        Submit Attendance
-      </button>
-    </div>
+  <!-- ✅ PREMIUM SUBMIT SECTION -->
+  <div class="submit-section">
+    <button id="submitAttendance" class="submit-btn interactive-hover">
+      <i class="fas fa-paper-plane"></i>
+      Submit Attendance
+    </button>
   </div>
 
   <script>
@@ -796,6 +1168,25 @@
         });
       }
     }
+    // Add to mark.html after successful attendance submission
+function handleAttendanceSuccess() {
+  // Get class info
+  const classInfo = sessionStorage.getItem('selectedClass');
+  if (classInfo) {
+    const data = JSON.parse(classInfo);
+    
+    // Mark for completion when returning
+    sessionStorage.setItem('attendanceCompleted', JSON.stringify({
+      classId: data.classId,
+      subject: data.subject,
+      completedAt: new Date().toISOString()
+    }));
+  }
+  
+  // Navigate back
+  window.location.href = 'myclass.html';
+}
+
   </script>
 </body>
 </html>
