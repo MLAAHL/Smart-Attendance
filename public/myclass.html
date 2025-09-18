@@ -15,21 +15,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
   <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-    import { firebaseConfig } from './firebase-config.js';
-    
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    
-    // Make auth and signOut available globally
-    window.auth = auth;
-    window.signOut = signOut;
-    window.onAuthStateChanged = onAuthStateChanged;
-    
-    console.log('✅ Firebase initialized successfully');
-  </script>
+ 
   <script src="https://cdn.tailwindcss.com"></script>
     
   <!-- Add this script to enable all colors -->
@@ -1680,5 +1666,168 @@
       console.log('✅ App initialization completed successfully');
     });
   </script>
+  <script type="module">
+    // ✅ FIREBASE AUTHENTICATION MODULE
+    import { firebaseConfig } from './firebase-config.js';
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    let authStateChecked = false;
+    
+    function showAuthLoading() {
+        const loadingScreen = document.getElementById('authLoadingScreen');
+        const mainContent = document.getElementById('mainContent');
+        
+        if (loadingScreen) loadingScreen.style.display = 'flex';
+        if (mainContent) mainContent.style.display = 'none';
+    }
+    
+    function hideAuthLoading() {
+        const loadingScreen = document.getElementById('authLoadingScreen');
+        const mainContent = document.getElementById('mainContent');
+        
+        if (loadingScreen) loadingScreen.style.display = 'none';
+        if (mainContent) mainContent.style.display = 'block';
+    }
+    
+    // ✅ SIMPLIFIED: Basic validation - any valid email is accepted
+    function isValidUser(email) {
+        return email && email.includes('@') && email.length > 0;
+    }
+    
+    onAuthStateChanged(auth, (user) => {
+        authStateChecked = true;
+    
+        if (user && user.email) {
+            const email = user.email;
+            
+            // ✅ SIMPLIFIED: Only check if email exists
+            if (!isValidUser(email)) {
+                console.error('❌ Invalid user email:', email);
+                signOut(auth).then(() => {
+                    window.location.href = "login.html";
+                });
+                return;
+            }
+    
+            console.log('✅ User authenticated:', email);
+            updateUserInterface(user, email);
+            hideAuthLoading();
+    
+        } else {
+            console.log('❌ No authenticated user found');
+            setTimeout(() => {
+                window.location.href = "login.html";
+            }, 100);
+        }
+    });
+    
+    function updateUserInterface(user, email) {
+        try {
+            // Get user data from storage or user object
+            const storedUserName = localStorage.getItem("userName") || sessionStorage.getItem("userName");
+            const userName = storedUserName || user.displayName || email.split('@')[0];
+            const profilePhoto = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=10b981&color=fff&size=128`;
+            
+            // Update UI elements
+            const userNameElements = document.querySelectorAll("#userName, .user-name");
+            const userEmailElements = document.querySelectorAll("#userEmail, .user-email");
+            const profilePicElements = document.querySelectorAll("#profilePic, .profile-pic");
+            
+            userNameElements.forEach(element => {
+                if (element) element.textContent = userName;
+            });
+            
+            userEmailElements.forEach(element => {
+                if (element) element.textContent = email;
+            });
+            
+            profilePicElements.forEach(element => {
+                if (element) {
+                    element.src = profilePhoto;
+                    element.onerror = () => {
+                        element.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=10b981&color=fff&size=128`;
+                    };
+                }
+            });
+    
+            // Store user data in session
+            const storage = localStorage.getItem("isAuthenticated") ? localStorage : sessionStorage;
+            storage.setItem("userName", userName);
+            storage.setItem("userEmail", email);
+            storage.setItem("firebaseUid", user.uid);
+            storage.setItem("isAuthenticated", "true");
+            
+            console.log('✅ User interface updated:', { userName, email });
+    
+        } catch (error) {
+            console.error('❌ Error updating UI:', error);
+        }
+    }
+    
+    // ✅ FIXED: Logout function with proper path
+    window.logout = async () => {
+        try {
+            const confirmLogout = confirm("Are you sure you want to logout?");
+            
+            if (!confirmLogout) {
+                return;
+            }
+            
+            console.log('🔄 Logging out user...');
+            
+            // Clear all stored data
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // Sign out from Firebase
+            await signOut(auth);
+            
+            // Redirect to login (without leading slash for relative path)
+            window.location.href = "login.html";
+            
+        } catch (error) {
+            console.error('❌ Logout error:', error);
+            
+            // Force logout even if Firebase signOut fails
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = "login.html";
+        }
+    };
+    
+    // ✅ ENHANCED: Global functions for other scripts
+    window.getCurrentUser = () => {
+        return {
+            user: auth.currentUser,
+            userName: localStorage.getItem("userName") || sessionStorage.getItem("userName"),
+            userEmail: localStorage.getItem("userEmail") || sessionStorage.getItem("userEmail"),
+            firebaseUid: localStorage.getItem("firebaseUid") || sessionStorage.getItem("firebaseUid")
+        };
+    };
+    
+    // ✅ ENHANCED: Check authentication status
+    window.isAuthenticated = () => {
+        return auth.currentUser !== null && 
+               (localStorage.getItem("isAuthenticated") === "true" || 
+                sessionStorage.getItem("isAuthenticated") === "true");
+    };
+    
+    // Initialize loading screen
+    showAuthLoading();
+    
+    // ✅ ENHANCED: Fallback timeout with better error handling
+    setTimeout(() => {
+        if (!authStateChecked) {
+            console.error('❌ Authentication check timeout');
+            window.location.href = "login.html";
+        }
+    }, 8000); // Reduced from 10 seconds to 8 seconds
+    
+    console.log('✅ Firebase authentication initialized');
+</script>
+
 </body>
 </html>
