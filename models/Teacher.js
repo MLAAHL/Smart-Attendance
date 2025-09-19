@@ -83,6 +83,41 @@ const createdSubjectSchema = new mongoose.Schema({
     }
 }, { _id: true });
 
+// Completed classes schema for tracking attendance history
+const completedClassSchema = new mongoose.Schema({
+    id: {
+        type: String,
+        required: true
+    },
+    stream: {
+        type: String,
+        required: true
+    },
+    semester: {
+        type: Number,
+        required: true
+    },
+    subject: {
+        type: String,
+        required: true
+    },
+    timeAdded: String,
+    dateAdded: String,
+    completedTime: {
+        type: String,
+        required: true
+    },
+    completedDate: {
+        type: String,
+        required: true
+    },
+    teacherId: String,
+    fromCreatedSubject: {
+        type: Boolean,
+        default: false
+    }
+}, { _id: false });
+
 // SIMPLE teacher schema - no complex indexes
 const teacherSchema = new mongoose.Schema({
     firebaseUid: String, // Simple string field, no constraints
@@ -97,6 +132,7 @@ const teacherSchema = new mongoose.Schema({
     },
     password: String,
     createdSubjects: [createdSubjectSchema],
+    completedClasses: [completedClassSchema],
     attendanceQueue: Array,
     lastQueueUpdate: Date
 }, {

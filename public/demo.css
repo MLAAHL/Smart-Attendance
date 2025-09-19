@@ -4,7 +4,7 @@ body {
   padding: 0;
   position: relative;
   overflow-x: hidden;
-  background: linear-gradient(125deg, #fcf6ff 0%, #fcf3f5 95%);
+  background: linear-gradient(125deg, #F0EDE5 0%, #E8E3D8 95%);
   background-size: cover;
 }
 
@@ -18,10 +18,10 @@ body {
   border: 1.8px solid rgba(255,255,255,0.18);
 }
 .gradient-bg {
-  background: linear-gradient(135deg, #ece9ff 0%, #f9e8ea 100%);
+  background: linear-gradient(135deg, #F0EDE5 0%, #E8E3D8 100%);
 }
 .header-gradient {
-  background: linear-gradient(120deg, #7158e2 0%, #fc5c7d 100%);
+  background: linear-gradient(120deg, #060D0C 0%, #2A3B36 100%);
 }
 
 
@@ -30,9 +30,9 @@ body {
     top: 0;
     left: 0;
     width: 100%;
-    background: linear-gradient(to right, #ff6f61, #ffcc70); /* vibrant retro gradient */
+    background: linear-gradient(to right, #060D0C, #2A3B36); /* LUXE NOIR gradient */
     z-index: 1000;
-    border-bottom: 4px double #222; /* retro-style border */
+    border-bottom: 4px double #F0EDE5; /* LUXE NOIR border */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -45,11 +45,11 @@ body {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 2.8rem;
     letter-spacing: 2px;
-    color: #ffeb3b; /* vibrant yellow */
+    color: #F0EDE5; /* LUXE NOIR light */
     text-shadow: 
-      2px 2px 0 #000,
-      4px 4px 0 #c2185b,
-      6px 6px 0 #1976d2; /* colorful shadow layers for 3D retro pop */
+      2px 2px 0 #2A3B36,
+      4px 4px 0 #060D0C,
+      6px 6px 0 #8B9B8F; /* LUXE NOIR shadow layers */
     transform: rotate(-1deg); /* slight tilt for retro feel */
   }
   
@@ -62,7 +62,7 @@ body {
   right: -260px;
   width: 260px;
   height: 100%;
-  background: white;
+  background: #F0EDE5;
   box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
   padding: 20px;
   z-index: 1000;
@@ -97,7 +97,7 @@ body {
 .menu-icon .line {
   width: 30px;
   height: 4px;
-  background-color: #000000;
+  background-color: #060D0C;
   margin: 5px 0;
   border-radius: 2px;
 }
@@ -127,8 +127,8 @@ body {
   }
   
   .tablinks.active {
-    background: linear-gradient(to right, #2b2b2b, #4a4a4a);
-    color: #ffffff;
+    background: linear-gradient(to right, #060D0C, #2A3B36);
+    color: #F0EDE5;
   }
   
   /* Tab content animation */
@@ -254,7 +254,7 @@ body {
     position: relative;
     width: 100%;
     height: 14rem; /* 56 Tailwind h-56 = 224px */
-    background-color:		#6366F1;
+    background-color: #060D0C;
     border-radius: 1.5rem; /* rounded-3xl */
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
 
@@ -273,8 +273,8 @@ body {
   
   .banner-text .badge {
     display: inline-block;
-    background-color: #6C4AB6;
-    color: white;
+    background-color: #2A3B36;
+    color: #F0EDE5;
     font-size: 0.75rem;
     font-weight: 600;
     padding: 0.25rem 0.75rem;
@@ -286,14 +286,14 @@ body {
   .banner-text h1 {
     font-size: 1.5rem;
     font-weight: 500;
-    color: #ffffff;
+    color: #F0EDE5;
     margin-bottom: 0.5rem;
     letter-spacing: 0.01em;
   }
   
   .banner-text p {
     font-size: 0.875rem;
-    color: #ffffff;
+    color: #F0EDE5;
     font-weight: 500;
     opacity: 0.8;
   }
@@ -330,7 +330,7 @@ body {
   /* Decorative circles */
   .circle {
     position: absolute;
-    background: white;
+    background: #F0EDE5;
     border-radius: 9999px;
   }
   
@@ -363,10 +363,10 @@ body {
 }
 
 .attendance-table th:first-child {
-  background-color: #4f46e5;
+  background-color: #060D0C;
   z-index: 25;
   color: white;
-  border-right: 2px solid #3730a3;
+  border-right: 2px solid #2A3B36;
 }
 
 /* Table structure */

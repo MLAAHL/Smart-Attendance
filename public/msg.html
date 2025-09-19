@@ -17,7 +17,7 @@
   <style>
     body {
       font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #060D0C 0%, #2A3B36 100%);
       min-height: 100vh;
     }
     
@@ -214,17 +214,17 @@
       <div class="text-center mb-12 animate-fade-in">
         <!-- Back Button -->
         <div class="flex justify-start mb-6">
-          <a href="myclass.html" class="inline-flex items-center px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-200 hover:scale-105 backdrop-blur-sm border border-white/20">
+          <a href="myclass.html" class="inline-flex items-center px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105 backdrop-blur-sm border" style="background-color: rgba(240, 237, 229, 0.1); color: #F0EDE5; border-color: rgba(240, 237, 229, 0.2);" onmouseover="this.style.backgroundColor='rgba(240, 237, 229, 0.2)'" onmouseout="this.style.backgroundColor='rgba(240, 237, 229, 0.1)'">
             <i class="fas fa-arrow-left mr-2"></i>
-            <span class="font-medium">Back to Classes</span>
+            <span class="font-medium" style="color: #F0EDE5;">Back to Classes</span>
           </a>
         </div>
       
-        <div class="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full shadow-lg mb-6">
-          <i class="fas fa-paper-plane text-3xl text-purple-600"></i>
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full shadow-lg mb-6" style="background-color: #F0EDE5;">
+          <i class="fas fa-paper-plane text-3xl" style="color: #060D0C;"></i>
         </div>
-        <h1 class="text-4xl font-bold text-white mb-4">Manual WhatsApp Messaging System</h1>
-        <p class="text-xl text-purple-100 max-w-3xl mx-auto">
+        <h1 class="text-4xl font-bold mb-4" style="color: #F0EDE5;">Manual WhatsApp Messaging System</h1>
+        <p class="text-xl max-w-3xl mx-auto" style="color: #F0EDE5; opacity: 0.8;">
           Send consolidated absence notifications to parents on-demand - anytime, any date, any semester
         </p>
       </div>
@@ -233,7 +233,7 @@
         <!-- System Status -->
         <div class="mt-6 inline-flex items-center bg-white bg-opacity-20 rounded-lg px-4 py-2">
           <span class="status-indicator" id="systemStatus"></span>
-          <span class="text-white text-sm" id="systemStatusText">Checking system status...</span>
+          <span class="text-sm" style="color: #F0EDE5;" id="systemStatusText">Checking system status...</span>
         </div>
       </div>
 
@@ -241,27 +241,27 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-fade-in">
         
         <div class="quick-action-card bg-white rounded-2xl p-6 text-center shadow-lg" onclick="setTodayDate()">
-          <div class="text-3xl text-blue-600 mb-4">
+          <div class="text-3xl mb-4" style="color: #060D0C;">
             <i class="fas fa-calendar-day"></i>
           </div>
-          <h3 class="font-bold text-gray-800 mb-2">Today's Messages</h3>
-          <p class="text-sm text-gray-600">Set date to today</p>
+          <h3 class="font-bold mb-2" style="color: #060D0C;">Today's Messages</h3>
+          <p class="text-sm" style="color: #8B9B8F;">Set date to today</p>
         </div>
         
         <div class="quick-action-card bg-white rounded-2xl p-6 text-center shadow-lg" onclick="setYesterdayDate()">
-          <div class="text-3xl text-orange-600 mb-4">
+          <div class="text-3xl mb-4" style="color: #2A3B36;">
             <i class="fas fa-calendar-minus"></i>
           </div>
-          <h3 class="font-bold text-gray-800 mb-2">Yesterday's Messages</h3>
-          <p class="text-sm text-gray-600">Set date to yesterday</p>
+          <h3 class="font-bold mb-2" style="color: #060D0C;">Yesterday's Messages</h3>
+          <p class="text-sm" style="color: #8B9B8F;">Set date to yesterday</p>
         </div>
         
         <div class="quick-action-card bg-white rounded-2xl p-6 text-center shadow-lg" onclick="clearForm()">
-          <div class="text-3xl text-gray-600 mb-4">
+          <div class="text-3xl mb-4" style="color: #8B9B8F;">
             <i class="fas fa-eraser"></i>
           </div>
-          <h3 class="font-bold text-gray-800 mb-2">Clear Form</h3>
-          <p class="text-sm text-gray-600">Reset all selections</p>
+          <h3 class="font-bold mb-2" style="color: #060D0C;">Clear Form</h3>
+          <p class="text-sm" style="color: #8B9B8F;">Reset all selections</p>
         </div>
         
       </div>
@@ -269,12 +269,12 @@
       <!-- Main Messaging Panel -->
       <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover animate-fade-in">
         <div class="flex items-center mb-8">
-          <div class="w-12 h-12 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-lg mr-4">
+          <div class="w-12 h-12 text-white rounded-full flex items-center justify-center font-bold text-lg mr-4" style="background: linear-gradient(to right, #060D0C, #2A3B36);">
             <i class="fas fa-paper-plane"></i>
           </div>
           <div>
-            <h2 class="text-2xl font-bold text-gray-800 mb-2">Send WhatsApp Messages</h2>
-            <p class="text-gray-600">Select stream, semester, and date to send consolidated absence notifications</p>
+            <h2 class="text-2xl font-bold mb-2" style="color: #060D0C;">Send WhatsApp Messages</h2>
+            <p style="color: #8B9B8F;">Select stream, semester, and date to send consolidated absence notifications</p>
           </div>
         </div>
         
@@ -282,10 +282,10 @@
   
           <!-- Academic Stream Selection -->
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-3">
-              <i class="fas fa-university mr-2 text-purple-600"></i>Academic Stream
+            <label class="block text-sm font-semibold mb-3" style="color: #060D0C;">
+              <i class="fas fa-university mr-2" style="color: #060D0C;"></i>Academic Stream
             </label>
-            <select id="messagingStream" onchange="validateForm()" class="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all text-lg">
+            <select id="messagingStream" onchange="validateForm()" class="w-full px-4 py-4 border-2 rounded-xl focus:ring-4 transition-all text-lg" style="border-color: #8B9B8F; color: #060D0C;" onfocus="this.style.borderColor='#2A3B36'" onblur="this.style.borderColor='#8B9B8F'">
               <option value="">-- Select Stream --</option>
               <option value="BCA">BCA - Computer Applications</option>
               <option value="BBA">BBA - Business Administration</option>
@@ -298,10 +298,10 @@
           
           <!-- Semester Selection -->
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-3">
-              <i class="fas fa-layer-group mr-2 text-purple-600"></i>Semester
+            <label class="block text-sm font-semibold mb-3" style="color: #060D0C;">
+              <i class="fas fa-layer-group mr-2" style="color: #060D0C;"></i>Semester
             </label>
-            <select id="messagingSemester" onchange="validateForm()" class="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all text-lg">
+            <select id="messagingSemester" onchange="validateForm()" class="w-full px-4 py-4 border-2 rounded-xl focus:ring-4 transition-all text-lg" style="border-color: #8B9B8F; color: #060D0C;" onfocus="this.style.borderColor='#2A3B36'" onblur="this.style.borderColor='#8B9B8F'">
               <option value="">-- Select Semester --</option>
               <option value="1">First Semester</option>
               <option value="2">Second Semester</option>
@@ -314,14 +314,14 @@
           
           
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-3">
-              <i class="fas fa-clock mr-2 text-purple-600"></i>Date
+            <label class="block text-sm font-semibold mb-3" style="color: #060D0C;">
+              <i class="fas fa-clock mr-2" style="color: #060D0C;"></i>Date
             </label>
-            <input type="date" id="messagingDate" onchange="validateForm()" class="date-input w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all text-lg">
+            <input type="date" id="messagingDate" onchange="validateForm()" class="date-input w-full px-4 py-4 border-2 rounded-xl focus:ring-4 transition-all text-lg" style="border-color: #8B9B8F; color: #060D0C;" onfocus="this.style.borderColor='#2A3B36'" onblur="this.style.borderColor='#8B9B8F'">
           </div>
           
           <div class="flex items-end">
-            <button onclick="previewMessages()" id="previewBtn" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-4 rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 font-semibold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            <button onclick="previewMessages()" id="previewBtn" class="w-full text-white px-4 py-4 rounded-xl transition-all duration-300 font-semibold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" style="background: linear-gradient(to right, #060D0C, #2A3B36);" onmouseover="this.style.background='linear-gradient(to right, #2A3B36, #060D0C)'" onmouseout="this.style.background='linear-gradient(to right, #060D0C, #2A3B36)'" disabled>
               <i class="fas fa-eye mr-2"></i>Preview
             </button>
           </div>
@@ -329,7 +329,7 @@
         
         <!-- Send Button -->
         <div class="text-center">
-          <button onclick="sendMessages()" id="sendBtn" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-12 py-4 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 font-semibold text-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+          <button onclick="sendMessages()" id="sendBtn" class="text-white px-12 py-4 rounded-xl transition-all duration-300 font-semibold text-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" style="background: linear-gradient(to right, #060D0C, #2A3B36);" onmouseover="this.style.background='linear-gradient(to right, #2A3B36, #060D0C)'" onmouseout="this.style.background='linear-gradient(to right, #060D0C, #2A3B36)'" disabled>
             <i class="fas fa-paper-plane mr-3"></i>Send WhatsApp Messages Now
           </button>
         </div>

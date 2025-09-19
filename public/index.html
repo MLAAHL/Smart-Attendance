@@ -22,16 +22,27 @@
     body {
       font-family: 'Poppins', sans-serif;
     }
+    
+    /* Teacher mode styles */
+    .teacher-mode #viewTab {
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .teacher-mode .tabcontent {
+      border: none;
+      box-shadow: none;
+    }
   </style>
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            customBlue: '#007CBE',
-            customYellow: '#FFF7AE',
-            customOrange: '#E57A44',
-            customPurple: '#251351',
+            customDark: '#060D0C',
+            customLight: '#F0EDE5',
+            customAccent: '#2A3B36',
+            customMuted: '#8B9B8F',
           }
         }
       }
@@ -54,43 +65,43 @@
 
       <!-- User Icon -->
       <div class="absolute top-4 right-4 flex items-center space-x-2">
-        <span class="text-sm font-medium text-indigo-700" id="userName"></span>
+        <span class="text-sm font-medium" style="color: #060D0C;" id="userName"></span>
         <img id="profilePic" src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="User"
-             class="w-8 h-8 rounded-full shadow-lg border border-indigo-300"/>
+             class="w-8 h-8 rounded-full shadow-lg border" style="border-color: #8B9B8F;"/>
       </div>
 
       <!-- Side Menu -->
       <div id="mobileMenu" class="side-menu hidden fixed top-0 left-0 w-64 h-full bg-white shadow z-50 p-4 transition-transform transform -translate-x-full">
         <div class="mb-8">
-          <div class="text-2xl font-bold text-indigo-600 flex items-center">
+          <div class="text-2xl font-bold flex items-center" style="color: #060D0C;">
             <i class="fas fa-chalkboard-teacher mr-2"></i>
             Smart Panel
           </div>
-          <div class="text-xs text-gray-500 mt-1">Teacher Dashboard</div>
+          <div class="text-xs mt-1" style="color: #8B9B8F;">Teacher Dashboard</div>
         </div>
         
         <div class="user-profile flex flex-col items-center mb-8">
           <div class="relative mb-4">
             <img id="profilePic" src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="User" 
-                 class="w-20 h-20 rounded-full border-4 border-indigo-100 object-cover shadow-lg"/>
+                 class="w-20 h-20 rounded-full border-4 object-cover shadow-lg" style="border-color: #F0EDE5;"/>
             <div class="absolute bottom-0 right-0 w-6 h-6 bg-green-400 rounded-full border-2 border-white"></div>
           </div>
-          <span id="userName" class="font-semibold text-gray-800 text-lg"></span>
-          <span id="userEmail" class="text-gray-500 text-sm mt-1"></span>
+          <span id="userName" class="font-semibold text-lg" style="color: #060D0C;"></span>
+          <span id="userEmail" class="text-sm mt-1" style="color: #8B9B8F;"></span>
         </div>
         
         <ul class="space-y-4 text-black">
           <li>
-            <button onclick="window.location.href = 'myclass.html'" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-indigo-50 text-gray-700 hover:text-indigo-600 transition">
-              <div class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600">
+            <button onclick="window.location.href = 'myclass.html'" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl transition" style="color: #060D0C;" onmouseover="this.style.backgroundColor='#F0EDE5'" onmouseout="this.style.backgroundColor='transparent'">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #F0EDE5; color: #060D0C;">
                 <i class="fas fa-home text-sm"></i>
               </div>
               <span>Dashboard</span>
             </button>
           </li>
           <li>
-            <a href="/myclass.html" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-50 text-gray-700 hover:text-purple-600 transition block">
-              <div class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
+            <a href="/myclass.html" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl transition block" style="color: #060D0C;" onmouseover="this.style.backgroundColor='#F0EDE5'" onmouseout="this.style.backgroundColor='transparent'">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #F0EDE5; color: #060D0C;">
                 <i class="fas fa-comments text-sm"></i>
             </div>
             <span>My class</span>
@@ -100,16 +111,16 @@
         
           <!-- ✅ NEW: Promote Students Button -->
           <li>
-            <a href="/promotion.html" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-50 text-gray-700 hover:text-purple-600 transition block">
-              <div class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
+            <a href="/promotion.html" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl transition block" style="color: #060D0C;" onmouseover="this.style.backgroundColor='#F0EDE5'" onmouseout="this.style.backgroundColor='transparent'">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #F0EDE5; color: #060D0C;">
                 <i class="fas fa-user-graduate text-sm"></i>
               </div>
               <span>Promote Students</span>
             </a>
           </li>
           <li>
-            <a href="/msg.html" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-50 text-gray-700 hover:text-purple-600 transition block">
-              <div class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
+            <a href="/msg.html" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl transition block" style="color: #060D0C;" onmouseover="this.style.backgroundColor='#F0EDE5'" onmouseout="this.style.backgroundColor='transparent'">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #F0EDE5; color: #060D0C;">
                 <i class="fas fa-comments text-sm"></i>
             </div>
             <span>WhatsApp</span>
@@ -117,8 +128,8 @@
           </li>
           
           <li>
-            <a href="/report.html" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-50 text-gray-700 hover:text-purple-600 transition block">
-              <div class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
+            <a href="/report.html" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl transition block" style="color: #060D0C;" onmouseover="this.style.backgroundColor='#F0EDE5'" onmouseout="this.style.backgroundColor='transparent'">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #F0EDE5; color: #060D0C;">
                 <i class="fas fa-user-graduate text-sm"></i>
               </div>
               <span>Reports</span>
@@ -130,8 +141,8 @@
         
         <!-- Logout Button -->
         <div class="mt-auto pt-4">
-          <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 text-red-500 transition">
-            <div class="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center text-red-500">
+          <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition" style="color: #060D0C;" onmouseover="this.style.backgroundColor='#F0EDE5'" onmouseout="this.style.backgroundColor='transparent'">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #F0EDE5; color: #060D0C;">
               <i class="fas fa-sign-out-alt text-sm"></i>
             </div>
             <span>Logout</span>
@@ -165,18 +176,18 @@
 
     <div id="tabs">
       <!-- ✅ MOBILE HEADER: Optimized spacing -->
-      <header class="w-full bg-white shadow-sm border-b border-gray-200 px-3 py-3 mb-4">
+      <header class="w-full shadow-sm border-b px-3 py-3 mb-4" style="background-color: #F0EDE5; border-color: #8B9B8F;">
         <div class="flex items-center justify-between">
           <!-- Left: Back Button -->
-          <button onclick="window.location.href = 'myclass.html'" class="w-8 h-8 rounded-full bg-gradient-to-r from-white to-blue-100 hover:from-blue-50 hover:to-blue-200 border border-blue-300 flex items-center justify-center transition-all duration-200 active:scale-95">
-            <i class="fa-solid fa-angle-left text-blue-600 text-xs"></i>
+          <button onclick="window.location.href = 'myclass.html'" class="w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-200 active:scale-95" style="background-color: #F0EDE5; border-color: #8B9B8F;" onmouseover="this.style.backgroundColor='#060D0C'; this.style.color='#F0EDE5'" onmouseout="this.style.backgroundColor='#F0EDE5'; this.style.color='#060D0C'">
+            <i class="fa-solid fa-angle-left text-xs" style="color: #060D0C;"></i>
           </button>
           
           
           <!-- Center: Title -->
           <div class="flex items-center space-x-3 rounded-lg px-3 py-2">
             <div class="text-center">
-              <p class="font-semibold text-indigo-700 text-sm">Attendance Management</p>
+              <p class="font-semibold text-sm" style="color: #060D0C;">Attendance Management</p>
             </div>
           </div>
           
@@ -188,13 +199,13 @@
       
       <!-- ✅ TAB BUTTONS: Better spacing -->
       <div class="px-4 mb-6">
-        <div class="flex bg-white rounded-full shadow-md p-1 max-w-sm mx-auto">
+        <div class="flex rounded-full shadow-md p-1 max-w-sm mx-auto" style="background-color: #F0EDE5;">
           <button onclick="showTab('markTab')" id="markBtn"
-            class="tablinks flex-1 px-4 py-2 text-white bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full transition-all duration-300 shadow-md text-xs font-medium">
+            class="tablinks flex-1 px-4 py-2 text-white rounded-full transition-all duration-300 shadow-md text-xs font-medium" style="background-color: #060D0C;">
             Mark Attendance
           </button>
           <button onclick="showTab('viewTab')" id="viewBtn"
-            class="tablinks flex-1 px-4 py-2 text-gray-600 hover:text-indigo-600 hover:bg-indigo-100 rounded-full transition-all duration-300 text-xs font-medium">
+            class="tablinks flex-1 px-4 py-2 rounded-full transition-all duration-300 text-xs font-medium" style="color: #8B9B8F;" onmouseover="this.style.color='#060D0C'; this.style.backgroundColor='#F0EDE5'" onmouseout="this.style.color='#8B9B8F'; this.style.backgroundColor='transparent'">
             View Attendance
           </button>
         </div>
@@ -204,8 +215,8 @@
     
     <div id="markTab" class="tabcontent p-3 sm:p-4">
       <!-- ✅ COMPACT: Title with responsive spacing -->
-      <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-3 flex items-center">
-        <i class="fas fa-edit text-indigo-500 mr-2"></i>
+      <h3 class="text-base sm:text-lg font-semibold mb-3 flex items-center" style="color: #060D0C;">
+        <i class="fas fa-edit mr-2" style="color: #060D0C;"></i>
         Mark Attendance
       </h3>
     
@@ -213,14 +224,14 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 px-1">
         <!-- Date Input -->
         <div class="relative">
-          <label class="block text-xs text-gray-600 mb-1">Date</label>
+          <label class="block text-xs mb-1" style="color: #8B9B8F;">Date</label>
           <input 
             type="date" 
             id="date" 
-            class="w-full p-2 text-sm border border-indigo-300 rounded-lg text-[#0f172a] bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" 
+            class="w-full p-2 text-sm border rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2" style="border-color: #8B9B8F; color: #060D0C;" onfocus="this.style.borderColor='#2A3B36'" onblur="this.style.borderColor='#8B9B8F'" 
             onchange="checkDateWarnings()"
           />
-          <div id="dateWarning" class="hidden mt-1 text-xs text-amber-600 flex items-center">
+          <div id="dateWarning" class="hidden mt-1 text-xs flex items-center" style="color: #8B9B8F;">
             <i class="fas fa-exclamation-triangle mr-1"></i>
             <span id="dateWarningText"></span>
           </div>
@@ -228,8 +239,8 @@
         
         <!-- Subject Select -->
         <div>
-          <label class="block text-xs text-gray-600 mb-1">Subject</label>
-          <select id="subject-mark" class="w-full px-3 py-2 text-sm bg-white text-[#0f172a] border border-indigo-300 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 transition duration-200">
+          <label class="block text-xs mb-1" style="color: #8B9B8F;">Subject</label>
+          <select id="subject-mark" class="w-full px-3 py-2 text-sm bg-white rounded-lg shadow focus:outline-none focus:ring-2 transition duration-200" style="border-color: #8B9B8F; color: #060D0C;" onfocus="this.style.borderColor='#2A3B36'" onblur="this.style.borderColor='#8B9B8F'">
             <option value="">-- Select Subject --</option>
           </select>
         </div>
@@ -237,13 +248,13 @@
     
       <!-- ✅ RESPONSIVE: Students table -->
       <div class="overflow-x-auto rounded-lg shadow mb-4">
-        <table class="table-auto w-full border border-indigo-200 bg-white text-[#0f172a] rounded-lg overflow-hidden">
-          <thead class="bg-gradient-to-r from-indigo-500 to-blue-500 text-white">
+        <table class="table-auto w-full border bg-white rounded-lg overflow-hidden" style="border-color: #8B9B8F; color: #060D0C;">
+          <thead class="text-white" style="background: linear-gradient(to right, #060D0C, #2A3B36);">
             <tr>
-              <th class="p-2 sm:p-3 border border-indigo-200 text-center text-xs sm:text-sm">#</th>
-              <th class="p-2 sm:p-3 border border-indigo-200 text-center text-xs sm:text-sm">ID</th>
-              <th class="p-2 sm:p-3 border border-indigo-200 text-left text-xs sm:text-sm">Name</th>
-              <th class="p-2 sm:p-3 border border-indigo-200 text-center text-xs sm:text-sm">Present</th>
+              <th class="p-2 sm:p-3 border text-center text-xs sm:text-sm" style="border-color: #8B9B8F;">#</th>
+              <th class="p-2 sm:p-3 border text-center text-xs sm:text-sm" style="border-color: #8B9B8F;">ID</th>
+              <th class="p-2 sm:p-3 border text-left text-xs sm:text-sm" style="border-color: #8B9B8F;">Name</th>
+              <th class="p-2 sm:p-3 border text-center text-xs sm:text-sm" style="border-color: #8B9B8F;">Present</th>
             </tr>
           </thead>
           <tbody id="students-list" class="text-xs sm:text-sm"></tbody>
@@ -252,7 +263,7 @@
     
       <!-- ✅ RESPONSIVE: Submit button -->
       <div class="flex justify-center mt-4">
-        <button id="submitAttendance" class="bg-gradient-to-r from-indigo-500 to-blue-500 text-white px-6 py-2 sm:px-8 sm:py-3 rounded-full font-medium hover:shadow-lg transition flex items-center text-sm sm:text-base">
+        <button id="submitAttendance" class="text-white px-6 py-2 sm:px-8 sm:py-3 rounded-full font-medium hover:shadow-lg transition flex items-center text-sm sm:text-base" style="background: linear-gradient(to right, #060D0C, #2A3B36);" onmouseover="this.style.background='linear-gradient(to right, #2A3B36, #060D0C)'" onmouseout="this.style.background='linear-gradient(to right, #060D0C, #2A3B36)'">
           <i class="fas fa-paper-plane mr-2"></i> 
           <span class="hidden sm:inline">Submit Attendance</span>
           <span class="sm:hidden">Submit</span>
@@ -263,19 +274,50 @@
     <div id="viewTab" class="tabcontent hidden p-2 sm:p-4">
       <!-- Mobile-optimized header -->
       <div class="flex items-center justify-between mb-3">
-        <h3 class="text-base font-semibold text-gray-800 flex items-center">
-          <i class="fas fa-table text-indigo-500 mr-2 text-sm"></i>
+        <h3 class="text-base font-semibold flex items-center" style="color: #060D0C;">
+          <i class="fas fa-table mr-2 text-sm" style="color: #060D0C;"></i>
           Register
         </h3>
+        <!-- Back to My Class button (only shown in teacher mode) -->
+        <button id="backToMyClassBtn" onclick="backToMyClass()" class="hidden px-3 py-1 text-xs rounded-lg transition-all" style="background-color: #F0EDE5; color: #060D0C; border: 1px solid #8B9B8F;" onmouseover="this.style.backgroundColor='#E8E3D8'" onmouseout="this.style.backgroundColor='#F0EDE5'">
+          <i class="fas fa-arrow-left mr-1"></i>My Class
+        </button>
       </div>
     
-      <!-- Compact subject selection -->
-      <div class="space-y-2 mb-4">
-        <label for="subject-view" class="block text-xs text-gray-600 font-medium">Select Subject</label>
-        <select id="subject-view" class="w-full p-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white text-gray-800">
+      <!-- Stream/Semester/Subject selection for teacher mode -->
+      <div id="teacherSelectionInterface" class="hidden space-y-3 mb-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="teacher-stream-select" class="block text-xs font-medium mb-1" style="color: #8B9B8F;">Select Stream</label>
+            <select id="teacher-stream-select" class="w-full p-2 text-sm border rounded-lg focus:ring-2 bg-white" style="border-color: #8B9B8F; color: #060D0C;" onfocus="this.style.borderColor='#2A3B36'" onblur="this.style.borderColor='#8B9B8F'">
+              <option value="">-- Select Stream --</option>
+            </select>
+          </div>
+          <div>
+            <label for="teacher-semester-select" class="block text-xs font-medium mb-1" style="color: #8B9B8F;">Select Semester</label>
+            <select id="teacher-semester-select" class="w-full p-2 text-sm border rounded-lg focus:ring-2 bg-white" style="border-color: #8B9B8F; color: #060D0C;" onfocus="this.style.borderColor='#2A3B36'" onblur="this.style.borderColor='#8B9B8F'">
+              <option value="">-- Select Semester --</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label for="teacher-subject-select" class="block text-xs font-medium mb-1" style="color: #8B9B8F;">Select Subject</label>
+          <select id="teacher-subject-select" class="w-full p-2 text-sm border rounded-lg focus:ring-2 bg-white" style="border-color: #8B9B8F; color: #060D0C;" onfocus="this.style.borderColor='#2A3B36'" onblur="this.style.borderColor='#8B9B8F'">
+            <option value="">-- Select Subject --</option>
+          </select>
+        </div>
+        <button id="teacherLoadRegisterBtn" class="w-full sm:w-auto px-4 py-2 text-white rounded-lg text-sm font-medium transition-all" style="background: linear-gradient(to right, #060D0C, #2A3B36);" onmouseover="this.style.background='linear-gradient(to right, #2A3B36, #060D0C)'" onmouseout="this.style.background='linear-gradient(to right, #060D0C, #2A3B36)'">
+          <i class="fas fa-search mr-2"></i>Load Attendance Register
+        </button>
+      </div>
+
+      <!-- Original subject selection (for normal mode) -->
+      <div id="normalSelectionInterface" class="space-y-2 mb-4">
+        <label for="subject-view" class="block text-xs font-medium" style="color: #8B9B8F;">Select Subject</label>
+        <select id="subject-view" class="w-full p-2 text-sm border rounded-lg focus:ring-2 bg-white" style="border-color: #8B9B8F; color: #060D0C;" onfocus="this.style.borderColor='#2A3B36'" onblur="this.style.borderColor='#8B9B8F'">
           <option value="">-- Select Subject --</option>
         </select>
-        <button id="loadRegisterBtn" class="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-indigo-500 to-blue-500 text-white rounded-lg text-sm font-medium hover:from-indigo-600 hover:to-blue-600 transition-all">
+        <button id="loadRegisterBtn" class="w-full sm:w-auto px-4 py-2 text-white rounded-lg text-sm font-medium transition-all" style="background: linear-gradient(to right, #060D0C, #2A3B36);" onmouseover="this.style.background='linear-gradient(to right, #2A3B36, #060D0C)'" onmouseout="this.style.background='linear-gradient(to right, #060D0C, #2A3B36)'">
           <i class="fas fa-search mr-2"></i>Load Attendance Register
         </button>
       </div>
@@ -284,12 +326,12 @@
       <div id="registerTable" class="hidden">
         <!-- Action buttons -->
         <div class="flex justify-end gap-2 mb-3">
-          <button id="saveChangesBtn" onclick="saveAttendanceChanges()" class="flex-1 sm:flex-none px-2 sm:px-3 py-2 bg-yellow-500 text-white rounded-lg text-xs sm:text-sm font-medium hidden hover:bg-yellow-600 transition-all">
+          <button id="saveChangesBtn" onclick="saveAttendanceChanges()" class="flex-1 sm:flex-none px-2 sm:px-3 py-2 text-white rounded-lg text-xs sm:text-sm font-medium hidden transition-all" style="background-color: #2A3B36;" onmouseover="this.style.backgroundColor='#060D0C'" onmouseout="this.style.backgroundColor='#2A3B36'">
             <i class="fas fa-save text-sm mr-1"></i>
             <span class="hidden sm:inline">Save Changes</span>
             <span class="sm:hidden text-xs">Save</span>
           </button>
-          <button id="exportExcelBtn" onclick="exportToExcel()" class="flex-1 sm:flex-none px-2 sm:px-3 py-2 bg-green-600 text-white rounded-lg text-xs sm:text-sm font-medium hidden hover:bg-green-700 transition-all">
+          <button id="exportExcelBtn" onclick="exportToExcel()" class="flex-1 sm:flex-none px-2 sm:px-3 py-2 text-white rounded-lg text-xs sm:text-sm font-medium hidden transition-all" style="background-color: #060D0C;" onmouseover="this.style.backgroundColor='#2A3B36'" onmouseout="this.style.backgroundColor='#060D0C'">
             <i class="fas fa-file-excel text-sm mr-1"></i>
             <span class="hidden sm:inline">Export Excel</span>
             <span class="sm:hidden text-xs">Export</span>
@@ -298,13 +340,13 @@
         
       
         <!-- ✅ FIXED: Table with sticky student column -->
-        <div class="rounded-lg shadow border border-indigo-200 overflow-hidden bg-white">
+        <div class="rounded-lg shadow border overflow-hidden bg-white" style="border-color: #8B9B8F;">
           <div class="overflow-x-auto relative">
             <table class="min-w-full text-xs sm:text-sm border-collapse">
-              <thead class="bg-indigo-600 text-white sticky top-0 z-30" id="view-thead">
+              <thead class="text-white sticky top-0 z-30" style="background-color: #060D0C;" id="view-thead">
                 <!-- Headers will be populated by JavaScript -->
               </thead>
-              <tbody class="bg-white text-gray-800 divide-y divide-gray-100" id="view-tbody">
+              <tbody class="bg-white divide-y" style="color: #060D0C; border-color: #F0EDE5;" id="view-tbody">
                 <!-- Rows will be populated by JavaScript -->
               </tbody>
             </table>
@@ -312,13 +354,13 @@
         </div>
     
         <!-- Mobile scroll hint -->
-        <div class="mt-2 text-xs text-gray-500 text-center flex items-center justify-center gap-2">
+        <div class="mt-2 text-xs text-center flex items-center justify-center gap-2" style="color: #8B9B8F;">
           <i class="fas fa-arrows-alt-h"></i>
           <span>Student column stays fixed • Scroll horizontally to view all dates</span>
         </div>
         
         <!-- ✅ Stats summary -->
-        <div class="mt-3 p-2 bg-gray-50 rounded-lg text-xs text-gray-600 grid grid-cols-2 sm:grid-cols-4 gap-2" id="attendanceStats">
+        <div class="mt-3 p-2 rounded-lg text-xs grid grid-cols-2 sm:grid-cols-4 gap-2" style="background-color: #F0EDE5; color: #060D0C;" id="attendanceStats">
           <!-- Stats will be populated by JavaScript -->
         </div>
       </div>
@@ -444,8 +486,369 @@
       return { invalidDates, validatedDates };
     }
     
+    // ✅ TEACHER VIEW MODE SETUP
+    function setupTeacherViewMode(teacherInfo) {
+      console.log('🔧 Setting up teacher view mode...');
+      
+      // Add teacher mode class to body
+      document.body.classList.add('teacher-mode');
+      
+      // Hide the header/banner for teacher mode
+      const header = document.querySelector('header');
+      if (header) {
+        header.style.display = 'none';
+      }
+      
+      // Hide the home page content and show only tabs
+      const homePage = document.getElementById("homePage");
+      if (homePage) {
+        homePage.classList.remove("hidden");
+        
+        // Hide everything except the tabs section
+        const children = homePage.children;
+        for (let i = 0; i < children.length; i++) {
+          const child = children[i];
+          if (!child.id || (child.id !== 'tabs' && child.id !== 'viewTab')) {
+            child.style.display = 'none';
+          }
+        }
+      }
+      
+      // Show tabs section
+      const tabs = document.getElementById('tabs');
+      if (tabs) {
+        tabs.classList.remove('hidden');
+        tabs.style.display = 'block';
+      }
+      
+      // Auto-navigate to view attendance tab after a short delay
+      setTimeout(() => {
+        // Show the view attendance tab directly
+        showTab('viewTab');
+        
+        // Hide the mark attendance tab button completely
+        const markBtn = document.getElementById('markBtn');
+        const viewBtn = document.getElementById('viewBtn');
+        
+        if (markBtn) {
+          markBtn.style.display = 'none';
+        }
+        
+        if (viewBtn) {
+          viewBtn.style.backgroundColor = '#060D0C';
+          viewBtn.style.color = 'white';
+          viewBtn.style.width = '100%'; // Make it full width since mark button is hidden
+        }
+        
+        // Show stream/semester selection interface
+        setupTeacherStreamSelection();
+        
+        // Show a welcome message
+        showTeacherWelcomeMessage(teacherInfo);
+        
+        // Show the back to my class button
+        const backBtn = document.getElementById('backToMyClassBtn');
+        if (backBtn) {
+          backBtn.classList.remove('hidden');
+        }
+        
+      }, 500);
+    }
+    
+    // ✅ BACK TO MY CLASS FUNCTION
+    function backToMyClass() {
+      window.location.href = 'myclass.html';
+    }
+    
+    // ✅ SETUP TEACHER STREAM SELECTION
+    function setupTeacherStreamSelection() {
+      console.log('🔧 Setting up teacher stream selection interface...');
+      
+      // Hide normal interface, show teacher interface
+      const normalInterface = document.getElementById('normalSelectionInterface');
+      const teacherInterface = document.getElementById('teacherSelectionInterface');
+      
+      if (normalInterface) normalInterface.classList.add('hidden');
+      if (teacherInterface) teacherInterface.classList.remove('hidden');
+      
+      // Populate streams (same as myclass.html)
+      populateTeacherStreams();
+      
+      // Setup event listeners
+      setupTeacherSelectionListeners();
+    }
+    
+    // ✅ POPULATE TEACHER STREAMS
+    function populateTeacherStreams() {
+      const streamSelect = document.getElementById('teacher-stream-select');
+      if (!streamSelect) return;
+      
+      // Same streams as in myclass.html
+      const streams = [
+        'BCA', 'BBA', 'BCom', 'BCom Section A', 'BCom Section B', 
+        'BSc', 'BA', 'MA', 'MSc', 'MCom', 'MCA'
+      ];
+      
+      streamSelect.innerHTML = '<option value="">-- Select Stream --</option>';
+      streams.forEach(stream => {
+        const option = document.createElement('option');
+        option.value = stream;
+        option.textContent = stream;
+        streamSelect.appendChild(option);
+      });
+    }
+    
+    // ✅ SETUP TEACHER SELECTION LISTENERS
+    function setupTeacherSelectionListeners() {
+      const streamSelect = document.getElementById('teacher-stream-select');
+      const semesterSelect = document.getElementById('teacher-semester-select');
+      const subjectSelect = document.getElementById('teacher-subject-select');
+      const loadBtn = document.getElementById('teacherLoadRegisterBtn');
+      
+      if (streamSelect) {
+        streamSelect.addEventListener('change', () => {
+          const selectedStream = streamSelect.value;
+          populateTeacherSemesters(selectedStream);
+          
+          // Clear subject selection
+          if (subjectSelect) {
+            subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+          }
+        });
+      }
+      
+      if (semesterSelect) {
+        semesterSelect.addEventListener('change', () => {
+          const selectedStream = streamSelect.value;
+          const selectedSemester = semesterSelect.value;
+          
+          if (selectedStream && selectedSemester) {
+            loadTeacherSubjects(selectedStream, selectedSemester);
+          }
+        });
+      }
+      
+      if (loadBtn) {
+        loadBtn.addEventListener('click', loadTeacherAttendanceRegister);
+      }
+    }
+    
+    // ✅ POPULATE TEACHER SEMESTERS
+    function populateTeacherSemesters(stream) {
+      const semesterSelect = document.getElementById('teacher-semester-select');
+      if (!semesterSelect || !stream) return;
+      
+      // Same logic as myclass.html
+      let maxSemesters = 6; // Default
+      
+      if (stream.includes('BCA') || stream.includes('BBA') || stream.includes('BSc')) {
+        maxSemesters = 6;
+      } else if (stream.includes('BCom') || stream.includes('BA')) {
+        maxSemesters = 6;
+      } else if (stream.includes('MA') || stream.includes('MSc') || stream.includes('MCom') || stream.includes('MCA')) {
+        maxSemesters = 4;
+      }
+      
+      semesterSelect.innerHTML = '<option value="">-- Select Semester --</option>';
+      for (let i = 1; i <= maxSemesters; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = `Semester ${i}`;
+        semesterSelect.appendChild(option);
+      }
+    }
+    
+    // ✅ LOAD TEACHER SUBJECTS
+    async function loadTeacherSubjects(stream, semester) {
+      const subjectSelect = document.getElementById('teacher-subject-select');
+      if (!subjectSelect) return;
+      
+      try {
+        console.log(`📚 Loading subjects for: ${stream} Semester ${semester}`);
+        
+        const response = await fetch(`/api/subjects/${stream}/sem${semester}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const data = await response.json();
+        const subjects = data.subjects || [];
+        
+        subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+        
+        // Group by type
+        const coreSubjects = subjects.filter(s => s.subjectType === 'CORE');
+        const languageSubjects = subjects.filter(s => s.subjectType === 'LANGUAGE');
+        
+        if (coreSubjects.length > 0) {
+          const coreGroup = document.createElement('optgroup');
+          coreGroup.label = 'Core Subjects';
+          coreSubjects.forEach(subject => {
+            const option = document.createElement('option');
+            option.value = subject.subjectName;
+            option.textContent = subject.subjectName;
+            coreGroup.appendChild(option);
+          });
+          subjectSelect.appendChild(coreGroup);
+        }
+        
+        if (languageSubjects.length > 0) {
+          const langGroup = document.createElement('optgroup');
+          langGroup.label = 'Language Subjects';
+          languageSubjects.forEach(subject => {
+            const option = document.createElement('option');
+            option.value = subject.subjectName;
+            option.textContent = subject.subjectName;
+            langGroup.appendChild(option);
+          });
+          subjectSelect.appendChild(langGroup);
+        }
+        
+        console.log(`✅ Loaded ${subjects.length} subjects (${coreSubjects.length} core, ${languageSubjects.length} language)`);
+        
+      } catch (error) {
+        console.error('❌ Error loading subjects:', error);
+        subjectSelect.innerHTML = '<option value="">-- Error Loading Subjects --</option>';
+      }
+    }
+    
+    // ✅ LOAD TEACHER ATTENDANCE REGISTER
+    async function loadTeacherAttendanceRegister() {
+      const streamSelect = document.getElementById('teacher-stream-select');
+      const semesterSelect = document.getElementById('teacher-semester-select');
+      const subjectSelect = document.getElementById('teacher-subject-select');
+      const loadBtn = document.getElementById('teacherLoadRegisterBtn');
+      
+      const stream = streamSelect?.value;
+      const semester = semesterSelect?.value;
+      const subject = subjectSelect?.value;
+      
+      if (!stream || !semester || !subject) {
+        showAlert("Missing Information", "Please select stream, semester, and subject.", "error");
+        return;
+      }
+      
+      try {
+        loadBtn.disabled = true;
+        loadBtn.innerHTML = '<span class="loading-spinner"></span> Loading...';
+        
+        console.log(`📊 Loading register for: ${stream} Semester ${semester} - ${subject}`);
+        
+        const res = await fetch(`/api/attendance-register/${stream}/sem${semester}/${encodeURIComponent(subject)}`);
+        
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
+        const data = await res.json();
+        console.log('📊 Register response:', data);
+        
+        let students, attendanceMap, subjectInfo;
+        
+        if (data.success && data.data) {
+          ({ students, attendanceMap, subjectInfo } = data.data);
+        } else if (data.students && data.attendanceMap) {
+          ({ students, attendanceMap } = data);
+          subjectInfo = data.subjectInfo;
+        } else {
+          throw new Error(data.message || 'Failed to load register');
+        }
+        
+        const dates = Object.keys(attendanceMap).sort();
+        
+        console.log(`✅ Loaded: ${students.length} students, ${dates.length} dates`);
+        
+        if (students.length === 0) {
+          const message = subjectInfo?.isLanguageSubject ? 
+            `No students found who chose ${subjectInfo.languageType} language` :
+            'No students found for this subject';
+          showAlert("No Students", message, "warning");
+          return;
+        }
+        
+        await renderAttendanceTable(students, dates, attendanceMap);
+        
+        const registerTable = document.getElementById("registerTable");
+        const saveBtn = document.getElementById("saveChangesBtn");
+        const exportExcelBtn = document.getElementById("exportExcelBtn");
+        
+        if (registerTable) registerTable.classList.remove("hidden");
+        if (saveBtn) saveBtn.classList.remove("hidden");
+        if (exportExcelBtn) exportExcelBtn.classList.remove("hidden");
+        
+        const avgAttendance = students.length > 0 ?
+          (students.reduce((sum, stu) => {
+            const attendedCount = dates.filter(date => attendanceMap[date]?.includes(stu.studentID)).length;
+            return sum + (dates.length > 0 ? (attendedCount / dates.length) * 100 : 0);
+          }, 0) / students.length).toFixed(1) : 0;
+        
+        let successMessage = `Register loaded successfully!\n\n`;
+        successMessage += `Subject: ${subject}\n`;
+        successMessage += `Stream: ${stream} Semester ${semester}\n`;
+        if (subjectInfo?.isLanguageSubject) {
+          successMessage += `Language: ${subjectInfo.languageType} students only\n`;
+        }
+        successMessage += `Students: ${students.length}\n`;
+        successMessage += `Days: ${dates.length}\n`;
+        successMessage += `Average Attendance: ${avgAttendance}%`;
+        
+        showAlert("Success", successMessage, "success");
+        
+      } catch (err) {
+        console.error("Error loading attendance register:", err);
+        showAlert("Loading Error", `Failed to load register: ${err.message}`, "error");
+      } finally {
+        loadBtn.disabled = false;
+        loadBtn.innerHTML = '<i class="fas fa-search mr-2"></i>Load Attendance Register';
+      }
+    }
+    
+    // ✅ SHOW TEACHER WELCOME MESSAGE
+    function showTeacherWelcomeMessage(teacherInfo) {
+      // Create a temporary welcome message
+      const welcomeDiv = document.createElement('div');
+      welcomeDiv.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2 rounded-lg shadow-lg';
+      welcomeDiv.style.backgroundColor = '#060D0C';
+      welcomeDiv.style.color = 'white';
+      welcomeDiv.innerHTML = `
+        <div class="flex items-center gap-2">
+          <i class="fas fa-chalkboard-teacher"></i>
+          <span>Welcome ${teacherInfo.name}! View attendance for any subject</span>
+        </div>
+      `;
+      
+      document.body.appendChild(welcomeDiv);
+      
+      // Remove after 3 seconds
+      setTimeout(() => {
+        if (welcomeDiv.parentNode) {
+          welcomeDiv.parentNode.removeChild(welcomeDiv);
+        }
+      }, 3000);
+    }
+    
     // ✅ MAIN INITIALIZATION
     document.addEventListener("DOMContentLoaded", () => {
+      // Check for teacher view mode from myclass.html
+      const teacherViewMode = sessionStorage.getItem('teacherViewMode');
+      if (teacherViewMode === 'true') {
+        try {
+          const teacherInfo = JSON.parse(sessionStorage.getItem('teacherInfo') || '{}');
+          
+          console.log('👨‍🏫 Teacher view mode activated:', {
+            teacherInfo
+          });
+          
+          // Set up teacher view mode
+          setupTeacherViewMode(teacherInfo);
+          
+          // Clear the session data
+          sessionStorage.removeItem('teacherViewMode');
+          sessionStorage.removeItem('teacherInfo');
+          
+        } catch (error) {
+          console.error('❌ Error setting up teacher view mode:', error);
+        }
+      }
+      
       // Check for auto-selection from myclass.html
       const selectedClassInfo = sessionStorage.getItem('selectedClass');
       if (selectedClassInfo) {
@@ -547,23 +950,38 @@
       window.location.href = 'myclass.html';
     }
     
-    // ✅ TAB MANAGEMENT
+    // ✅ TAB MANAGEMENT - LUXE NOIR Theme
     function showTab(tabId) {
       markTab.classList.add("hidden");
       viewTab.classList.add("hidden");
       document.getElementById(tabId).classList.remove("hidden");
       
+      // Reset both buttons to inactive state (LUXE NOIR)
       document.getElementById('markBtn').className =
-        "tablinks flex-1 px-2 py-1 text-gray-600 hover:text-indigo-600 hover:bg-indigo-100 rounded-full transition-all duration-300 text-[10px] font-medium";
+        "tablinks flex-1 px-4 py-2 rounded-full transition-all duration-300 text-xs font-medium";
+      document.getElementById('markBtn').style.cssText = "color: #8B9B8F; background-color: transparent;";
+      document.getElementById('markBtn').onmouseover = function() { this.style.color='#060D0C'; this.style.backgroundColor='#F0EDE5'; };
+      document.getElementById('markBtn').onmouseout = function() { this.style.color='#8B9B8F'; this.style.backgroundColor='transparent'; };
+      
       document.getElementById('viewBtn').className =
-        "tablinks flex-1 px-2 py-1 text-gray-600 hover:text-indigo-600 hover:bg-indigo-100 rounded-full transition-all duration-300 text-[10px] font-medium";
+        "tablinks flex-1 px-4 py-2 rounded-full transition-all duration-300 text-xs font-medium";
+      document.getElementById('viewBtn').style.cssText = "color: #8B9B8F; background-color: transparent;";
+      document.getElementById('viewBtn').onmouseover = function() { this.style.color='#060D0C'; this.style.backgroundColor='#F0EDE5'; };
+      document.getElementById('viewBtn').onmouseout = function() { this.style.color='#8B9B8F'; this.style.backgroundColor='transparent'; };
     
+      // Set active tab (LUXE NOIR)
       if (tabId === 'markTab') {
         document.getElementById('markBtn').className =
-          "tablinks flex-1 px-2 py-1 text-white bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full transition-all duration-300 shadow-sm text-[10px] font-medium";
+          "tablinks flex-1 px-4 py-2 text-white rounded-full transition-all duration-300 shadow-md text-xs font-medium";
+        document.getElementById('markBtn').style.cssText = "background-color: #060D0C; color: #F0EDE5;";
+        document.getElementById('markBtn').onmouseover = null;
+        document.getElementById('markBtn').onmouseout = null;
       } else {
         document.getElementById('viewBtn').className =
-          "tablinks flex-1 px-2 py-1 text-white bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full transition-all duration-300 shadow-sm text-[10px] font-medium";
+          "tablinks flex-1 px-4 py-2 text-white rounded-full transition-all duration-300 shadow-md text-xs font-medium";
+        document.getElementById('viewBtn').style.cssText = "background-color: #060D0C; color: #F0EDE5;";
+        document.getElementById('viewBtn').onmouseover = null;
+        document.getElementById('viewBtn').onmouseout = null;
       }
     }
     
@@ -1033,8 +1451,19 @@
         loadBtn.innerHTML = '<span class="loading-spinner"></span> Loading...';
     
         console.log(`📊 Loading register for: ${subject}`);
+        
+        // Get stream and semester from selected option (for teacher subjects)
+        const selectedOption = subjectView.options[subjectView.selectedIndex];
+        const streamFromOption = selectedOption.getAttribute('data-stream');
+        const semesterFromOption = selectedOption.getAttribute('data-semester');
+        
+        // Use stream/semester from option if available (teacher mode), otherwise use global variables
+        const streamToUse = streamFromOption || selectedStream;
+        const semesterToUse = semesterFromOption || selectedSem;
+        
+        console.log(`📊 Using stream: ${streamToUse}, semester: ${semesterToUse} for subject: ${subject}`);
     
-        const res = await fetch(`/api/attendance-register/${selectedStream}/sem${selectedSem}/${encodeURIComponent(subject)}`);
+        const res = await fetch(`/api/attendance-register/${streamToUse}/sem${semesterToUse}/${encodeURIComponent(subject)}`);
         
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);

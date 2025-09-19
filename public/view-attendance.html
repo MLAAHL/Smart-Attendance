@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>View Attendance - Smart Attendance</title>
+  
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="demo.css">
+
+  <!-- Inline Styles -->
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(125deg, #F0EDE5 0%, #E8E3D8 95%);
+      background-size: cover;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    
+    .glass {
+      background: rgba(255,255,255,0.14);
+      box-shadow: 0 8px 32px 0 rgba(31,38,135,0.18);
+      backdrop-filter: blur(13px);
+      -webkit-backdrop-filter: blur(13px);
+      border-radius: 1.4rem;
+      border: 1.8px solid rgba(255,255,255,0.18);
+    }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            customDark: '#060D0C',
+            customLight: '#F0EDE5',
+            customAccent: '#2A3B36',
+            customMuted: '#8B9B8F',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-screen">
+  
+  <div class="p-2 sm:p-4">
+    <div id="viewTab" class="tabcontent p-2 sm:p-4">
+      <!-- Mobile-optimized header -->
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-base font-semibold flex items-center" style="color: #060D0C;">
+          <i class="fas fa-table mr-2 text-sm" style="color: #060D0C;"></i>
+          Register
+        </h3>
+        <!-- Back to My Class button -->
+        <button onclick="window.location.href='myclass.html'" class="px-3 py-1 text-xs rounded-lg transition-all" style="background-color: #F0EDE5; color: #060D0C; border: 1px solid #8B9B8F;" onmouseover="this.style.backgroundColor='#E8E3D8'" onmouseout="this.style.backgroundColor='#F0EDE5'">
+          <i class="fas fa-arrow-left mr-1"></i>My Class
+        </button>
+      </div>
+    
+      <!-- Stream/Semester/Subject selection -->
+      <div class="space-y-3 mb-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="streamSelect" class="block text-xs font-medium mb-1" style="color: #8B9B8F;">Select Stream</label>
+            <select id="streamSelect" class="w-full p-2 text-sm border rounded-lg focus:ring-2 bg-white" style="border-color: #8B9B8F; color: #060D0C;" onfocus="this.style.borderColor='#2A3B36'" onblur="this.style.borderColor='#8B9B8F'">
+              <option value="">-- Select Stream --</option>
+            </select>
+          </div>
+          <div>
+            <label for="semesterSelect" class="block text-xs font-medium mb-1" style="color: #8B9B8F;">Select Semester</label>
+            <select id="semesterSelect" class="w-full p-2 text-sm border rounded-lg focus:ring-2 bg-white" style="border-color: #8B9B8F; color: #060D0C;" onfocus="this.style.borderColor='#2A3B36'" onblur="this.style.borderColor='#8B9B8F'">
+              <option value="">-- Select Semester --</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label for="subjectSelect" class="block text-xs font-medium mb-1" style="color: #8B9B8F;">Select Subject</label>
+          <select id="subjectSelect" class="w-full p-2 text-sm border rounded-lg focus:ring-2 bg-white" style="border-color: #8B9B8F; color: #060D0C;" onfocus="this.style.borderColor='#2A3B36'" onblur="this.style.borderColor='#8B9B8F'">
+            <option value="">-- Select Subject --</option>
+          </select>
+        </div>
+        <button id="loadRegisterBtn" class="w-full sm:w-auto px-4 py-2 text-white rounded-lg text-sm font-medium transition-all" style="background: linear-gradient(to right, #060D0C, #2A3B36);" onmouseover="this.style.background='linear-gradient(to right, #2A3B36, #060D0C)'" onmouseout="this.style.background='linear-gradient(to right, #060D0C, #2A3B36)'">
+          <i class="fas fa-search mr-2"></i>Load Attendance Register
+        </button>
+      </div>
+
+      <!-- Register display -->
+      <div id="registerTable" class="hidden">
+        <!-- Action buttons -->
+        <div class="flex justify-end gap-2 mb-3">
+          <button id="exportExcelBtn" onclick="exportToExcel()" class="flex-1 sm:flex-none px-2 sm:px-3 py-2 text-white rounded-lg text-xs sm:text-sm font-medium hidden transition-all" style="background-color: #060D0C;" onmouseover="this.style.backgroundColor='#2A3B36'" onmouseout="this.style.backgroundColor='#060D0C'">
+            <i class="fas fa-file-excel text-sm mr-1"></i>
+            <span class="hidden sm:inline">Export Excel</span>
+            <span class="sm:hidden text-xs">Export</span>
+          </button>
+        </div>
+        
+        <!-- Table with sticky student column -->
+        <div class="rounded-lg shadow border overflow-hidden bg-white" style="border-color: #8B9B8F;">
+          <div class="overflow-x-auto relative">
+            <table class="min-w-full text-xs sm:text-sm border-collapse">
+              <thead class="text-white sticky top-0 z-30" style="background-color: #060D0C;" id="view-thead">
+                <!-- Headers will be populated by JavaScript -->
+              </thead>
+              <tbody class="bg-white divide-y" style="color: #060D0C; border-color: #F0EDE5;" id="view-tbody">
+                <!-- Rows will be populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+    
+        <!-- Mobile scroll hint -->
+        <div class="mt-2 text-xs text-center flex items-center justify-center gap-2" style="color: #8B9B8F;">
+          <i class="fas fa-arrows-alt-h"></i>
+          <span>Student column stays fixed • Scroll horizontally to view all dates</span>
+        </div>
+        
+        <!-- Stats summary -->
+        <div class="mt-3 p-2 rounded-lg text-xs grid grid-cols-2 sm:grid-cols-4 gap-2" style="background-color: #F0EDE5; color: #060D0C;" id="attendanceStats">
+          <!-- Stats will be populated by JavaScript -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Include XLSX library for Excel export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  
+  <script>
+    // Global variables
+    const streams = [
+      { name: 'BCA', semesters: [1,2,3,4,5,6] },
+      { name: 'BBA', semesters: [1,2,3,4,5,6] },
+      { name: 'BCOM', semesters: [1,2,3,4,5,6] },
+      { name: 'BCOM SECTION B', semesters: [1,2,3,4,5,6] },
+      { name: 'BCOM-BDA', semesters: [1,2,3,4,5,6] },
+      { name: 'BCOM A AND F', semesters: [1,2,3,4,5,6] },
+    ];
+
+    // DOM element references
+    const streamSelect = document.getElementById('streamSelect');
+    const semesterSelect = document.getElementById('semesterSelect');
+    const subjectSelect = document.getElementById('subjectSelect');
+    const loadRegisterBtn = document.getElementById('loadRegisterBtn');
+    const registerTable = document.getElementById('registerTable');
+    const viewThead = document.getElementById('view-thead');
+    const viewTbody = document.getElementById('view-tbody');
+    const attendanceStats = document.getElementById('attendanceStats');
+    const exportExcelBtn = document.getElementById('exportExcelBtn');
+
+    // Current register data
+    let currentStudents = [];
+    let currentDates = [];
+    let currentAttendanceMap = {};
+    let currentSubject = '';
+    let currentStream = '';
+    let currentSemester = '';
+
+    // Alert function to match index.html style
+    function showAlert(title, message, type) {
+      const prefixes = {
+        success: "✅ ",
+        error: "❌ ",
+        warning: "⚠️ ",
+        info: "ℹ️ "
+      };
+      alert(`${prefixes[type]}${title}\n\n${message}`);
+    }
+
+    // Populate streams
+    function populateStreams() {
+      streamSelect.innerHTML = '<option value="">-- Select Stream --</option>' + 
+        streams.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+    }
+
+    // Populate semesters based on stream
+    function populateSemesters(streamName) {
+      const stream = streams.find(s => s.name === streamName);
+      semesterSelect.innerHTML = '<option value="">-- Select Semester --</option>' + 
+        (stream ? stream.semesters.map(n => `<option value="${n}">Sem ${n}</option>`).join('') : '');
+      subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+      hideRegister();
+    }
+
+    // Load subjects from API
+    async function loadSubjects(stream, sem) {
+      subjectSelect.innerHTML = '<option value="">Loading...</option>';
+      try {
+        const res = await fetch(`/api/subjects/${encodeURIComponent(stream)}/sem${sem}`);
+        const data = await res.json();
+        if (!data.success) throw new Error('Failed to load subjects');
+        const subjects = data.subjects || [];
+        subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>' + 
+          subjects.map(s => `<option value="${s.subjectName}">${s.subjectName}</option>`).join('');
+      } catch (e) {
+        subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+        showAlert('Loading Error', 'Failed to load subjects', 'error');
+      }
+    }
+
+    // Hide register
+    function hideRegister() {
+      registerTable.classList.add('hidden');
+      exportExcelBtn.classList.add('hidden');
+    }
+
+    // Load attendance register - main function matching index.html
+    async function loadAttendanceRegister() {
+      const stream = streamSelect.value;
+      const sem = semesterSelect.value;
+      const subject = subjectSelect.value;
+      
+      if (!stream || !sem || !subject) {
+        showAlert('Missing Information', 'Please select stream, semester and subject', 'error');
+        return;
+      }
+
+      try {
+        loadRegisterBtn.disabled = true;
+        loadRegisterBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
+
+        console.log(`📊 Loading register for: ${subject}`);
+        
+        const res = await fetch(`/api/attendance-register/${encodeURIComponent(stream)}/sem${sem}/${encodeURIComponent(subject)}`);
+        
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
+        const data = await res.json();
+        console.log('📊 Register response:', data);
+
+        let students, attendanceMap, subjectInfo;
+        
+        if (data.success && data.data) {
+          ({ students, attendanceMap, subjectInfo } = data.data);
+        } else if (data.students && data.attendanceMap) {
+          ({ students, attendanceMap } = data);
+          subjectInfo = data.subjectInfo;
+        } else {
+          throw new Error(data.message || 'Failed to load register');
+        }
+
+        const dates = Object.keys(attendanceMap).sort();
+
+        console.log(`✅ Loaded: ${students.length} students, ${dates.length} dates`);
+
+        if (students.length === 0) {
+          const message = subjectInfo?.isLanguageSubject ? 
+            `No students found who chose ${subjectInfo.languageType} language` :
+            'No students found for this subject';
+          showAlert("No Students", message, "warning");
+          return;
+        }
+
+        // Store current data for export
+        currentStudents = students;
+        currentDates = dates;
+        currentAttendanceMap = attendanceMap;
+        currentSubject = subject;
+        currentStream = stream;
+        currentSemester = sem;
+
+        await renderAttendanceTable(students, dates, attendanceMap);
+
+        registerTable.classList.remove("hidden");
+        exportExcelBtn.classList.remove("hidden");
+
+        // Calculate stats
+        updateAttendanceStats(students, dates, attendanceMap);
+
+        const avgAttendance = students.length > 0 ?
+          (students.reduce((sum, stu) => {
+            const attendedCount = dates.filter(date => attendanceMap[date]?.includes(stu.studentID)).length;
+            return sum + (dates.length > 0 ? (attendedCount / dates.length) * 100 : 0);
+          }, 0) / students.length).toFixed(1) : 0;
+
+        let successMessage = `Register loaded successfully!\n\n`;
+        successMessage += `Subject: ${subject}\n`;
+        if (subjectInfo?.isLanguageSubject) {
+          successMessage += `Language: ${subjectInfo.languageType} students only\n`;
+        }
+        successMessage += `Students: ${students.length}\n`;
+        successMessage += `Days: ${dates.length}\n`;
+        successMessage += `Average Attendance: ${avgAttendance}%`;
+
+        showAlert("Success", successMessage, "success");
+
+      } catch (err) {
+        console.error("Error loading attendance register:", err);
+        showAlert("Loading Error", `Failed to load register: ${err.message}`, "error");
+      } finally {
+        loadRegisterBtn.disabled = false;
+        loadRegisterBtn.innerHTML = '<i class="fas fa-search mr-2"></i>Load Attendance Register';
+      }
+    }
+
+    // Render attendance table matching index.html style
+    async function renderAttendanceTable(students, dates, attendanceMap) {
+      if (!viewThead || !viewTbody) {
+        console.error('❌ Table elements not found');
+        return;
+      }
+
+      // Sort students by Student ID
+      const sortedStudents = students.sort((a, b) => {
+        const aNum = parseInt(a.studentID);
+        const bNum = parseInt(b.studentID);
+        
+        if (!isNaN(aNum) && !isNaN(bNum) && 
+            a.studentID === aNum.toString() && 
+            b.studentID === bNum.toString()) {
+          return aNum - bNum;
+        }
+        
+        return a.studentID.localeCompare(b.studentID, undefined, {
+          numeric: true,
+          sensitivity: 'base'
+        });
+      });
+
+      // Create table header matching index.html style
+      viewThead.innerHTML = `
+        <tr>
+          <th class="p-3 text-center font-bold text-sm">#</th>
+          <th class="p-3 text-left font-bold text-sm">Student ID</th>
+          <th class="p-3 text-left font-bold text-sm">Name</th>
+          ${dates.map(d => {
+            const dateObj = new Date(d);
+            const displayDate = dateObj.toLocaleDateString('en-GB', {day: '2-digit', month: '2-digit'});
+            const title = dateObj.toLocaleDateString('en-IN', { 
+              weekday: 'short', 
+              month: 'short', 
+              day: 'numeric' 
+            });
+            
+            return `<th class="p-2 text-center font-semibold text-xs min-w-12" data-date="${d}" title="${title}">${displayDate}</th>`;
+          }).join('')}
+          
+          <th class="p-3 text-center font-bold text-xs" style="background-color: #2A3B36;">Total</th>
+          <th class="p-3 text-center font-bold text-xs" style="background-color: #060D0C;">Present</th>
+          <th class="p-3 text-center font-bold text-xs" style="background-color: #2A3B36;">%</th>
+        </tr>
+      `;
+
+      // Create table body
+      viewTbody.innerHTML = "";
+      
+      sortedStudents.forEach((stu, index) => {
+        let attended = 0;
+        const row = [];
+
+        row.push(`<td class="p-3 text-center font-medium">${index + 1}</td>`);
+        row.push(`
+          <td class="p-3 font-medium">
+            <span class="text-xs font-bold px-2 py-1 rounded-md whitespace-nowrap" style="color: #060D0C; background-color: #F0EDE5;">${stu.studentID}</span>
+          </td>
+        `);
+        row.push(`
+          <td class="p-3 font-medium">
+            <span class="text-sm" style="color: #060D0C;">${stu.name}</span>
+          </td>
+        `);
+
+        dates.forEach(date => {
+          const present = attendanceMap[date]?.includes(stu.studentID);
+          if (present) attended++;
+          
+          row.push(`
+            <td class="p-2 text-center">
+              <span class="text-lg">${present ? '✅' : '❌'}</span>
+            </td>
+          `);
+        });
+
+        const total = dates.length;
+        const percentage = total ? ((attended / total) * 100).toFixed(1) : "0.0";
+        const percentClass = percentage < 75 ? 'color: #ef4444; background-color: #fef2f2;' : 
+                            percentage >= 85 ? 'color: #22c55e; background-color: #f0fdf4;' : 
+                            'color: #eab308; background-color: #fefce8;';
+
+        row.push(`<td class="p-3 text-center font-semibold" style="color: #060D0C; background-color: #F0EDE5;">${total}</td>`);
+        row.push(`<td class="p-3 text-center font-semibold" style="color: #060D0C; background-color: #F0EDE5;">${attended}</td>`);
+        row.push(`<td class="p-3 text-center font-bold rounded-md" style="${percentClass}">${percentage}%</td>`);
+
+        const tr = document.createElement('tr');
+        tr.className = `transition duration-200 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`;
+        tr.style.borderColor = '#F0EDE5';
+        tr.dataset.studentId = stu.studentID;
+        tr.innerHTML = row.join("");
+        
+        // Add hover effect
+        tr.onmouseover = () => tr.style.backgroundColor = '#F0EDE5';
+        tr.onmouseout = () => tr.style.backgroundColor = index % 2 === 0 ? 'white' : '#f9fafb';
+        
+        viewTbody.appendChild(tr);
+      });
+
+      console.log(`✅ Table rendered with ${sortedStudents.length} students (sorted by Student ID)`);
+    }
+
+    // Update attendance stats
+    function updateAttendanceStats(students, dates, attendanceMap) {
+      if (!attendanceStats || !students.length || !dates.length) return;
+
+      let totalPresent = 0;
+      let totalPossible = students.length * dates.length;
+      let above75 = 0;
+      let below75 = 0;
+
+      students.forEach(stu => {
+        const attended = dates.filter(date => attendanceMap[date]?.includes(stu.studentID)).length;
+        totalPresent += attended;
+        const percentage = (attended / dates.length) * 100;
+        if (percentage >= 75) above75++; else below75++;
+      });
+
+      const overallPercentage = ((totalPresent / totalPossible) * 100).toFixed(1);
+
+      attendanceStats.innerHTML = `
+        <div class="text-center">
+          <div class="font-semibold">${students.length}</div>
+          <div class="text-xs">Students</div>
+        </div>
+        <div class="text-center">
+          <div class="font-semibold">${dates.length}</div>
+          <div class="text-xs">Days</div>
+        </div>
+        <div class="text-center">
+          <div class="font-semibold">${overallPercentage}%</div>
+          <div class="text-xs">Overall</div>
+        </div>
+        <div class="text-center">
+          <div class="font-semibold">${above75}/${below75}</div>
+          <div class="text-xs">Above/Below 75%</div>
+        </div>
+      `;
+    }
+
+    // Excel export function matching index.html
+    async function exportToExcel() {
+      console.log("🚀 Excel export started");
+      
+      const originalText = exportExcelBtn.innerHTML;
+      exportExcelBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Exporting...';
+      exportExcelBtn.disabled = true;
+
+      try {
+        if (typeof XLSX === 'undefined') {
+          throw new Error("XLSX library not loaded");
+        }
+        
+        const table = document.querySelector("#registerTable table");
+        
+        if (!table) {
+          throw new Error("No attendance table found. Please load the register first.");
+        }
+
+        const tbody = table.querySelector("tbody");
+        const rows = tbody ? tbody.querySelectorAll("tr") : [];
+        
+        if (rows.length === 0) {
+          throw new Error("No student data found. Please load attendance register first.");
+        }
+
+        const processedData = [];
+        
+        const headerRow = ["#", "Student ID", "Name"];
+        const dateHeaders = table.querySelectorAll("th[data-date]");
+        
+        dateHeaders.forEach(header => {
+          if (header.dataset.date) {
+            const date = new Date(header.dataset.date);
+            if (!isNaN(date.getTime())) {
+              headerRow.push(date.toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: '2-digit',
+                year: '2-digit'
+              }));
+            }
+          }
+        });
+        
+        headerRow.push("Total", "Present", "Percentage");
+        processedData.push(headerRow);
+
+        rows.forEach((row, rowIndex) => {
+          try {
+            const cells = row.querySelectorAll("td");
+            if (cells.length < 3) return;
+
+            let studentID = `Student_${rowIndex + 1}`;
+            let studentName = "Unknown";
+            let attended = 0;
+            let totalDays = 0;
+
+            if (cells[1]) {
+              const span = cells[1].querySelector('span');
+              studentID = span ? span.textContent.trim() : cells[1].textContent.trim();
+            }
+            
+            if (cells[2]) {
+              const span = cells[2].querySelector('span');
+              studentName = span ? span.textContent.trim() : cells[2].textContent.trim();
+            }
+
+            const dataRow = [rowIndex + 1, studentID, studentName];
+
+            // Count attendance from the current data
+            currentDates.forEach(date => {
+              totalDays++;
+              const isPresent = currentAttendanceMap[date]?.includes(studentID);
+              if (isPresent) attended++;
+              dataRow.push(isPresent ? "Present" : "Absent");
+            });
+
+            const percentage = totalDays > 0 ? (attended / totalDays) * 100 : 0;
+            
+            dataRow.push(totalDays, attended, `${percentage.toFixed(1)}%`);
+            processedData.push(dataRow);
+
+          } catch (e) {
+            console.warn(`⚠️ Error processing row ${rowIndex}:`, e);
+          }
+        });
+
+        if (processedData.length <= 1) {
+          throw new Error("No valid student data found.");
+        }
+
+        const ws = XLSX.utils.aoa_to_sheet(processedData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Attendance");
+
+        const fileName = `Attendance_${currentStream}_Sem${currentSemester}_${currentSubject}_${new Date().toISOString().split('T')[0]}.xlsx`;
+        
+        XLSX.writeFile(wb, fileName);
+        
+        showAlert("Export Success", `Attendance data exported successfully as ${fileName}`, "success");
+
+      } catch (error) {
+        console.error("❌ Export error:", error);
+        showAlert("Export Error", `Failed to export: ${error.message}`, "error");
+      } finally {
+        exportExcelBtn.innerHTML = originalText;
+        exportExcelBtn.disabled = false;
+      }
+    }
+
+    // Event listeners
+    streamSelect.addEventListener('change', () => {
+      subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+      hideRegister();
+      if (streamSelect.value) {
+        populateSemesters(streamSelect.value);
+      } else {
+        semesterSelect.innerHTML = '<option value="">-- Select Semester --</option>';
+      }
+    });
+
+    semesterSelect.addEventListener('change', () => {
+      subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+      hideRegister();
+      if (streamSelect.value && semesterSelect.value) {
+        loadSubjects(streamSelect.value, semesterSelect.value);
+      }
+    });
+
+    subjectSelect.addEventListener('change', () => {
+      hideRegister();
+    });
+
+    loadRegisterBtn.addEventListener('click', loadAttendanceRegister);
+
+    // Initialize
+    populateStreams();
+    
+    console.log("✅ View Attendance page loaded successfully");
+  </script>
+
+</body>
+</html>

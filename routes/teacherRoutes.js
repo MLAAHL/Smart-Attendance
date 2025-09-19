@@ -3331,5 +3331,307 @@ router.delete("/queue/item/:itemId", asyncHandler(async (req, res) => {
   }
 }));
 
+// ============================================================================
+// NEW API ENDPOINTS FOR FRONTEND INTEGRATION
+// ============================================================================
+
+// Add created subject to teacher (matches frontend implementation)
+router.post("/teacher/subjects", asyncHandler(async (req, res) => {
+  try {
+    const { teacherId, firebaseUid, subject } = req.body;
+    
+    if (!teacherId && !firebaseUid) {
+      return res.status(400).json({
+        success: false,
+        message: "Teacher ID or Firebase UID is required"
+      });
+    }
+    
+    if (!subject) {
+      return res.status(400).json({
+        success: false,
+        message: "Subject data is required"
+      });
+    }
+    
+    // Find teacher by firebaseUid or teacherId (email)
+    let teacher;
+    if (firebaseUid) {
+      teacher = await Teacher.findByFirebaseUid(firebaseUid);
+    } else {
+      teacher = await Teacher.findByEmail(teacherId);
+    }
+    
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found"
+      });
+    }
+    
+    // Check for duplicate subject
+    const duplicate = teacher.createdSubjects.find(s => 
+      s.subjectName === subject.subjectName &&
+      s.stream === subject.stream &&
+      s.semester === subject.semester
+    );
+    
+    if (duplicate) {
+      return res.status(409).json({
+        success: false,
+        message: "Subject already exists in your library"
+      });
+    }
+    
+    // Add the new subject to the teacher's createdSubjects array
+    const newSubject = {
+      subjectId: subject.id,
+      subjectName: subject.subjectName,
+      subjectCode: subject.subjectCode,
+      streamId: subject.stream,
+      streamName: subject.stream,
+      semesterNumber: subject.semester,
+      status: 'active',
+      studentCount: 0,
+      students: [],
+      iaTests: [],
+      createdAt: new Date(subject.createdAt),
+      updatedAt: new Date()
+    };
+    
+    console.log('📝 Saving subject to database:', newSubject);
+    teacher.createdSubjects.push(newSubject);
+    
+    await teacher.save();
+    
+    console.log(`💾 Subject "${subject.subjectName}" added to teacher's library`);
+    
+    res.json({
+      success: true,
+      message: "Subject added to library successfully",
+      subject: subject
+    });
+  } catch (error) {
+    console.error("❌ Error adding subject to library:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to add subject to library",
+      error: error.message
+    });
+  }
+}));
+
+// Get teacher's created subjects (matches frontend implementation)
+router.get("/teacher/:identifier/subjects", asyncHandler(async (req, res) => {
+  try {
+    const { identifier } = req.params;
+    const decodedIdentifier = decodeURIComponent(identifier);
+    console.log(`🔍 Looking for teacher with identifier: "${identifier}" (decoded: "${decodedIdentifier}")`);
+    
+    // Try to find teacher by firebaseUid first, then by email
+    let teacher = await Teacher.findByFirebaseUid(decodedIdentifier);
+    if (!teacher) {
+      console.log(`🔍 Not found by firebaseUid, trying email: "${decodedIdentifier}"`);
+      teacher = await Teacher.findByEmail(decodedIdentifier);
+    }
+    
+    if (!teacher) {
+      console.log(`❌ Teacher not found with identifier: "${identifier}"`);
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found"
+      });
+    }
+    
+    console.log(`✅ Found teacher: ${teacher.name} (${teacher.email})`);
+    
+    // Convert teacher's createdSubjects to frontend format
+    console.log(`📋 Raw createdSubjects from database:`, teacher.createdSubjects);
+    
+    const subjects = teacher.createdSubjects.map(subject => ({
+      id: subject.subjectId,
+      subjectName: subject.subjectName,
+      subjectCode: subject.subjectCode,
+      stream: subject.streamName,
+      semester: subject.semesterNumber,
+      subjectType: 'CORE', // Default for created subjects
+      createdAt: subject.createdAt,
+      teacherId: teacher.email,
+      firebaseUid: teacher.firebaseUid
+    }));
+    
+    console.log(`📥 Converted ${subjects.length} subjects for frontend:`, subjects);
+    
+    res.json({
+      success: true,
+      subjects: subjects
+    });
+  } catch (error) {
+    console.error("❌ Error loading teacher subjects:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to load subjects",
+      error: error.message
+    });
+  }
+}));
+
+// Delete created subject (matches frontend implementation)
+router.delete("/teacher/subjects/:subjectId", asyncHandler(async (req, res) => {
+  try {
+    const { subjectId } = req.params;
+    const { teacherId, firebaseUid } = req.body;
+    
+    if (!teacherId && !firebaseUid) {
+      return res.status(400).json({
+        success: false,
+        message: "Teacher ID or Firebase UID is required"
+      });
+    }
+    
+    // Find teacher by firebaseUid or teacherId (email)
+    let teacher;
+    if (firebaseUid) {
+      teacher = await Teacher.findByFirebaseUid(firebaseUid);
+    } else {
+      teacher = await Teacher.findByEmail(teacherId);
+    }
+    
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found"
+      });
+    }
+    
+    // Find subject to delete
+    const subjectIndex = teacher.createdSubjects.findIndex(
+      subject => subject.subjectId === subjectId
+    );
+    
+    if (subjectIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Subject not found in library"
+      });
+    }
+    
+    const deletedSubject = teacher.createdSubjects[subjectIndex];
+    
+    // Remove the subject from the array
+    teacher.createdSubjects.splice(subjectIndex, 1);
+    await teacher.save();
+    
+    console.log(`🗑️ Subject "${deletedSubject.subjectName}" deleted from teacher's library`);
+    
+    res.json({
+      success: true,
+      message: "Subject deleted successfully"
+    });
+  } catch (error) {
+    console.error("❌ Error deleting subject:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete subject",
+      error: error.message
+    });
+  }
+}));
+
+// Add completed class to teacher's history
+router.post("/teacher/completed", asyncHandler(async (req, res) => {
+  try {
+    const { teacherId, firebaseUid, completedClass } = req.body;
+    
+    if (!teacherId && !firebaseUid) {
+      return res.status(400).json({
+        success: false,
+        message: "Teacher ID or Firebase UID is required"
+      });
+    }
+    
+    if (!completedClass) {
+      return res.status(400).json({
+        success: false,
+        message: "Completed class data is required"
+      });
+    }
+    
+    // Find teacher by firebaseUid or teacherId (email)
+    let teacher;
+    if (firebaseUid) {
+      teacher = await Teacher.findByFirebaseUid(firebaseUid);
+    } else {
+      teacher = await Teacher.findByEmail(teacherId);
+    }
+    
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found"
+      });
+    }
+    
+    // Add the completed class to the teacher's completedClasses array
+    teacher.completedClasses.push(completedClass);
+    await teacher.save();
+    
+    console.log(`✅ Completed class "${completedClass.subject}" added to teacher's history`);
+    
+    res.json({
+      success: true,
+      message: "Completed class added to history",
+      completedClass: completedClass
+    });
+  } catch (error) {
+    console.error("❌ Error adding completed class:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to add completed class",
+      error: error.message
+    });
+  }
+}));
+
+// Get teacher's completed classes
+router.get("/teacher/:identifier/completed", asyncHandler(async (req, res) => {
+  try {
+    const { identifier } = req.params;
+    const decodedIdentifier = decodeURIComponent(identifier);
+    console.log(`🔍 Looking for teacher completed classes with identifier: "${identifier}" (decoded: "${decodedIdentifier}")`);
+    
+    // Try to find teacher by firebaseUid first, then by email
+    let teacher = await Teacher.findByFirebaseUid(decodedIdentifier);
+    if (!teacher) {
+      console.log(`🔍 Not found by firebaseUid, trying email: "${decodedIdentifier}"`);
+      teacher = await Teacher.findByEmail(decodedIdentifier);
+    }
+    
+    if (!teacher) {
+      console.log(`❌ Teacher not found with identifier: "${identifier}"`);
+      return res.status(404).json({
+        success: false,
+        message: "Teacher not found"
+      });
+    }
+    
+    console.log(`✅ Found teacher for completed classes: ${teacher.name} (${teacher.email})`);
+    
+    console.log(`📥 Loaded ${teacher.completedClasses.length} completed classes for teacher: ${identifier}`);
+    
+    res.json({
+      success: true,
+      completedClasses: teacher.completedClasses || []
+    });
+  } catch (error) {
+    console.error("❌ Error loading completed classes:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to load completed classes",
+      error: error.message
+    });
+  }
+}));
+
 
 module.exports = router;
