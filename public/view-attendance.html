@@ -36,6 +36,85 @@
       border-radius: 1.4rem;
       border: 1.8px solid rgba(255,255,255,0.18);
     }
+    
+    /* Checkbox styling for edit mode - matching index.html and overriding Tailwind */
+    .checkbox {
+      width: 16px !important;
+      height: 16px !important;
+      accent-color: #2A3B36 !important;
+      cursor: pointer !important;
+      transition: all 0.3s ease !important;
+      appearance: auto !important;
+      -webkit-appearance: auto !important;
+      -moz-appearance: auto !important;
+      display: inline-block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      position: relative !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 1px solid #d1d5db !important;
+      border-radius: 0.25rem !important;
+      background-color: white !important;
+    }
+
+    .checkbox:hover {
+      transform: scale(1.1) !important;
+    }
+
+    .checkbox:checked {
+      background-color: #2A3B36 !important;
+      border-color: #2A3B36 !important;
+    }
+    
+    /* Enhanced checkbox styling (alternative) */
+    .attendance-checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #8B9B8F;
+      border-radius: 6px;
+      background-color: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      margin: 0;
+      padding: 0;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    
+    .attendance-checkbox:checked {
+      background-color: #2A3B36;
+      border-color: #2A3B36;
+      color: white;
+    }
+    
+    .attendance-checkbox:checked::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+      line-height: 1;
+    }
+    
+    .attendance-checkbox:hover {
+      border-color: #2A3B36;
+      box-shadow: 0 0 0 3px rgba(42, 59, 54, 0.1);
+      transform: scale(1.05);
+    }
+    
+    .attendance-checkbox:focus {
+      outline: none;
+      border-color: #2A3B36;
+      box-shadow: 0 0 0 3px rgba(42, 59, 54, 0.2);
+    }
   </style>
   <script>
     tailwind.config = {
@@ -97,8 +176,57 @@
 
       <!-- Register display -->
       <div id="registerTable" class="hidden">
+        <!-- View mode selector -->
+        <div class="bg-white rounded-lg p-4 mb-4 border" style="border-color: #F0EDE5;">
+          <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+            <div class="flex-1">
+              <label class="block text-xs font-medium mb-2" style="color: #8B9B8F;">View Mode</label>
+              <div class="flex gap-2">
+                <button id="fullRegisterBtn" class="px-3 py-2 text-xs font-medium rounded-lg transition-all" style="background-color: #2A3B36; color: white;">
+                  <i class="fas fa-table mr-1"></i>Full Register
+                </button>
+                <button id="singleDateBtn" class="px-3 py-2 text-xs font-medium rounded-lg transition-all" style="background-color: #F0EDE5; color: #060D0C;">
+                  <i class="fas fa-calendar-day mr-1"></i>Single Date
+                </button>
+              </div>
+            </div>
+            <div id="dateSelector" class="flex-1 hidden">
+              <label for="specificDateInput" class="block text-xs font-medium mb-2" style="color: #8B9B8F;">Select Date</label>
+              <input 
+                type="date" 
+                id="specificDateInput" 
+                class="w-full p-2 text-sm border rounded-lg focus:ring-2 bg-white" 
+                style="border-color: #8B9B8F; color: #060D0C;" 
+                onfocus="this.style.borderColor='#2A3B36'" 
+                onblur="this.style.borderColor='#8B9B8F'"
+              />
+              <div id="dateValidationMessage" class="text-xs mt-1 hidden">
+                <span id="attendanceStatus" class="flex items-center gap-1">
+                  <i class="fas fa-info-circle"></i>
+                  <span id="statusText">Select a date to check attendance</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Action buttons -->
         <div class="flex justify-end gap-2 mb-3">
+          <button id="editAttendanceBtn" class="flex-1 sm:flex-none px-2 sm:px-3 py-2 text-white rounded-lg text-xs sm:text-sm font-medium hidden transition-all" style="background-color: #2A3B36;" onmouseover="this.style.backgroundColor='#060D0C'" onmouseout="this.style.backgroundColor='#2A3B36'">
+            <i class="fas fa-edit text-sm mr-1"></i>
+            <span class="hidden sm:inline">Edit Attendance</span>
+            <span class="sm:hidden text-xs">Edit</span>
+          </button>
+          <button id="saveAttendanceBtn" class="flex-1 sm:flex-none px-2 sm:px-3 py-2 text-white rounded-lg text-xs sm:text-sm font-medium hidden transition-all" style="background-color: #2A3B36;" onmouseover="this.style.backgroundColor='#060D0C'" onmouseout="this.style.backgroundColor='#2A3B36'">
+            <i class="fas fa-save text-sm mr-1"></i>
+            <span class="hidden sm:inline">Save Changes</span>
+            <span class="sm:hidden text-xs">Save</span>
+          </button>
+          <button id="cancelEditBtn" class="flex-1 sm:flex-none px-2 sm:px-3 py-2 text-white rounded-lg text-xs sm:text-sm font-medium hidden transition-all" style="background-color: #8B9B8F;" onmouseover="this.style.backgroundColor='#060D0C'" onmouseout="this.style.backgroundColor='#8B9B8F'">
+            <i class="fas fa-times text-sm mr-1"></i>
+            <span class="hidden sm:inline">Cancel</span>
+            <span class="sm:hidden text-xs">Cancel</span>
+          </button>
           <button id="exportExcelBtn" onclick="exportToExcel()" class="flex-1 sm:flex-none px-2 sm:px-3 py-2 text-white rounded-lg text-xs sm:text-sm font-medium hidden transition-all" style="background-color: #060D0C;" onmouseover="this.style.backgroundColor='#2A3B36'" onmouseout="this.style.backgroundColor='#060D0C'">
             <i class="fas fa-file-excel text-sm mr-1"></i>
             <span class="hidden sm:inline">Export Excel</span>
@@ -158,6 +286,18 @@
     const viewTbody = document.getElementById('view-tbody');
     const attendanceStats = document.getElementById('attendanceStats');
     const exportExcelBtn = document.getElementById('exportExcelBtn');
+    const editAttendanceBtn = document.getElementById('editAttendanceBtn');
+    const saveAttendanceBtn = document.getElementById('saveAttendanceBtn');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    
+    // Date selector elements
+    const fullRegisterBtn = document.getElementById('fullRegisterBtn');
+    const singleDateBtn = document.getElementById('singleDateBtn');
+    const dateSelector = document.getElementById('dateSelector');
+    const specificDateInput = document.getElementById('specificDateInput');
+    const dateValidationMessage = document.getElementById('dateValidationMessage');
+    const attendanceStatus = document.getElementById('attendanceStatus');
+    const statusText = document.getElementById('statusText');
 
     // Current register data
     let currentStudents = [];
@@ -166,8 +306,178 @@
     let currentSubject = '';
     let currentStream = '';
     let currentSemester = '';
+    let isEditMode = false;
+    let originalAttendanceMap = {};
+    
+    // Date selector state
+    let isFullRegisterView = true;
+    let selectedDate = '';
 
-    // Alert function to match index.html style
+    // Toggle between full register and single date view
+    function toggleViewMode(isFullRegister) {
+      isFullRegisterView = isFullRegister;
+      
+      if (isFullRegister) {
+        // Full register view
+        fullRegisterBtn.style.backgroundColor = '#2A3B36';
+        fullRegisterBtn.style.color = 'white';
+        singleDateBtn.style.backgroundColor = '#F0EDE5';
+        singleDateBtn.style.color = '#060D0C';
+        dateSelector.classList.add('hidden');
+        selectedDate = '';
+        
+        console.log('📊 Switched to full register view');
+        
+        // Re-render table in full register mode if data is available
+        if (currentStudents.length > 0 && currentDates.length > 0) {
+          console.log('🔄 Re-rendering table for full register view');
+          renderAttendanceTable(currentStudents, currentDates, currentAttendanceMap);
+        }
+      } else {
+        // Single date view
+        fullRegisterBtn.style.backgroundColor = '#F0EDE5';
+        fullRegisterBtn.style.color = '#060D0C';
+        singleDateBtn.style.backgroundColor = '#2A3B36';
+        singleDateBtn.style.color = 'white';
+        dateSelector.classList.remove('hidden');
+        
+        // Set date input limits and default value
+        setDateInputLimits();
+        
+        console.log('📅 Switched to single date view');
+        
+        // Trigger date selection if a date is already selected or use default
+        if (selectedDate) {
+          console.log('🔄 Re-rendering table for selected date:', selectedDate);
+          onDateSelect();
+        }
+      }
+    }
+    
+    // Set date input limits and default value
+    function setDateInputLimits() {
+      if (currentDates.length > 0) {
+        // Set min and max based on available attendance dates for guidance
+        const sortedDates = [...currentDates].sort();
+        const minDate = sortedDates[0];
+        const maxDate = sortedDates[sortedDates.length - 1];
+        
+        // Don't restrict the calendar, but show guidance
+        dateValidationMessage.classList.remove('hidden');
+        statusText.textContent = `Select any date to check attendance`;
+        attendanceStatus.style.color = '#8B9B8F';
+        
+        // Set a reasonable default to the latest attendance date
+        specificDateInput.value = maxDate;
+        selectedDate = maxDate;
+        
+        console.log(`📅 Date input ready. Attendance available from ${minDate} to ${maxDate}`);
+      } else {
+        dateValidationMessage.classList.remove('hidden');
+        statusText.textContent = `No attendance data available`;
+        attendanceStatus.style.color = '#ef4444';
+      }
+    }
+    
+    // Handle specific date selection
+    function onDateSelect() {
+      selectedDate = specificDateInput.value;
+      console.log('📅 Selected date:', selectedDate);
+      
+      if (!selectedDate) {
+        dateValidationMessage.classList.add('hidden');
+        return;
+      }
+      
+      // Check if attendance exists for this date
+      const hasAttendance = currentAttendanceMap[selectedDate];
+      const attendanceExists = hasAttendance !== undefined;
+      
+      dateValidationMessage.classList.remove('hidden');
+      
+      if (attendanceExists) {
+        // Attendance was marked on this date
+        const presentCount = hasAttendance.length;
+        const totalStudents = currentStudents.length;
+        statusText.textContent = `Attendance marked: ${presentCount}/${totalStudents} students present`;
+        attendanceStatus.style.color = '#22c55e';
+        attendanceStatus.querySelector('i').className = 'fas fa-check-circle';
+        
+        // Render table with attendance data
+        if (currentStudents.length > 0) {
+          renderAttendanceTable(currentStudents, currentDates, currentAttendanceMap);
+        }
+      } else {
+        // No attendance marked on this date
+        statusText.textContent = `Attendance not marked on this day`;
+        attendanceStatus.style.color = '#ef4444';
+        attendanceStatus.querySelector('i').className = 'fas fa-exclamation-circle';
+        
+        // Render table showing "no attendance marked"
+        renderNoAttendanceTable();
+      }
+    }
+    
+    // Render table when no attendance is marked for selected date
+    function renderNoAttendanceTable() {
+      if (!viewThead || !viewTbody) return;
+      
+      const selectedDateObj = new Date(selectedDate);
+      const formattedDate = selectedDateObj.toLocaleDateString('en-IN', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      
+      // Create header
+      viewThead.innerHTML = `
+        <tr>
+          <th class="p-3 text-center font-bold text-sm">#</th>
+          <th class="p-3 text-left font-bold text-sm">Student ID</th>
+          <th class="p-3 text-left font-bold text-sm">Name</th>
+          <th class="p-3 text-center font-bold text-sm">Status (${formattedDate})</th>
+        </tr>
+      `;
+      
+      // Sort students by ID
+      const sortedStudents = currentStudents.sort((a, b) => {
+        const aNum = parseInt(a.studentID);
+        const bNum = parseInt(b.studentID);
+        
+        if (!isNaN(aNum) && !isNaN(bNum) && 
+            a.studentID === aNum.toString() && 
+            b.studentID === bNum.toString()) {
+          return aNum - bNum;
+        }
+        
+        return a.studentID.localeCompare(b.studentID, undefined, {
+          numeric: true,
+          sensitivity: 'base'
+        });
+      });
+      
+      // Create body with "no attendance" message
+      viewTbody.innerHTML = sortedStudents.map((stu, index) => `
+        <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">
+          <td class="p-3 text-center font-medium">${index + 1}</td>
+          <td class="p-3 font-medium">
+            <span class="text-xs font-bold px-2 py-1 rounded-md whitespace-nowrap" style="color: #060D0C; background-color: #F0EDE5;">${stu.studentID}</span>
+          </td>
+          <td class="p-3 font-medium">
+            <span class="text-sm" style="color: #060D0C;">${stu.name}</span>
+          </td>
+          <td class="p-3 text-center">
+            <div class="flex items-center justify-center gap-2">
+              <i class="fas fa-calendar-times text-gray-400"></i>
+              <span class="text-sm text-gray-500">Attendance not marked</span>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+      
+      console.log(`📅 Rendered no-attendance table for ${selectedDate}`);
+    }
     function showAlert(title, message, type) {
       const prefixes = {
         success: "✅ ",
@@ -213,6 +523,10 @@
     function hideRegister() {
       registerTable.classList.add('hidden');
       exportExcelBtn.classList.add('hidden');
+      editAttendanceBtn.classList.add('hidden');
+      saveAttendanceBtn.classList.add('hidden');
+      cancelEditBtn.classList.add('hidden');
+      isEditMode = false;
     }
 
     // Load attendance register - main function matching index.html
@@ -276,6 +590,16 @@
 
         registerTable.classList.remove("hidden");
         exportExcelBtn.classList.remove("hidden");
+        editAttendanceBtn.classList.remove("hidden");
+        
+        // Initialize date selector if in single date mode
+        if (!isFullRegisterView) {
+          setDateInputLimits();
+          // Trigger date selection if a date is already selected
+          if (selectedDate) {
+            onDateSelect();
+          }
+        }
 
         // Calculate stats
         updateAttendanceStats(students, dates, attendanceMap);
@@ -308,6 +632,58 @@
 
     // Render attendance table matching index.html style
     async function renderAttendanceTable(students, dates, attendanceMap) {
+      console.log('🏗️ Rendering attendance table. Edit mode:', isEditMode);
+      console.log('📊 Students:', students.length, 'Dates:', dates.length);
+      console.log('📅 View mode - Full Register:', isFullRegisterView, 'Selected Date:', selectedDate);
+      
+      // Determine which dates to show based on view mode
+      let displayDates = dates;
+      if (!isFullRegisterView && selectedDate) {
+        displayDates = [selectedDate];
+        console.log('📅 Showing single date:', selectedDate);
+      } else if (!isFullRegisterView && !selectedDate) {
+        console.log('📅 Single date mode but no date selected');
+        showAlert('Select Date', 'Please select a date to view attendance.', 'info');
+        return;
+      }
+      
+      // Critical check: If no dates, we can't render checkboxes
+      if (displayDates.length === 0) {
+        console.error('❌ CRITICAL: No dates available - this will result in no checkboxes!');
+        console.log('💡 This is likely why checkboxes are not appearing');
+        
+        if (isEditMode) {
+          showAlert('No Attendance Data', 'No attendance records found for this subject. You need to mark attendance first using the "Mark Attendance" page before you can edit it here.', 'warning');
+          
+          // Create a sample table showing students but explaining no data
+          viewThead.innerHTML = `
+            <tr>
+              <th class="p-3 text-center font-bold text-sm">#</th>
+              <th class="p-3 text-left font-bold text-sm">Student ID</th>
+              <th class="p-3 text-left font-bold text-sm">Name</th>
+              <th class="p-3 text-center font-bold text-sm">Status</th>
+            </tr>
+          `;
+          
+          viewTbody.innerHTML = students.map((stu, index) => `
+            <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">
+              <td class="p-3 text-center font-medium">${index + 1}</td>
+              <td class="p-3 font-medium">
+                <span class="text-xs font-bold px-2 py-1 rounded-md whitespace-nowrap" style="color: #060D0C; background-color: #F0EDE5;">${stu.studentID}</span>
+              </td>
+              <td class="p-3 font-medium">
+                <span class="text-sm" style="color: #060D0C;">${stu.name}</span>
+              </td>
+              <td class="p-3 text-center text-gray-500">
+                <i class="fas fa-info-circle"></i> No attendance data
+              </td>
+            </tr>
+          `).join('');
+          
+          return; // Exit early
+        }
+      }
+      
       if (!viewThead || !viewTbody) {
         console.error('❌ Table elements not found');
         return;
@@ -330,29 +706,50 @@
         });
       });
 
-      // Create table header matching index.html style
-      viewThead.innerHTML = `
-        <tr>
-          <th class="p-3 text-center font-bold text-sm">#</th>
-          <th class="p-3 text-left font-bold text-sm">Student ID</th>
-          <th class="p-3 text-left font-bold text-sm">Name</th>
-          ${dates.map(d => {
-            const dateObj = new Date(d);
-            const displayDate = dateObj.toLocaleDateString('en-GB', {day: '2-digit', month: '2-digit'});
-            const title = dateObj.toLocaleDateString('en-IN', { 
-              weekday: 'short', 
-              month: 'short', 
-              day: 'numeric' 
-            });
+      // Create table header based on view mode
+      if (isFullRegisterView) {
+        // Full register view - show all dates
+        viewThead.innerHTML = `
+          <tr>
+            <th class="p-3 text-center font-bold text-sm">#</th>
+            <th class="p-3 text-left font-bold text-sm">Student ID</th>
+            <th class="p-3 text-left font-bold text-sm">Name</th>
+            ${displayDates.map(d => {
+              const dateObj = new Date(d);
+              const displayDate = dateObj.toLocaleDateString('en-GB', {day: '2-digit', month: '2-digit'});
+              const title = dateObj.toLocaleDateString('en-IN', { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric' 
+              });
+              
+              return `<th class="p-2 text-center font-semibold text-xs min-w-12" data-date="${d}" title="${title}">${displayDate}</th>`;
+            }).join('')}
             
-            return `<th class="p-2 text-center font-semibold text-xs min-w-12" data-date="${d}" title="${title}">${displayDate}</th>`;
-          }).join('')}
-          
-          <th class="p-3 text-center font-bold text-xs" style="background-color: #2A3B36;">Total</th>
-          <th class="p-3 text-center font-bold text-xs" style="background-color: #060D0C;">Present</th>
-          <th class="p-3 text-center font-bold text-xs" style="background-color: #2A3B36;">%</th>
-        </tr>
-      `;
+            <th class="p-3 text-center font-bold text-xs" style="background-color: #2A3B36;">Total</th>
+            <th class="p-3 text-center font-bold text-xs" style="background-color: #060D0C;">Present</th>
+            <th class="p-3 text-center font-bold text-xs" style="background-color: #2A3B36;">%</th>
+          </tr>
+        `;
+      } else {
+        // Single date view - show just attendance status
+        const dateObj = new Date(selectedDate);
+        const formattedDate = dateObj.toLocaleDateString('en-IN', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        
+        viewThead.innerHTML = `
+          <tr>
+            <th class="p-3 text-center font-bold text-sm">#</th>
+            <th class="p-3 text-left font-bold text-sm">Student ID</th>
+            <th class="p-3 text-left font-bold text-sm">Name</th>
+            <th class="p-3 text-center font-bold text-sm">Attendance (${formattedDate})</th>
+          </tr>
+        `;
+      }
 
       // Create table body
       viewTbody.innerHTML = "";
@@ -373,26 +770,83 @@
           </td>
         `);
 
-        dates.forEach(date => {
-          const present = attendanceMap[date]?.includes(stu.studentID);
-          if (present) attended++;
+        if (isFullRegisterView) {
+          // Full register view - show all dates
+          displayDates.forEach(date => {
+            const present = attendanceMap[date]?.includes(stu.studentID);
+            if (present) attended++;
+            
+            console.log(`🔍 Processing date ${date} for student ${stu.studentID}, present: ${present}, isEditMode: ${isEditMode}`);
+            
+            if (isEditMode) {
+              // Edit mode: show checkboxes (matching index.html structure)
+              console.log(`📋 Creating checkbox for student ${stu.studentID} on date ${date}, present: ${present}`);
+              row.push(`
+                <td class="p-2 text-center">
+                  <input 
+                    type="checkbox" 
+                    class="checkbox" 
+                    data-date="${date}"
+                    data-student-id="${stu.studentID}"
+                    value="${stu.studentID}"
+                    ${present ? "checked" : ""}
+                  />
+                </td>
+              `);
+            } else {
+              // View mode: show icons
+              console.log(`👁️ Creating icon for student ${stu.studentID} on date ${date}, present: ${present}`);
+              row.push(`
+                <td class="p-2 text-center">
+                  <span class="text-lg">${present ? '✅' : '❌'}</span>
+                </td>
+              `);
+            }
+          });
+
+          // Add summary columns for full register view
+          const total = displayDates.length;
+          const percentage = total ? ((attended / total) * 100).toFixed(1) : "0.0";
+          const percentClass = percentage < 75 ? 'color: #ef4444; background-color: #fef2f2;' : 
+                              percentage >= 85 ? 'color: #22c55e; background-color: #f0fdf4;' : 
+                              'color: #eab308; background-color: #fefce8;';
+
+          row.push(`<td class="p-3 text-center font-semibold" style="color: #060D0C; background-color: #F0EDE5;">${total}</td>`);
+          row.push(`<td class="p-3 text-center font-semibold" style="color: #060D0C; background-color: #F0EDE5;">${attended}</td>`);
+          row.push(`<td class="p-3 text-center font-bold rounded-md" style="${percentClass}">${percentage}%</td>`);
+        } else {
+          // Single date view - show just attendance status for selected date
+          const present = attendanceMap[selectedDate]?.includes(stu.studentID);
           
-          row.push(`
-            <td class="p-2 text-center">
-              <span class="text-lg">${present ? '✅' : '❌'}</span>
-            </td>
-          `);
-        });
-
-        const total = dates.length;
-        const percentage = total ? ((attended / total) * 100).toFixed(1) : "0.0";
-        const percentClass = percentage < 75 ? 'color: #ef4444; background-color: #fef2f2;' : 
-                            percentage >= 85 ? 'color: #22c55e; background-color: #f0fdf4;' : 
-                            'color: #eab308; background-color: #fefce8;';
-
-        row.push(`<td class="p-3 text-center font-semibold" style="color: #060D0C; background-color: #F0EDE5;">${total}</td>`);
-        row.push(`<td class="p-3 text-center font-semibold" style="color: #060D0C; background-color: #F0EDE5;">${attended}</td>`);
-        row.push(`<td class="p-3 text-center font-bold rounded-md" style="${percentClass}">${percentage}%</td>`);
+          if (isEditMode) {
+            // Edit mode: show checkbox for single date
+            row.push(`
+              <td class="p-3 text-center">
+                <div class="flex items-center justify-center gap-2">
+                  <input 
+                    type="checkbox" 
+                    class="checkbox" 
+                    data-date="${selectedDate}"
+                    data-student-id="${stu.studentID}"
+                    value="${stu.studentID}"
+                    ${present ? "checked" : ""}
+                  />
+                  <span class="text-sm">${present ? 'Present' : 'Absent'}</span>
+                </div>
+              </td>
+            `);
+          } else {
+            // View mode: show status for single date
+            row.push(`
+              <td class="p-3 text-center">
+                <div class="flex items-center justify-center gap-2">
+                  <span class="text-2xl">${present ? '✅' : '❌'}</span>
+                  <span class="text-sm font-medium ${present ? 'text-green-600' : 'text-red-600'}">${present ? 'Present' : 'Absent'}</span>
+                </div>
+              </td>
+            `);
+          }
+        }
 
         const tr = document.createElement('tr');
         tr.className = `transition duration-200 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`;
@@ -408,6 +862,248 @@
       });
 
       console.log(`✅ Table rendered with ${sortedStudents.length} students (sorted by Student ID)`);
+      
+      // Add event delegation for checkboxes
+      if (isEditMode) {
+        // Remove existing event listeners to avoid duplicates
+        viewTbody.removeEventListener('change', handleCheckboxChange);
+        viewTbody.addEventListener('change', handleCheckboxChange);
+      }
+      
+      // Debug: Count checkboxes after rendering
+      if (isEditMode) {
+        setTimeout(() => {
+          const checkboxes = viewTbody.querySelectorAll('.checkbox');
+          const allInputs = viewTbody.querySelectorAll('input');
+          console.log(`🔍 Debug after render - Found ${checkboxes.length} .checkbox elements`);
+          console.log(`🔍 Debug after render - Found ${allInputs.length} input elements total`);
+          if (checkboxes.length === 0 && allInputs.length === 0) {
+            console.error('❌ NO CHECKBOXES FOUND! This indicates a rendering issue.');
+            console.log('📊 isEditMode:', isEditMode);
+            console.log('🏗️ Table HTML sample:', viewTbody.innerHTML.substring(0, 500));
+            
+            // Emergency fallback: Force re-render
+            console.log('🚨 Attempting emergency fallback...');
+            forceCheckboxRender();
+          } else {
+            console.log('✅ Checkboxes successfully rendered!');
+          }
+        }, 100);
+      }
+    }
+    
+    // Event handler for checkbox changes
+    function handleCheckboxChange(event) {
+      if (event.target.classList.contains('checkbox')) {
+        markUnsavedChanges();
+      }
+    }
+    
+    // Emergency fallback function
+    function forceCheckboxRender() {
+      if (!isEditMode || !currentStudents || !currentDates) return;
+      
+      console.log('🔧 Force rendering checkboxes...');
+      const rows = viewTbody.querySelectorAll('tr');
+      
+      rows.forEach((row, studentIndex) => {
+        const student = currentStudents[studentIndex];
+        if (!student) return;
+        
+        const cells = row.querySelectorAll('td');
+        const dateCells = Array.from(cells).slice(3, 3 + currentDates.length); // Skip first 3 columns
+        
+        dateCells.forEach((cell, dateIndex) => {
+          const date = currentDates[dateIndex];
+          const present = currentAttendanceMap[date]?.includes(student.studentID);
+          
+          cell.innerHTML = `
+            <input 
+              type="checkbox" 
+              class="checkbox" 
+              data-date="${date}"
+              data-student-id="${student.studentID}"
+              value="${student.studentID}"
+              ${present ? "checked" : ""}
+            />
+          `;
+        });
+      });
+      
+      setTimeout(() => {
+        const checkboxes = viewTbody.querySelectorAll('.checkbox');
+        console.log(`🔧 After fallback: Found ${checkboxes.length} checkboxes`);
+      }, 50);
+    }
+
+    // Toggle edit mode
+    function toggleEditMode() {
+      isEditMode = !isEditMode;
+      console.log('🔄 Toggling edit mode. New state:', isEditMode);
+      
+      // Debug: Check data availability
+      console.log('📊 Data check before render:');
+      console.log('  currentStudents:', currentStudents ? currentStudents.length : 'null/undefined');
+      console.log('  currentDates:', currentDates ? currentDates.length : 'null/undefined');
+      console.log('  currentAttendanceMap:', currentAttendanceMap ? Object.keys(currentAttendanceMap).length : 'null/undefined');
+      
+      if (!currentStudents || !currentDates || !currentAttendanceMap) {
+        console.error('❌ Cannot toggle edit mode - missing data!');
+        showAlert('Error', 'Please load attendance data first before entering edit mode.', 'error');
+        isEditMode = !isEditMode; // Revert the toggle
+        return;
+      }
+      
+      if (isEditMode) {
+        // Entering edit mode
+        console.log('📝 Entering edit mode');
+        originalAttendanceMap = JSON.parse(JSON.stringify(currentAttendanceMap)); // Deep copy
+        editAttendanceBtn.classList.add('hidden');
+        saveAttendanceBtn.classList.remove('hidden');
+        cancelEditBtn.classList.remove('hidden');
+        exportExcelBtn.classList.add('hidden');
+        
+        // Re-render table with checkboxes
+        console.log('🔄 About to render table in EDIT mode with data:', {
+          students: currentStudents.length,
+          dates: currentDates.length,
+          attendanceKeys: Object.keys(currentAttendanceMap).length
+        });
+        renderAttendanceTable(currentStudents, currentDates, currentAttendanceMap);
+        
+        showAlert('Edit Mode', 'You can now edit attendance by checking/unchecking boxes. Click Save to save changes or Cancel to discard.', 'info');
+      } else {
+        // Exiting edit mode
+        console.log('👁️ Exiting edit mode');
+        editAttendanceBtn.classList.remove('hidden');
+        saveAttendanceBtn.classList.add('hidden');
+        cancelEditBtn.classList.add('hidden');
+        exportExcelBtn.classList.remove('hidden');
+        
+        // Re-render table in view mode
+        renderAttendanceTable(currentStudents, currentDates, currentAttendanceMap);
+      }
+    }
+
+    // Mark unsaved changes - make globally available
+    function markUnsavedChanges() {
+      console.log('💾 Marking unsaved changes');
+      // Visual indication that there are unsaved changes
+      saveAttendanceBtn.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+      saveAttendanceBtn.innerHTML = '<i class="fas fa-save text-sm mr-1"></i><span class="hidden sm:inline">Save Changes*</span><span class="sm:hidden text-xs">Save*</span>';
+    }
+    
+    // Make function globally available
+    window.markUnsavedChanges = markUnsavedChanges;
+
+    // Save attendance changes
+    async function saveAttendanceChanges() {
+      console.log('💾 Save function called, isEditMode:', isEditMode);
+      
+      if (!isEditMode) {
+        console.log('❌ Not in edit mode, returning early');
+        return;
+      }
+      
+      try {
+        console.log('🔄 Starting save process...');
+        saveAttendanceBtn.disabled = true;
+        saveAttendanceBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i><span class="hidden sm:inline">Saving...</span><span class="sm:hidden text-xs">Saving...</span>';
+
+        // Collect updated attendance data
+        const updatedAttendanceMap = {};
+        currentDates.forEach(date => {
+          updatedAttendanceMap[date] = [];
+        });
+
+        // Get all checkboxes and build attendance map
+        const checkboxes = viewTbody.querySelectorAll('.checkbox, .attendance-checkbox');
+        console.log(`📋 Found ${checkboxes.length} checkboxes to process`);
+        
+        checkboxes.forEach(checkbox => {
+          if (checkbox.checked) {
+            const date = checkbox.dataset.date;
+            const studentId = checkbox.dataset.studentId;
+            if (!updatedAttendanceMap[date]) {
+              updatedAttendanceMap[date] = [];
+            }
+            updatedAttendanceMap[date].push(studentId);
+          }
+        });
+        
+        console.log('📊 Updated attendance map:', updatedAttendanceMap);
+
+        // Send to server using the existing update-attendance endpoint
+        console.log(`🌐 Sending to API: /api/update-attendance/${currentStream}/sem${currentSemester}/${currentSubject}`);
+        const response = await fetch(`/api/update-attendance/${encodeURIComponent(currentStream)}/sem${currentSemester}/${encodeURIComponent(currentSubject)}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            attendanceMap: updatedAttendanceMap
+          })
+        });
+
+        const result = await response.json();
+        console.log('💾 Save response:', result);
+
+        if (response.ok && result.success) {
+          console.log('✅ Save successful, exiting edit mode...');
+          
+          // Update current data
+          currentAttendanceMap = updatedAttendanceMap;
+          
+          // Exit edit mode properly - don't call toggleEditMode as it will toggle again
+          isEditMode = false;
+          console.log('📝 Set isEditMode to false');
+          
+          // Manually update UI to view mode
+          editAttendanceBtn.classList.remove('hidden');
+          saveAttendanceBtn.classList.add('hidden');
+          cancelEditBtn.classList.add('hidden');
+          exportExcelBtn.classList.remove('hidden');
+          console.log('🎯 Updated UI buttons for view mode');
+          
+          // Re-render table in view mode
+          renderAttendanceTable(currentStudents, currentDates, currentAttendanceMap);
+          console.log('🔄 Re-rendered table in view mode');
+          
+          // Update stats
+          updateAttendanceStats(currentStudents, currentDates, currentAttendanceMap);
+          
+          showAlert('Success', 'Attendance changes saved successfully!', 'success');
+          console.log('✅ Save process completed successfully');
+        } else {
+          console.error('❌ Save failed:', result);
+          throw new Error(result.message || 'Failed to save changes');
+        }
+
+      } catch (error) {
+        console.error('Save error:', error);
+        showAlert('Save Error', `Failed to save changes: ${error.message}`, 'error');
+      } finally {
+        saveAttendanceBtn.disabled = false;
+        saveAttendanceBtn.style.background = '';
+        saveAttendanceBtn.innerHTML = '<i class="fas fa-save text-sm mr-1"></i><span class="hidden sm:inline">Save Changes</span><span class="sm:hidden text-xs">Save</span>';
+      }
+    }
+
+    // Cancel edit mode
+    function cancelEditMode() {
+      if (!isEditMode) return;
+      
+      const confirmCancel = confirm('Are you sure you want to cancel? All unsaved changes will be lost.');
+      if (!confirmCancel) return;
+      
+      // Restore original data
+      currentAttendanceMap = originalAttendanceMap;
+      
+      // Exit edit mode
+      isEditMode = false;
+      toggleEditMode();
+      
+      showAlert('Cancelled', 'Edit mode cancelled. No changes were saved.', 'info');
     }
 
     // Update attendance stats
@@ -582,6 +1278,14 @@
     });
 
     loadRegisterBtn.addEventListener('click', loadAttendanceRegister);
+    editAttendanceBtn.addEventListener('click', toggleEditMode);
+    saveAttendanceBtn.addEventListener('click', saveAttendanceChanges);
+    cancelEditBtn.addEventListener('click', cancelEditMode);
+    
+    // Date selector event listeners
+    fullRegisterBtn.addEventListener('click', () => toggleViewMode(true));
+    singleDateBtn.addEventListener('click', () => toggleViewMode(false));
+    specificDateInput.addEventListener('change', onDateSelect);
 
     // Initialize
     populateStreams();
