@@ -9,82 +9,141 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   
   <style>
+    :root {
+      /* Beautiful Blue Gradient Palette */
+      --navy-deep: #001D39;
+      --ocean-blue: #0A4174;
+      --steel-blue: #49769F;
+      --teal-blue: #4E8EA2;
+      --sky-blue: #6EA2B3;
+      --light-blue: #7BBDE8;
+      --pale-blue: #BDD8E9;
+      
+      /* Status Colors */
+      --present: #4CAF50;
+      --absent: #EF5350;
+      --accent: #FFD54F;
+    }
+
+    * {
+      scroll-behavior: smooth;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body { 
       font-family: 'Poppins', sans-serif; 
-      background: linear-gradient(125deg, #F0EDE5 0%, #E8E3D8 95%);
+      background: 
+        radial-gradient(circle at 20% 50%, rgba(1, 29, 57, 0.03), transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(10, 65, 116, 0.05), transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(73, 118, 159, 0.04), transparent 50%),
+        linear-gradient(135deg, var(--pale-blue) 0%, rgba(255, 255, 255, 0.9) 100%);
       min-height: 100vh;
       margin: 0;
       padding: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
+      position: relative;
+      user-select: none;
+    }
+
+    /* Subtle gradient overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 50%, rgba(1, 29, 57, 0.03), transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(10, 65, 116, 0.05), transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(73, 118, 159, 0.04), transparent 50%);
+      pointer-events: none;
+      z-index: -1;
     }
     
     .login-container {
-      background: rgba(240, 237, 229, 0.95);
-      backdrop-filter: blur(20px);
-      border-radius: 16px;
-      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
-      border: 1px solid rgba(139, 155, 143, 0.3);
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid rgba(189, 216, 233, 0.4);
+      box-shadow: 
+        0 8px 32px rgba(1, 29, 57, 0.1),
+        0 1px 0 rgba(255, 255, 255, 0.6) inset;
+      border-radius: 20px;
       max-width: 340px;
       width: 100%;
-      padding: 24px;
-      transition: all 0.3s ease;
+      padding: 28px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--steel-blue), var(--light-blue), var(--sky-blue));
+      border-radius: 20px 20px 0 0;
     }
     
     .login-container:hover {
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      box-shadow: 
+        0 12px 40px rgba(1, 29, 57, 0.15),
+        0 1px 0 rgba(255, 255, 255, 0.6) inset;
     }
     
-    /* Compact College Branding */
     .college-branding {
       text-align: center;
-      margin-bottom: 20px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid rgba(139, 155, 143, 0.1);
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(189, 216, 233, 0.3);
+      position: relative;
     }
     
     .college-logo {
-      width: 50px;
-      height: 50px;
-      background: linear-gradient(135deg, #060D0C 0%, #2A3B36 100%);
-      border-radius: 12px;
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--steel-blue) 0%, var(--teal-blue) 100%);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 10px;
-      color: #F0EDE5;
-      font-size: 1.3rem;
+      margin: 0 auto 12px;
+      color: white;
+      font-size: 1.4rem;
       animation: pulse 3s infinite;
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      box-shadow: 
+        0 4px 15px rgba(73, 118, 159, 0.3),
+        0 1px 0 rgba(255, 255, 255, 0.3) inset;
     }
-    
+
     .college-name {
       font-size: 1.1rem;
       font-weight: 700;
-      color: #060D0C;
-      margin: 0 0 3px;
-      line-height: 1.2;
+      color: var(--navy-deep);
+      margin-bottom: 4px;
+      letter-spacing: -0.025em;
     }
-    
-    .college-subtitle {
-      font-size: 0.7rem;
-      color: #8B9B8F;
-      margin: 0 0 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-    
+
     .system-name {
-      background: linear-gradient(135deg, #060D0C 0%, #2A3B36 100%);
-      color: #F0EDE5;
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 0.7rem;
+      font-size: 0.85rem;
+      color: var(--steel-blue);
       font-weight: 600;
-      display: inline-block;
-      box-shadow: 0 2px 8px rgba(6, 13, 12, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
     
     @keyframes pulse {
@@ -94,57 +153,66 @@
     
     .welcome-section {
       text-align: center;
-      margin-bottom: 18px;
+      margin-bottom: 20px;
     }
     
     .welcome-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #060D0C;
-      margin: 0 0 4px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--navy-deep);
+      margin: 0 0 6px;
+      letter-spacing: -0.025em;
     }
     
     .welcome-subtitle {
-      color: #8B9B8F;
+      color: rgba(1, 29, 57, 0.6);
       margin: 0 0 12px;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
+      font-weight: 500;
     }
     
     .form-group {
-      margin-bottom: 16px;
+      margin-bottom: 18px;
     }
     
     .form-label {
-      display: block;
+      display: flex;
+      align-items: center;
+      gap: 8px;
       font-weight: 600;
-      color: #060D0C;
+      color: var(--navy-deep);
       margin-bottom: 6px;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
     }
     
     .form-label i {
-      color: #667eea;
-      margin-right: 6px;
-      width: 12px;
-      font-size: 0.8rem;
+      color: var(--steel-blue);
+      width: 14px;
+      font-size: 0.85rem;
     }
     
     .form-input {
       width: 100%;
-      padding: 12px;
-      border: 2px solid rgba(139, 155, 143, 0.3);
-      border-radius: 10px;
-      font-size: 0.9rem;
-      transition: all 0.3s ease;
+      padding: 12px 16px;
+      border: 1px solid rgba(123, 189, 232, 0.2);
       background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 12px;
+      font-size: 0.9rem;
+      color: var(--navy-deep);
       box-sizing: border-box;
+      transition: all 0.3s ease;
+      font-weight: 500;
     }
     
     .form-input:focus {
       outline: none;
-      border-color: #2A3B36;
-      background: white;
-      box-shadow: 0 0 0 2px rgba(42, 59, 54, 0.1);
+      border-color: var(--steel-blue);
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 
+        0 0 0 3px rgba(73, 118, 159, 0.1),
+        0 4px 15px rgba(78, 142, 162, 0.15);
       transform: translateY(-1px);
     }
     
@@ -159,54 +227,68 @@
       transform: translateY(-50%);
       background: none;
       border: none;
-      color: #9ca3af;
+      color: rgba(1, 29, 57, 0.5);
       cursor: pointer;
-      transition: color 0.3s ease;
-      padding: 2px;
+      transition: all 0.3s ease;
+      padding: 4px;
       font-size: 0.9rem;
+      border-radius: 6px;
     }
     
     .password-toggle:hover {
-      color: #667eea;
+      color: var(--steel-blue);
+      background: rgba(123, 189, 232, 0.1);
     }
     
     .remember-group {
       display: flex;
       align-items: center;
-      margin-bottom: 18px;
+      margin-bottom: 20px;
+      gap: 8px;
     }
     
     .remember-group input {
-      margin-right: 6px;
-      transform: scale(0.9);
+      accent-color: var(--steel-blue);
+      transform: scale(1.1);
     }
     
     .remember-group label {
-      font-size: 0.8rem;
-      color: #6b7280;
+      font-size: 0.85rem;
+      color: rgba(1, 29, 57, 0.7);
       cursor: pointer;
+      font-weight: 500;
     }
     
     .login-button {
       width: 100%;
-      background: linear-gradient(135deg, #060D0C 0%, #2A3B36 100%);
+      background: linear-gradient(135deg, var(--ocean-blue), var(--steel-blue));
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       color: white;
-      border: none;
-      padding: 12px 18px;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      font-weight: 600;
+      padding: 14px 20px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
       overflow: hidden;
-      box-shadow: 0 4px 15px rgba(6, 13, 12, 0.3);
+      box-shadow: 
+        0 4px 15px rgba(10, 65, 116, 0.3),
+        0 1px 0 rgba(255, 255, 255, 0.3) inset;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
     
-    .login-button:hover {
-      background: linear-gradient(135deg, #2A3B36 0%, #060D0C 100%);
-      transform: translateY(-1px);
-      box-shadow: 0 8px 20px rgba(6, 13, 12, 0.4);
+    .login-button:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--navy-deep), var(--ocean-blue));
+      transform: translateY(-2px);
+      box-shadow: 
+        0 8px 25px rgba(1, 29, 57, 0.4),
+        0 1px 0 rgba(255, 255, 255, 0.3) inset;
     }
     
     .login-button:disabled {
@@ -232,12 +314,16 @@
     }
     
     .alert {
-      padding: 10px 12px;
-      border-radius: 8px;
-      margin-bottom: 14px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 16px;
       display: flex;
       align-items: center;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid;
     }
     
     .alert i {
@@ -246,256 +332,775 @@
     }
     
     .alert-error {
-      background: rgba(254, 242, 242, 0.9);
-      border: 1px solid rgba(254, 202, 202, 0.8);
-      color: #dc2626;
+      background: rgba(239, 83, 80, 0.1);
+      color: var(--absent);
+      border-color: rgba(239, 83, 80, 0.3);
     }
     
     .alert-success {
-      background: rgba(240, 253, 244, 0.9);
-      border: 1px solid rgba(187, 247, 208, 0.8);
-      color: #16a34a;
+      background: rgba(76, 175, 80, 0.1);
+      color: var(--present);
+      border-color: rgba(76, 175, 80, 0.3);
     }
     
     .alert-warning {
-      background: rgba(255, 251, 235, 0.9);
-      border: 1px solid rgba(254, 215, 170, 0.8);
-      color: #d97706;
+      background: rgba(255, 213, 79, 0.1);
+      color: var(--accent);
+      border-color: rgba(255, 213, 79, 0.3);
     }
     
     .footer {
       text-align: center;
-      margin-top: 18px;
-      padding-top: 14px;
-      border-top: 1px solid rgba(229, 231, 235, 0.5);
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(189, 216, 233, 0.3);
     }
     
     .footer p {
-      color: #9ca3af;
-      font-size: 0.7rem;
-      margin: 2px 0;
+      color: rgba(1, 29, 57, 0.6);
+      font-size: 0.75rem;
+      margin: 3px 0;
+      font-weight: 500;
     }
-    
-    /* Enhanced Loading Screen */
-    .auth-loading-screen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(125deg, #fcf6ff 0%, #fcf3f5 95%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      color: #374151;
+
+    .footer i {
+      margin-right: 4px;
+      color: var(--steel-blue);
     }
-    
-    .auth-loading-spinner {
-      display: inline-block;
-      width: 40px;
-      height: 40px;
-      border: 2px solid rgba(139, 155, 143, 0.3);
-      border-top: 3px solid #667eea;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
-    .loading-brand {
-      text-align: center;
-      max-width: 280px;
-      background: rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(15px);
-      padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.6);
-    }
-    
-    .loading-logo {
-      width: 60px;
-      height: 60px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 16px;
-      color: white;
-      font-size: 1.6rem;
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    }
-    
-    /* Enhanced Progress Bar */
-    .progress-container {
-      width: 220px;
-      height: 8px;
-      background: rgba(102, 126, 234, 0.1);
-      border-radius: 4px;
-      overflow: hidden;
-      margin-top: 20px;
-      position: relative;
-      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    .progress-bar {
-      height: 100%;
-      background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #667eea 100%);
-      border-radius: 4px;
-      animation: progressFlow 2.5s ease-in-out infinite;
-      position: relative;
-      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
-    }
-    
-    .progress-bar::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-      animation: progressShimmer 1.5s infinite;
-    }
-    
-    @keyframes progressFlow {
-      0% { width: 0%; transform: translateX(0); }
-      50% { width: 75%; transform: translateX(0); }
-      100% { width: 100%; transform: translateX(0); }
-    }
-    
-    @keyframes progressShimmer {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(200%); }
-    }
-    
-    .progress-dots {
-      display: flex;
-      justify-content: center;
-      gap: 6px;
-      margin-top: 15px;
-    }
-    
-    .progress-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: rgba(102, 126, 234, 0.3);
-      animation: dotPulse 1.5s infinite ease-in-out;
-    }
-    
-    .progress-dot:nth-child(1) { animation-delay: 0s; }
-    .progress-dot:nth-child(2) { animation-delay: 0.2s; }
-    .progress-dot:nth-child(3) { animation-delay: 0.4s; }
-    
-    @keyframes dotPulse {
-      0%, 60%, 100% {
-        background: rgba(102, 126, 234, 0.3);
-        transform: scale(1);
-      }
-      30% {
-        background: #667eea;
-        transform: scale(1.2);
-      }
-    }
-    
-    @media (max-width: 480px) {
-      body {
-        padding: 8px;
-      }
-      
-      .login-container {
-        padding: 20px;
-        max-width: 320px;
-      }
-      
-      .college-name {
-        font-size: 1rem;
-      }
-      
-      .college-logo {
-        width: 45px;
-        height: 45px;
-        font-size: 1.2rem;
-      }
-      
-      .form-input {
-        padding: 10px;
-        font-size: 0.85rem;
-      }
-      
-      .login-button {
-        padding: 11px 16px;
-        font-size: 0.9rem;
-      }
-      
-      .loading-brand {
-        padding: 25px;
-        max-width: 260px;
-      }
-      
-      .progress-container {
-        width: 200px;
-      }
-    }
-    
-    @media (min-width: 481px) and (max-width: 768px) {
-      .login-container {
-        max-width: 350px;
-        padding: 26px;
-      }
-    }
-  </style>
+
+/* Enhanced Loading Screen */
+.auth-loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(1, 29, 57, 0.03), transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(10, 65, 116, 0.05), transparent 50%),
+    radial-gradient(circle at 40% 80%, rgba(73, 118, 159, 0.04), transparent 50%),
+    linear-gradient(135deg, var(--pale-blue) 0%, rgba(255, 255, 255, 0.9) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  color: var(--navy-deep);
+}
+
+.loading-brand {
+  text-align: center;
+  max-width: 320px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(189, 216, 233, 0.4);
+  box-shadow: 
+    0 8px 32px rgba(1, 29, 57, 0.1),
+    0 1px 0 rgba(255, 255, 255, 0.6) inset;
+  padding: 32px;
+  border-radius: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.loading-brand::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--steel-blue), var(--light-blue), var(--sky-blue));
+  border-radius: 24px 24px 0 0;
+}
+
+/* Enhanced Logo Container with College Logo Support */
+.loading-logo {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  position: relative;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  /* Professional shadow matching your design */
+  box-shadow: 
+    0 8px 24px rgba(1, 29, 57, 0.15),
+    0 4px 12px rgba(73, 118, 159, 0.2);
+  /* Fallback background gradient */
+  background: linear-gradient(135deg, var(--steel-blue) 0%, var(--teal-blue) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* College Logo Image Styling */
+.college-logo-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
+  position: relative;
+  z-index: 2;
+  display: block;
+  transition: all 0.3s ease;
+}
+
+/* Fallback Icon Styling */
+.logo-fallback {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  color: white;
+  font-size: 2rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Show fallback when image fails to load */
+.college-logo-img:error {
+  display: none;
+}
+
+.college-logo-img:error + .logo-fallback {
+  opacity: 1;
+}
+
+/* Enhanced Typography */
+.loading-brand h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--navy-deep);
+  margin: 0 0 8px 0;
+  letter-spacing: -0.025em;
+  line-height: 1.3;
+}
+
+.loading-brand .system-name {
+  font-size: 1rem;
+  color: var(--steel-blue);
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.loading-brand p {
+  color: rgba(1, 29, 57, 0.7);
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Enhanced Progress Bar */
+.progress-container {
+  width: 260px;
+  height: 6px;
+  background: rgba(189, 216, 233, 0.3);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 24px auto 0;
+  position: relative;
+  box-shadow: inset 0 1px 3px rgba(1, 29, 57, 0.1);
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--steel-blue) 0%, var(--light-blue) 50%, var(--steel-blue) 100%);
+  border-radius: 3px;
+  animation: progressFlow 2.5s ease-in-out infinite;
+  position: relative;
+  box-shadow: 0 1px 4px rgba(73, 118, 159, 0.3);
+}
+
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  animation: progressShimmer 1.5s infinite;
+}
+
+@keyframes progressFlow {
+  0% { width: 0%; transform: translateX(0); }
+  50% { width: 70%; transform: translateX(0); }
+  100% { width: 100%; transform: translateX(0); }
+}
+
+@keyframes progressShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+/* Enhanced Progress Dots */
+.progress-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.progress-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(123, 189, 232, 0.4);
+  animation: dotPulse 1.5s infinite ease-in-out;
+}
+
+.progress-dot:nth-child(1) { animation-delay: 0s; }
+.progress-dot:nth-child(2) { animation-delay: 0.2s; }
+.progress-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotPulse {
+  0%, 60%, 100% {
+    background: rgba(123, 189, 232, 0.4);
+    transform: scale(1);
+  }
+  30% {
+    background: var(--steel-blue);
+    transform: scale(1.2);
+  }
+}
+
+/* Hidden honeypot field */
+.honeypot {
+  position: absolute !important;
+  left: -9999px !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  overflow: hidden !important;
+}
+
+/* Security overlay */
+.security-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(239, 83, 80, 0.95);
+  backdrop-filter: blur(10px);
+  z-index: 99999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Disable text selection on sensitive elements */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Modern blue scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(189, 216, 233, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--steel-blue), var(--teal-blue));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--ocean-blue), var(--steel-blue));
+}
+
+/* College Branding Section */
+.college-branding {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(189, 216, 233, 0.3);
+  position: relative;
+}
+
+/* Enhanced College Logo Container */
+.college-logo {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  position: relative;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  /* Professional shadow and styling */
+  box-shadow: 
+    0 6px 20px rgba(73, 118, 159, 0.25),
+    0 2px 8px rgba(1, 29, 57, 0.15);
+  /* Fallback background gradient */
+  background: linear-gradient(135deg, var(--steel-blue) 0%, var(--teal-blue) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.college-logo:hover {
+  transform: translateY(-1px);
+  box-shadow: 
+    0 8px 25px rgba(73, 118, 159, 0.3),
+    0 3px 12px rgba(1, 29, 57, 0.2);
+}
+
+/* College Logo Image Styling */
+.college-logo .college-logo-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
+  position: relative;
+  z-index: 2;
+  display: block;
+  transition: all 0.3s ease;
+}
+
+.college-logo .college-logo-img:hover {
+  transform: scale(1.02);
+}
+
+/* Fallback Icon Styling */
+.college-logo-fallback {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  color: white;
+  font-size: 1.6rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Show fallback when image fails to load */
+.college-logo .college-logo-img:error {
+  display: none;
+}
+
+.college-logo .college-logo-img:error + .college-logo-fallback {
+  opacity: 1;
+}
+
+/* College Name Styling */
+.college-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--navy-deep);
+  margin: 0 0 6px 0;
+  letter-spacing: -0.025em;
+  line-height: 1.3;
+}
+
+/* System Name Styling */
+.system-name {
+  font-size: 0.9rem;
+  color: var(--steel-blue);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.system-name i {
+  color: var(--steel-blue);
+  font-size: 0.85rem;
+}
+
+/* 📱 OPTIMIZED MOBILE RESPONSIVE - REDUCED HEIGHTS */
+@media (max-width: 480px) {
+  body {
+    padding: 6px; /* Reduced from 8px */
+    min-height: 100vh; /* Ensure full viewport height */
+  }
+  
+  .login-container {
+    padding: 18px; /* Reduced from 24px */
+    max-width: 320px;
+    margin: 8px; /* Add small margin */
+  }
+  
+  /* Reduced College Branding Heights */
+  .college-branding {
+    margin-bottom: 16px; /* Reduced from 24px */
+    padding-bottom: 14px; /* Reduced from 20px */
+  }
+  
+  .college-logo {
+    width: 48px; /* Reduced from 56px */
+    height: 48px; /* Reduced from 56px */
+    margin-bottom: 10px; /* Reduced from 12px */
+  }
+  
+  .college-logo .college-logo-img {
+    width: 48px; /* Reduced from 56px */
+    height: 48px; /* Reduced from 56px */
+  }
+  
+  .college-logo-fallback {
+    font-size: 1.2rem; /* Reduced from 1.4rem */
+  }
+  
+  .college-name {
+    font-size: 1rem; /* Reduced from 1.1rem */
+    margin-bottom: 4px; /* Reduced from 6px */
+  }
+  
+  /* Reduced Welcome Section Heights */
+  .welcome-section {
+    margin-bottom: 14px; /* Reduced from 20px */
+  }
+  
+  .welcome-title {
+    font-size: 1.1rem; /* Reduced from 1.2rem */
+    margin-bottom: 4px; /* Reduced from 6px */
+  }
+  
+  .welcome-subtitle {
+    margin-bottom: 8px; /* Reduced from 12px */
+    font-size: 0.8rem; /* Reduced */
+  }
+  
+  /* Reduced Form Heights */
+  .form-group {
+    margin-bottom: 14px; /* Reduced from 18px */
+  }
+  
+  .form-input {
+    padding: 10px 14px; /* Reduced from 11px 14px */
+    font-size: 0.85rem;
+  }
+  
+  .form-label {
+    margin-bottom: 4px; /* Reduced from 6px */
+    font-size: 0.8rem; /* Reduced */
+  }
+  
+  /* Reduced Button Heights */
+  .remember-group {
+    margin-bottom: 16px; /* Reduced from 20px */
+  }
+  
+  .login-button {
+    padding: 11px 16px; /* Reduced from 12px 18px */
+    font-size: 0.9rem;
+  }
+  
+  /* Reduced Footer Heights */
+  .footer {
+    margin-top: 16px; /* Reduced from 20px */
+    padding-top: 12px; /* Reduced from 16px */
+  }
+  
+  .footer p {
+    font-size: 0.7rem; /* Reduced */
+    margin: 2px 0; /* Reduced from 3px */
+  }
+  
+  /* Loading Screen Mobile Optimizations */
+  .loading-brand {
+    padding: 24px; /* Reduced from 28px */
+    max-width: 300px; /* Reduced from 320px */
+    margin: 0 12px; /* Reduced margin */
+  }
+  
+  .loading-logo {
+    width: 60px; /* Reduced from 70px */
+    height: 60px; /* Reduced from 70px */
+    margin-bottom: 14px; /* Reduced from 16px */
+  }
+  
+  .loading-brand .college-logo-img {
+    width: 60px; /* Reduced from 70px */
+    height: 60px; /* Reduced from 70px */
+  }
+  
+  .logo-fallback {
+    font-size: 1.4rem; /* Reduced from 1.6rem */
+  }
+  
+  .loading-brand h2 {
+    font-size: 1rem; /* Reduced from 1.1rem */
+    margin-bottom: 6px; /* Reduced from 8px */
+  }
+  
+  .loading-brand .system-name {
+    font-size: 0.85rem; /* Reduced from 0.9rem */
+    margin-bottom: 12px; /* Reduced from 16px */
+  }
+  
+  .progress-container {
+    width: 200px; /* Reduced from 220px */
+    margin-top: 18px; /* Reduced from 24px */
+  }
+  
+  .progress-dots {
+    margin-top: 16px; /* Reduced from 20px */
+  }
+  
+  /* System Name for Mobile */
+  .system-name {
+    font-size: 0.8rem; /* Reduced from 0.85rem */
+  }
+}
+
+/* 📱 EXTRA SMALL PHONES - FURTHER REDUCTIONS */
+@media (max-width: 360px) {
+  body {
+    padding: 4px; /* Further reduced */
+  }
+  
+  .login-container {
+    padding: 16px; /* Further reduced */
+    max-width: 300px; /* Further reduced */
+  }
+  
+  .college-branding {
+    margin-bottom: 12px; /* Further reduced */
+    padding-bottom: 12px; /* Further reduced */
+  }
+  
+  .college-logo {
+    width: 44px; /* Further reduced */
+    height: 44px; /* Further reduced */
+    margin-bottom: 8px; /* Further reduced */
+  }
+  
+  .college-logo .college-logo-img {
+    width: 44px; /* Further reduced */
+    height: 44px; /* Further reduced */
+  }
+  
+  .college-name {
+    font-size: 0.95rem; /* Further reduced */
+  }
+  
+  .welcome-section {
+    margin-bottom: 12px; /* Further reduced */
+  }
+  
+  .form-group {
+    margin-bottom: 12px; /* Further reduced */
+  }
+  
+  .form-input {
+    padding: 9px 12px; /* Further reduced */
+  }
+  
+  .remember-group {
+    margin-bottom: 14px; /* Further reduced */
+  }
+  
+  .loading-brand {
+    padding: 20px; /* Further reduced */
+    max-width: 280px; /* Further reduced */
+  }
+  
+  .loading-logo {
+    width: 54px; /* Further reduced */
+    height: 54px; /* Further reduced */
+  }
+  
+  .loading-brand .college-logo-img {
+    width: 54px; /* Further reduced */
+    height: 54px; /* Further reduced */
+  }
+  
+  .progress-container {
+    width: 180px; /* Further reduced */
+  }
+}
+
+/* 📱 VERY SMALL PHONES (iPhone SE, etc.) */
+@media (max-width: 320px) {
+  .login-container {
+    padding: 14px; /* Minimal padding */
+    max-width: 280px; /* Further reduced */
+  }
+  
+  .college-logo {
+    width: 40px; /* Minimal size */
+    height: 40px; /* Minimal size */
+  }
+  
+  .college-logo .college-logo-img {
+    width: 40px; /* Minimal size */
+    height: 40px; /* Minimal size */
+  }
+  
+  .college-logo-fallback {
+    font-size: 1rem; /* Minimal size */
+  }
+  
+  .college-name {
+    font-size: 0.9rem; /* Minimal size */
+  }
+  
+  .system-name {
+    font-size: 0.75rem; /* Minimal size */
+  }
+  
+  .loading-brand {
+    padding: 18px; /* Minimal padding */
+    max-width: 260px; /* Minimal width */
+  }
+  
+  .loading-logo {
+    width: 50px; /* Minimal size */
+    height: 50px; /* Minimal size */
+  }
+  
+  .loading-brand .college-logo-img {
+    width: 50px; /* Minimal size */
+    height: 50px; /* Minimal size */
+  }
+  
+  .progress-container {
+    width: 160px; /* Minimal width */
+  }
+}
+
+/* 📱 LANDSCAPE ORIENTATION FIXES */
+@media (max-height: 500px) and (orientation: landscape) {
+  body {
+    padding: 4px;
+    align-items: flex-start; /* Align to top */
+    padding-top: 10px;
+  }
+  
+  .login-container {
+    padding: 12px;
+    margin: 4px 0;
+  }
+  
+  .college-branding {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+  }
+  
+  .welcome-section {
+    margin-bottom: 8px;
+  }
+  
+  .form-group {
+    margin-bottom: 10px;
+  }
+  
+  .footer {
+    margin-top: 12px;
+    padding-top: 8px;
+  }
+}
+</style>
+
 </head>
 
-<body>
-  <!-- Enhanced Loading Screen -->
-  <div id="initialLoadingScreen" class="auth-loading-screen">
-    <div class="loading-brand">
-      <div class="loading-logo">
-        <i class="fas fa-graduation-cap"></i>
-      </div>
-      <h2 class="text-lg font-bold mb-1">MLA Academy of Higher Learning</h2>
-      <div class="system-name mb-3">Smart Attendance</div>
-      <p class="opacity-70 text-xs mb-2">Initializing secure portal...</p>
-      
-      <!-- Enhanced Progress Bar -->
-      <div class="progress-container">
-        <div class="progress-bar"></div>
-      </div>
-      
-      <!-- Progress Dots -->
-      <div class="progress-dots">
-        <div class="progress-dot"></div>
-        <div class="progress-dot"></div>
-        <div class="progress-dot"></div>
-      </div>
-      
-      <p class="text-xs opacity-60 mt-3">Please wait...</p>
+<body class="no-select">
+  <!-- Security Overlay (shown when tampering detected) -->
+  <div id="securityOverlay" class="security-overlay">
+    <div>
+      <i class="fas fa-shield-alt" style="font-size: 3rem; margin-bottom: 20px;"></i>
+      <h2>Security Alert</h2>
+      <p style="margin: 20px 0;">Unauthorized access attempt detected.<br>This incident has been logged.</p>
+      <button onclick="location.reload()" style="
+        background: white; 
+        color: var(--absent); 
+        border: none; 
+        padding: 12px 24px; 
+        border-radius: 8px; 
+        font-weight: 600;
+        cursor: pointer;
+      ">Reload Page</button>
     </div>
   </div>
 
-  <!-- Compact Main Login Form -->
+  <!-- Enhanced Loading Screen with College Logo -->
+<!-- Enhanced Loading Screen with Perfect Logo -->
+<div id="initialLoadingScreen" class="auth-loading-screen">
+  <div class="loading-brand">
+    <!-- College Logo Container -->
+    <div class="loading-logo">
+      <img src="logo2.png" alt="MLA Academy Logo" class="college-logo-img">
+      <!-- Fallback icon if logo fails to load -->
+      <i class="fas fa-graduation-cap logo-fallback"></i>
+    </div>
+    
+    <h2>MLA Academy of Higher Learning</h2>
+    <div class="system-name">
+      <i class="fas fa-clipboard-check"></i>
+      Smart Attendance
+    </div>
+    <p>Initializing secure portal...</p>
+    
+    <!-- Enhanced Progress Bar -->
+    <div class="progress-container">
+      <div class="progress-bar"></div>
+    </div>
+    
+    <!-- Progress Dots -->
+    <div class="progress-dots">
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+    </div>
+    
+    <p style="margin-top: 16px; opacity: 0.6;">Please wait...</p>
+  </div>
+</div>
+
+
+  <!-- Main Login Form -->
   <div id="loginContent" class="login-container" style="display: none;">
     
-    <!-- Compact College Branding -->
-    <div class="college-branding">
-      <div class="college-logo">
-        <i class="fas fa-graduation-cap"></i>
-      </div>
-      <h1 class="college-name">MLA Academy of Higher Learning</h1>
-      <div class="system-name">
-        <i class="fas fa-clipboard-check mr-1"></i>Smart Attendance
-      </div>
-    </div>
+<!-- Enhanced College Branding with Logo -->
+<div class="college-branding">
+  <div class="college-logo">
+    <img src="logo2.png" alt="MLA Academy Logo" class="college-logo-img">
+    <i class="fas fa-graduation-cap college-logo-fallback"></i>
+  </div>
+  <h1 class="college-name">MLA Academy of Higher Learning</h1>
+  <div class="system-name">
+    <i class="fas fa-clipboard-check"></i>
+    Smart Attendance
+  </div>
+</div>
 
-    <!-- Compact Welcome Section -->
+
+
+    <!-- Welcome Section -->
     <div class="welcome-section">
       <h2 class="welcome-title">Teacher Login</h2>
       <p class="welcome-subtitle">Access your dashboard</p>
     </div>
 
-    <!-- Compact Security Alert -->
+    <!-- Security Alert -->
     <div id="securityAlert" class="alert alert-warning" style="display: none;">
       <i class="fas fa-exclamation-triangle"></i>
       <div>
@@ -504,8 +1109,11 @@
       </div>
     </div>
 
-    <!-- Compact Login Form -->
+    <!-- Login Form -->
     <form id="loginForm">
+      <!-- Honeypot trap for bots -->
+      <input type="text" name="website" class="honeypot" tabindex="-1" autocomplete="off">
+      
       <div class="form-group">
         <label class="form-label">
           <i class="fas fa-envelope"></i>Email
@@ -547,12 +1155,12 @@
 
       <button type="submit" id="loginButton" class="login-button">
         <span id="loginButtonText">
-          <i class="fas fa-sign-in-alt mr-1"></i>Sign In
+          <i class="fas fa-sign-in-alt"></i>Sign In
         </span>
       </button>
     </form>
 
-    <!-- Compact Alert Messages -->
+    <!-- Alert Messages -->
     <div id="errorMessage" class="alert alert-error" style="display: none;">
       <i class="fas fa-exclamation-circle"></i>
       <div id="errorText"></div>
@@ -563,11 +1171,11 @@
       <div id="successText"></div>
     </div>
 
-    <!-- Compact Footer -->
+    <!-- Footer -->
     <div class="footer">
-      <p><i class="fas fa-shield-alt mr-1"></i>Secure Portal</p>
+      <p><i class="fas fa-shield-alt"></i>Secure Portal</p>
       <p>© 2025 MLA Academy of Higher Learning</p>
-      <p class="opacity-75">Smart Attendance v2.1</p>
+      <p style="opacity: 0.7;">Smart Attendance v2.1</p>
     </div>
   </div>
 
@@ -585,17 +1193,350 @@
       browserSessionPersistence
     } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-    // ✅ Use imported configuration
+    // ✅ ENHANCED SECURITY CONFIGURATION
+    const SECURITY_CONFIG = {
+      MAX_LOGIN_ATTEMPTS: 3,
+      LOCKOUT_DURATION: 30 * 60 * 1000, // 30 minutes
+      SESSION_TIMEOUT: 4 * 60 * 60 * 1000, // 4 hours
+      SESSION_REFRESH_INTERVAL: 2 * 60 * 60 * 1000, // 2 hours
+      VALIDATION_KEY: 'mla_academy_2025_secure_v2',
+      ALLOWED_DOMAINS: ['localhost', '127.0.0.1', 'your-domain.com'],
+      HONEYPOT_ENABLED: true,
+      DEVTOOLS_PROTECTION: true
+    };
+
+    // 🔐 ADVANCED SECURITY MANAGER
+    class SecurityManager {
+      static securityViolations = 0;
+      static maxViolations = 3;
+      
+      // Generate secure hash for validation
+      static generateSecureHash(data) {
+        const timestamp = Date.now();
+        const combined = JSON.stringify({ ...data, timestamp, key: SECURITY_CONFIG.VALIDATION_KEY });
+        return { hash: btoa(combined), timestamp };
+      }
+
+      // Validate secure hash
+      static validateSecureHash(hash, data, timestamp) {
+        const maxAge = 5 * 60 * 1000; // 5 minutes
+        if (Date.now() - timestamp > maxAge) return false;
+        
+        const expectedHash = btoa(JSON.stringify({ ...data, timestamp, key: SECURITY_CONFIG.VALIDATION_KEY }));
+        return hash === expectedHash;
+      }
+
+      // Domain validation
+      static isDomainValid() {
+        const currentDomain = window.location.hostname;
+        const isValid = SECURITY_CONFIG.ALLOWED_DOMAINS.some(domain => 
+          currentDomain === domain || currentDomain.endsWith(domain)
+        );
+        
+        if (!isValid) {
+          this.logSecurityViolation('Invalid domain access');
+        }
+        
+        return isValid;
+      }
+
+      // Enhanced DevTools detection
+      static detectDevTools() {
+        let devtools = false;
+        
+        // Method 1: Console detection
+        const element = new Image();
+        element.__defineGetter__("id", function() {
+          devtools = true;
+        });
+        console.log('%c', element);
+        
+        // Method 2: Timing-based detection
+        const start = performance.now();
+        debugger;
+        const end = performance.now();
+        
+        if (end - start > 100) devtools = true;
+        
+        // Method 3: Window size detection
+        const threshold = 160;
+        if (window.outerHeight - window.innerHeight > threshold ||
+            window.outerWidth - window.innerWidth > threshold) {
+          devtools = true;
+        }
+        
+        return devtools;
+      }
+
+      // Log security violations
+      static logSecurityViolation(type) {
+        this.securityViolations++;
+        console.warn(`🚨 Security violation: ${type} (${this.securityViolations}/${this.maxViolations})`);
+        
+        // Log to server if available
+        if (typeof logSecurityEvent === 'function') {
+          logSecurityEvent({
+            type,
+            timestamp: Date.now(),
+            userAgent: navigator.userAgent,
+            url: window.location.href
+          });
+        }
+        
+        if (this.securityViolations >= this.maxViolations) {
+          this.triggerSecurityLockdown();
+        }
+      }
+
+      // Trigger security lockdown
+      static triggerSecurityLockdown() {
+        document.getElementById('securityOverlay').style.display = 'flex';
+        
+        // Disable all form elements
+        const inputs = document.querySelectorAll('input, button');
+        inputs.forEach(input => input.disabled = true);
+        
+        // Clear any stored data
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        console.error('🔒 Security lockdown activated');
+      }
+
+      // Anti-tampering protection
+      static protectAgainstTampering() {
+        if (!SECURITY_CONFIG.DEVTOOLS_PROTECTION) return;
+        
+        // Disable right-click context menu
+        document.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          this.logSecurityViolation('Right-click attempt');
+          return false;
+        });
+
+        // Disable common keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+          // F12, Ctrl+Shift+I, Ctrl+Shift+C, Ctrl+U
+          if (
+            e.key === 'F12' ||
+            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'C')) ||
+            (e.ctrlKey && e.key === 'u') ||
+            (e.ctrlKey && e.key === 's') // Disable save
+          ) {
+            e.preventDefault();
+            this.logSecurityViolation('Keyboard shortcut attempt');
+            return false;
+          }
+        });
+
+        // Disable text selection on sensitive elements
+        document.addEventListener('selectstart', (e) => {
+          if (e.target.closest('.no-select')) {
+            e.preventDefault();
+            return false;
+          }
+        });
+
+        // Monitor for tampering attempts
+        setInterval(() => {
+          if (this.detectDevTools()) {
+            this.logSecurityViolation('Developer tools detected');
+          }
+        }, 2000);
+
+        // Detect page modification attempts
+        const observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+              const hasScript = Array.from(mutation.addedNodes).some(node => 
+                node.nodeName === 'SCRIPT' || 
+                (node.innerHTML && node.innerHTML.includes('<script'))
+              );
+              if (hasScript) {
+                this.logSecurityViolation('Script injection attempt');
+              }
+            }
+          });
+        });
+        
+        observer.observe(document.body, {
+          childList: true,
+          subtree: true
+        });
+      }
+
+      // Server-side validation token
+      static generateValidationToken() {
+        const timestamp = Date.now();
+        const randomStr = Math.random().toString(36).substring(7);
+        const tokenData = { 
+          timestamp, 
+          randomStr, 
+          domain: window.location.hostname,
+          userAgent: navigator.userAgent.substring(0, 100) // Truncate for security
+        };
+        
+        return this.generateSecureHash(tokenData);
+      }
+
+      // Integrity check
+      static performIntegrityCheck() {
+        // Check if critical functions exist
+        const criticalFunctions = ['fetch', 'XMLHttpRequest', 'localStorage', 'sessionStorage'];
+        const missing = criticalFunctions.filter(func => !window[func]);
+        
+        if (missing.length > 0) {
+          this.logSecurityViolation('Critical functions missing: ' + missing.join(', '));
+          return false;
+        }
+        
+        // Check if page has been modified
+        const expectedElements = ['loginForm', 'email', 'password'];
+        const missingElements = expectedElements.filter(id => !document.getElementById(id));
+        
+        if (missingElements.length > 0) {
+          this.logSecurityViolation('Critical elements missing: ' + missingElements.join(', '));
+          return false;
+        }
+        
+        return true;
+      }
+    }
+
+    // 🔐 SECURE SESSION MANAGER
+    class SecureSessionManager {
+      static SESSION_KEYS = [
+        'userName', 'userEmail', 'firebaseUid', 'loginTime', 
+        'isAuthenticated', 'sessionExpiry', 'lastActivity', 
+        'securityHash', 'validationToken', 'tokenTimestamp'
+      ];
+
+      static isValidSession() {
+        const localStorage_session = this.getSecureSessionData('localStorage');
+        const sessionStorage_session = this.getSecureSessionData('sessionStorage');
+        
+        if (localStorage_session.isValid && localStorage_session.isSecure) {
+          this.updateLastActivity('localStorage');
+          return { isValid: true, storage: 'localStorage', data: localStorage_session.data };
+        }
+        
+        if (sessionStorage_session.isValid && sessionStorage_session.isSecure) {
+          this.updateLastActivity('sessionStorage');
+          return { isValid: true, storage: 'sessionStorage', data: sessionStorage_session.data };
+        }
+        
+        return { isValid: false };
+      }
+
+      static getSecureSessionData(storageType) {
+        try {
+          const storage = storageType === 'localStorage' ? localStorage : sessionStorage;
+          const sessionExpiry = parseInt(storage.getItem('sessionExpiry') || '0');
+          const lastActivity = parseInt(storage.getItem('lastActivity') || '0');
+          const tokenTimestamp = parseInt(storage.getItem('tokenTimestamp') || '0');
+          const isAuthenticated = storage.getItem('isAuthenticated') === 'true';
+          const firebaseUid = storage.getItem('firebaseUid');
+          const securityHash = storage.getItem('securityHash');
+          const userEmail = storage.getItem('userEmail');
+          
+          const now = Date.now();
+          const isExpired = sessionExpiry > 0 && now > sessionExpiry;
+          const isInactive = lastActivity > 0 && (now - lastActivity) > SECURITY_CONFIG.SESSION_REFRESH_INTERVAL;
+          const isTokenExpired = tokenTimestamp > 0 && (now - tokenTimestamp) > (30 * 60 * 1000); // 30 minutes
+          
+          // Validate security hash
+          const isSecure = securityHash && SecurityManager.validateSecureHash(
+            securityHash,
+            { uid: firebaseUid, email: userEmail },
+            tokenTimestamp
+          );
+          
+          if (isAuthenticated && firebaseUid && !isExpired && !isInactive && !isTokenExpired && isSecure) {
+            return {
+              isValid: true,
+              isSecure: true,
+              data: {
+                userName: storage.getItem('userName'),
+                userEmail: userEmail,
+                firebaseUid: firebaseUid,
+                loginTime: storage.getItem('loginTime'),
+                lastActivity: lastActivity
+              }
+            };
+          }
+          
+          // Clear compromised session
+          this.clearSessionData(storageType);
+          
+          return { isValid: false, isSecure: false };
+        } catch (error) {
+          console.error('Session validation error:', error);
+          this.clearSessionData(storageType);
+          return { isValid: false, isSecure: false };
+        }
+      }
+
+      static updateLastActivity(storageType) {
+        const storage = storageType === 'localStorage' ? localStorage : sessionStorage;
+        storage.setItem('lastActivity', Date.now().toString());
+      }
+
+      static createSession(user, email, persistent = false) {
+        try {
+          const storage = persistent ? localStorage : sessionStorage;
+          
+          // Clear alternate storage
+          this.clearSessionData(persistent ? 'sessionStorage' : 'localStorage');
+          
+          // Generate security token
+          const securityToken = SecurityManager.generateValidationToken();
+          const securityHashData = SecurityManager.generateSecureHash({
+            uid: user.uid,
+            email: email
+          });
+          
+          const sessionData = {
+            userName: user.displayName || email.split('@')[0],
+            userEmail: email,
+            firebaseUid: user.uid,
+            loginTime: Date.now(),
+            isAuthenticated: 'true',
+            sessionExpiry: Date.now() + SECURITY_CONFIG.SESSION_TIMEOUT,
+            lastActivity: Date.now(),
+            securityHash: securityHashData.hash,
+            validationToken: securityToken.hash,
+            tokenTimestamp: securityHashData.timestamp
+          };
+
+          Object.entries(sessionData).forEach(([key, value]) => {
+            storage.setItem(key, value.toString());
+          });
+
+          console.log('✅ Secure session created with enhanced validation');
+        } catch (error) {
+          console.error('Session creation error:', error);
+          throw new Error('Failed to create secure session');
+        }
+      }
+
+      static clearSessionData(storageType) {
+        try {
+          const storage = storageType === 'localStorage' ? localStorage : sessionStorage;
+          this.SESSION_KEYS.forEach(key => storage.removeItem(key));
+        } catch (error) {
+          console.error('Session clearing error:', error);
+        }
+      }
+
+      static clearAllSessions() {
+        this.clearSessionData('localStorage');
+        this.clearSessionData('sessionStorage');
+      }
+    }
+
+    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    // Note: Persistence will be set dynamically based on "Keep me signed in" checkbox
-
-    // Security Configuration
-    const SECURITY_CONFIG = {
-      MAX_LOGIN_ATTEMPTS: 5,
-      LOCKOUT_DURATION: 15 * 60 * 1000,
-      SESSION_TIMEOUT: 24 * 60 * 60 * 1000
-    };
 
     // Security State
     let securityState = {
@@ -619,7 +1560,21 @@
       togglePassword: document.getElementById("togglePassword")
     };
 
-    // Show/Hide Loading Functions
+    // 🔐 SECURITY INITIALIZATION
+    if (!SecurityManager.isDomainValid()) {
+      SecurityManager.triggerSecurityLockdown();
+      throw new Error('Domain validation failed');
+    }
+
+    if (!SecurityManager.performIntegrityCheck()) {
+      SecurityManager.triggerSecurityLockdown();
+      throw new Error('Integrity check failed');
+    }
+
+    // Apply anti-tampering protection
+    SecurityManager.protectAgainstTampering();
+
+    // Utility Functions
     function showInitialLoading() {
       elements.initialLoadingScreen.style.display = 'flex';
       elements.loginContent.style.display = 'none';
@@ -630,7 +1585,6 @@
       elements.loginContent.style.display = 'block';
     }
 
-    // Utility Functions
     function showError(message) {
       elements.errorText.textContent = message;
       elements.errorMessage.style.display = 'flex';
@@ -658,7 +1612,7 @@
         elements.loginButtonText.innerHTML = '<div class="loading-spinner"></div>Signing In...';
         elements.loginButton.disabled = true;
       } else {
-        elements.loginButtonText.innerHTML = '<i class="fas fa-sign-in-alt mr-1"></i>Sign In';
+        elements.loginButtonText.innerHTML = '<i class="fas fa-sign-in-alt"></i>Sign In';
         elements.loginButton.disabled = isLockedOut();
       }
     }
@@ -676,14 +1630,16 @@
         localStorage.setItem("lockoutUntil", securityState.lockoutUntil.toString());
         
         const lockoutMinutes = Math.ceil(SECURITY_CONFIG.LOCKOUT_DURATION / 60000);
-        showError(`Locked for ${lockoutMinutes} minutes.`);
-        showSecurityAlert(`Account locked. Contact support.`);
+        showError(`Account locked for ${lockoutMinutes} minutes due to multiple failed attempts.`);
+        showSecurityAlert(`Account locked. Contact support if needed.`);
         elements.loginButton.disabled = true;
+        
+        SecurityManager.logSecurityViolation('Multiple failed login attempts');
         
         setTimeout(() => location.reload(), SECURITY_CONFIG.LOCKOUT_DURATION);
       } else {
         const remaining = SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS - securityState.loginAttempts;
-        showSecurityAlert(`${remaining} attempts left.`);
+        showSecurityAlert(`${remaining} attempts remaining.`);
       }
     }
 
@@ -695,68 +1651,54 @@
       elements.securityAlert.style.display = 'none';
     }
 
-    function checkAuthorization(email) {
-      // Allow all Firebase authenticated users
-      return true;
+    // Enhanced secure login
+    async function secureLogin(email, password, rememberMe) {
+      // Generate validation token
+      const validationToken = SecurityManager.generateValidationToken();
+      
+      try {
+        const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
+        await setPersistence(auth, persistence);
+        
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        
+        console.log('✅ Secure authentication successful');
+        
+        return { user, validationToken };
+        
+      } catch (error) {
+        console.error('🚫 Authentication failed:', error.code);
+        throw error;
+      }
     }
 
-    // Add a flag to prevent multiple redirections
     let isRedirecting = false;
 
     function redirectToApp(user, email, isAutoLogin = false) {
-      if (isRedirecting) return; // Prevent multiple redirections
+      if (isRedirecting) return;
       isRedirecting = true;
 
-      const userName = user.displayName || email.split('@')[0];
-      const sessionData = {
-        userName: userName,
-        userEmail: email,
-        firebaseUid: user.uid, // Add Firebase UID
-        loginTime: Date.now(),
-        isAuthenticated: true,
-        sessionExpiry: Date.now() + SECURITY_CONFIG.SESSION_TIMEOUT
-      };
+      const rememberMe = isAutoLogin ? 
+        (localStorage.getItem('userName') ? true : false) : 
+        document.getElementById("rememberMe")?.checked || false;
 
-      // For auto-login, check if data exists in either storage (user was already logged in)
-      // For manual login, use the checkbox state
-      let storage;
-      if (isAutoLogin) {
-        // Check if user data exists in localStorage (was remembered) or sessionStorage
-        const hasLocalData = localStorage.getItem('userName') || localStorage.getItem('userEmail');
-        storage = hasLocalData ? localStorage : sessionStorage;
-      } else {
-        // Manual login - check the checkbox
-        const rememberMe = document.getElementById("rememberMe")?.checked || false;
-        storage = rememberMe ? localStorage : sessionStorage;
-        
-        // Clear any existing data from the other storage type
-        if (rememberMe) {
-          Object.keys(sessionData).forEach(key => sessionStorage.removeItem(key));
-        } else {
-          Object.keys(sessionData).forEach(key => localStorage.removeItem(key));
+      try {
+        SecureSessionManager.createSession(user, email, rememberMe);
+
+        if (!isAutoLogin) {
+          showSuccess("✅ Secure login successful! Redirecting to dashboard...");
+          resetSecurityState();
         }
+        
+        setTimeout(() => {
+          window.location.replace("myclass.html");
+        }, isAutoLogin ? 100 : 1800);
+      } catch (error) {
+        console.error('Redirect error:', error);
+        showError('Session creation failed. Please try again.');
+        isRedirecting = false;
       }
-
-      // Store in the appropriate storage
-      Object.entries(sessionData).forEach(([key, value]) => {
-        storage.setItem(key, value.toString());
-      });
-
-      console.log('✅ Session data stored:', {
-        storage: storage === localStorage ? 'localStorage' : 'sessionStorage',
-        firebaseUid: user.uid,
-        userName: userName,
-        userEmail: email
-      });
-
-      if (!isAutoLogin) {
-        showSuccess("✅ Login successful! Redirecting...");
-        resetSecurityState();
-      }
-      
-      setTimeout(() => {
-        window.location.replace("myclass.html");
-      }, isAutoLogin ? 100 : 1800);
     }
 
     // Password Toggle
@@ -775,13 +1717,19 @@
       }
     });
 
-    // Login Form Handler
+    // Enhanced Login Form Handler
     elements.loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       
+      // Check honeypot (bot detection)
+      if (SECURITY_CONFIG.HONEYPOT_ENABLED && e.target.website?.value) {
+        SecurityManager.logSecurityViolation('Bot detected via honeypot');
+        return;
+      }
+      
       if (isLockedOut()) {
         const remainingMinutes = Math.ceil((securityState.lockoutUntil - Date.now()) / 60000);
-        showError(`Locked. Try in ${remainingMinutes} minutes.`);
+        showError(`Account locked. Try again in ${remainingMinutes} minutes.`);
         return;
       }
 
@@ -790,46 +1738,36 @@
 
       const email = document.getElementById("email").value.trim().toLowerCase();
       const password = document.getElementById("password").value;
-
-      if (!checkAuthorization(email)) {
-        recordFailedAttempt();
-        showError(`Access denied. Email not authorized.`);
-        setLoginButtonLoading(false);
-        return;
-      }
+      const rememberMe = document.getElementById("rememberMe").checked;
 
       try {
-        // Set persistence based on "Keep me signed in" checkbox
-        const rememberMe = document.getElementById("rememberMe").checked;
-        const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
-        await setPersistence(auth, persistence);
-        
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        
-        redirectToApp(user, email, false); // Pass false for manual login
+        const { user, validationToken } = await secureLogin(email, password, rememberMe);
+        redirectToApp(user, email, false);
 
       } catch (error) {
-        let errorMessage = "Authentication failed";
+        recordFailedAttempt();
         
+        let errorMessage = "Authentication failed";
         switch (error.code) {
           case 'auth/user-not-found':
             errorMessage = "Account not found.";
             break;
           case 'auth/wrong-password':
-            errorMessage = "Incorrect password.";
+            errorMessage = "Invalid credentials.";
             break;
           case 'auth/invalid-email':
             errorMessage = "Invalid email format.";
             break;
           case 'auth/too-many-requests':
-            errorMessage = "Too many attempts. Try later.";
+            errorMessage = "Too many failed attempts. Try again later.";
+            break;
+          case 'auth/network-request-failed':
+            errorMessage = "Network error. Please check your connection.";
             break;
           default:
-            errorMessage = `Login failed.`;
+            errorMessage = "Authentication failed.";
         }
         
-        recordFailedAttempt();
         showError(errorMessage);
         
       } finally {
@@ -837,38 +1775,62 @@
       }
     });
 
-    // Auto-login check with loading
+    // Enhanced Auto-login with Security Validation
     showInitialLoading();
 
     onAuthStateChanged(auth, (user) => {
       setTimeout(() => {
-        if (user && user.email && checkAuthorization(user.email)) {
-          redirectToApp(user, user.email, true); // Pass true for auto-login
+        if (user && user.email) {
+          const sessionCheck = SecureSessionManager.isValidSession();
+          
+          if (sessionCheck.isValid) {
+            console.log('✅ Secure session validated, auto-logging in');
+            redirectToApp(user, user.email, true);
+          } else {
+            console.log('❌ Session security validation failed');
+            hideInitialLoading();
+            setTimeout(() => document.getElementById('email')?.focus(), 100);
+          }
         } else {
+          SecureSessionManager.clearAllSessions();
           hideInitialLoading();
-          // Auto-focus email field
-          setTimeout(() => {
-            document.getElementById('email')?.focus();
-          }, 100);
+          setTimeout(() => document.getElementById('email')?.focus(), 100);
         }
-      }, 1000);
+      }, 1200);
     });
 
     // Initialize security state
     setTimeout(() => {
       if (isLockedOut()) {
         const remainingMinutes = Math.ceil((securityState.lockoutUntil - Date.now()) / 60000);
-        showError(`Locked. Try in ${remainingMinutes} minutes.`);
-        showSecurityAlert("Account locked.");
+        showError(`Account locked. Please wait ${remainingMinutes} minutes.`);
+        showSecurityAlert("Account temporarily locked.");
         elements.loginButton.disabled = true;
       } else if (securityState.loginAttempts > 0) {
         const remaining = SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS - securityState.loginAttempts;
-        showSecurityAlert(`${remaining} attempts left.`);
+        showSecurityAlert(`${remaining} login attempts remaining.`);
       }
-    }, 1300);
+    }, 1400);
+
+    // Activity tracking for session management
+    let activityTimer;
+    const trackActivity = () => {
+      clearTimeout(activityTimer);
+      activityTimer = setTimeout(() => {
+        const sessionCheck = SecureSessionManager.isValidSession();
+        if (sessionCheck.isValid) {
+          SecureSessionManager.updateLastActivity(sessionCheck.storage);
+        }
+      }, 1000);
+    };
+
+    ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
+      document.addEventListener(event, trackActivity, true);
+    });
+
+    // Final security check
+    console.log('🔐 Security systems initialized and active');
 
   </script>
-
 </body>
 </html>
-
