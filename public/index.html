@@ -1,1199 +1,1030 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Smart Attendance</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mark Attendance</title>
   
-  <!-- Tailwind CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-
-  <!-- Custom CSS -->
-  <link rel="stylesheet" href="demo.css">
-
-  <!-- Inline Styles -->
   <style>
+    :root {
+      /* Beautiful Blue Gradient Palette */
+      --navy-deep: #001D39;
+      --ocean-blue: #0A4174;
+      --steel-blue: #49769F;
+      --teal-blue: #4E8EA2;
+      --sky-blue: #6EA2B3;
+      --light-blue: #7BBDE8;
+      --pale-blue: #BDD8E9;
+      
+      /* Status Colors */
+      --present: #4CAF50;
+      --absent: #EF5350;
+      --accent: #FFD54F;
+    }
+
+    * {
+      scroll-behavior: smooth;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: 'Poppins', sans-serif;
-    }
-    
-    /* Teacher mode styles */
-    .teacher-mode #viewTab {
+      font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+      background: 
+        radial-gradient(circle at 20% 50%, rgba(1, 29, 57, 0.03), transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(10, 65, 116, 0.05), transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(73, 118, 159, 0.04), transparent 50%),
+        linear-gradient(135deg, var(--pale-blue) 0%, rgba(255, 255, 255, 0.9) 100%);
       min-height: 100vh;
-      padding: 20px;
+      color: var(--navy-deep);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      padding: 0;
+      position: relative;
+    }
+
+    /* Subtle gradient overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 50%, rgba(1, 29, 57, 0.03), transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(10, 65, 116, 0.05), transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(73, 118, 159, 0.04), transparent 50%);
+      pointer-events: none;
+      z-index: -1;
     }
     
-    .teacher-mode .tabcontent {
-      border: none;
-      box-shadow: none;
+    /* 🌊 ENHANCED HEADER WITH GLASS MORPHISM */
+    .header {
+      background: linear-gradient(135deg, var(--navy-deep) 0%, var(--ocean-blue) 50%, var(--steel-blue) 100%);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 
+        0 4px 20px rgba(1, 29, 57, 0.08),
+        0 1px 0 rgba(255, 255, 255, 0.2) inset;
+      border-bottom: 1px solid rgba(189, 216, 233, 0.2);
     }
-  </style>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            customDark: '#060D0C',
-            customLight: '#F0EDE5',
-            customAccent: '#2A3B36',
-            customMuted: '#8B9B8F',
-          }
-        }
+    
+    .back-btn {
+      background: rgba(189, 216, 233, 0.2);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(123, 189, 232, 0.3);
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 0.9rem;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3) inset;
+    }
+    
+    .back-btn:hover {
+      background: rgba(123, 189, 232, 0.1);
+      border-color: var(--steel-blue);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(73, 118, 159, 0.2);
+    }
+    
+    .title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0;
+      flex: 1;
+    }
+    
+    .header-icon {
+      font-size: 1rem;
+      opacity: 0.9;
+      background: rgba(189, 216, 233, 0.15);
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(189, 216, 233, 0.2);
+    }
+
+    /* 📋 GLASS MORPHISM CLASS INFO CARD */
+    .class-info-card {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid rgba(189, 216, 233, 0.5);
+      box-shadow: 
+        0 8px 32px rgba(1, 29, 57, 0.1),
+        0 1px 0 rgba(255, 255, 255, 0.6) inset;
+      color: var(--navy-deep);
+      padding: 12px 16px;
+      margin: 8px 16px;
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .class-info-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--steel-blue), var(--light-blue), var(--sky-blue));
+      border-radius: 12px 12px 0 0;
+    }
+
+    .class-info-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin: 0 0 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--navy-deep);
+    }
+
+    .class-info-title i {
+      background: linear-gradient(135deg, 
+        rgba(123, 189, 232, 0.2), 
+        rgba(189, 216, 233, 0.3));
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid rgba(123, 189, 232, 0.3);
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--steel-blue);
+    }
+
+    .class-info-details {
+      font-size: 0.75rem;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      color: rgba(1, 29, 57, 0.8);
+    }
+
+    .class-info-details span {
+      background: rgba(189, 216, 233, 0.2);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(123, 189, 232, 0.3);
+      padding: 3px 8px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* 📱 GLASS MORPHISM FORM SECTION */
+    .form-section {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(189, 216, 233, 0.4);
+      box-shadow: 
+        0 8px 32px rgba(1, 29, 57, 0.1),
+        0 1px 0 rgba(255, 255, 255, 0.6) inset;
+      padding: 12px 16px;
+      margin: 8px 16px;
+      border-radius: 12px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .label {
+      display: block;
+      font-weight: 600;
+      color: var(--navy-deep);
+      margin-bottom: 4px;
+      font-size: 0.75rem;
+    }
+
+    .input, .select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid rgba(123, 189, 232, 0.2);
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 6px;
+      font-size: 0.8rem;
+      color: var(--navy-deep);
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+    }
+
+    .input:focus, .select:focus {
+      outline: none;
+      border-color: var(--steel-blue);
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 
+        0 0 0 3px rgba(73, 118, 159, 0.1),
+        0 4px 15px rgba(78, 142, 162, 0.15);
+      transform: translateY(-1px);
+    }
+
+    /* 🎯 GLASS MORPHISM SUBJECT DISPLAY */
+    .subject-display {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--light-blue);
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--navy-deep);
+      background: rgba(189, 216, 233, 0.2);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+    }
+
+    .subject-badge {
+      background: linear-gradient(135deg, var(--ocean-blue), var(--steel-blue));
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      box-shadow: 
+        0 2px 8px rgba(10, 65, 116, 0.3),
+        0 1px 0 rgba(255, 255, 255, 0.3) inset;
+    }
+
+    /* 📊 GLASS MORPHISM STATS */
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(189, 216, 233, 0.4);
+      box-shadow: 
+        0 4px 20px rgba(1, 29, 57, 0.08),
+        0 1px 0 rgba(255, 255, 255, 0.6) inset;
+      padding: 8px 12px;
+      margin: 0 16px 8px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      color: var(--navy-deep);
+      font-size: 0.75rem;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      background: rgba(189, 216, 233, 0.2);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(123, 189, 232, 0.3);
+      flex: 1;
+      justify-content: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+    }
+
+    .stat-item:hover {
+      background: rgba(123, 189, 232, 0.1);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(78, 142, 162, 0.15);
+    }
+    
+    /* 📋 ENHANCED GLASS MORPHISM TABLE */
+    .table-container {
+      margin: 0 16px 8px 16px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(189, 216, 233, 0.4);
+      box-shadow: 
+        0 8px 32px rgba(1, 29, 57, 0.1),
+        0 1px 0 rgba(255, 255, 255, 0.6) inset;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: transparent;
+    }
+    
+    thead {
+      background: linear-gradient(135deg, var(--navy-deep) 0%, var(--ocean-blue) 50%, var(--steel-blue) 100%);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: white;
+    }
+    
+    th {
+      padding: 12px 8px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      border-right: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1) inset;
+    }
+
+    th:last-child {
+      border-right: none;
+    }
+    
+    td {
+      padding: 10px 8px;
+      border-bottom: 1px solid rgba(189, 216, 233, 0.3);
+      border-right: 1px solid rgba(189, 216, 233, 0.2);
+      font-size: 0.75rem;
+      color: var(--navy-deep);
+      text-align: center;
+      background: transparent;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    td:last-child {
+      border-right: none;
+    }
+    
+    .student-name {
+      text-align: left !important;
+      font-weight: 500;
+    }
+    
+    .student-id {
+      font-weight: 600;
+      color: var(--steel-blue);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    tbody tr:nth-child(even) td {
+      background: rgba(189, 216, 233, 0.1);
+    }
+    
+    tbody tr:hover td {
+      background: rgba(123, 189, 232, 0.15);
+      transform: translateX(2px);
+      box-shadow: 4px 0 15px rgba(73, 118, 159, 0.15);
+    }
+    
+    .checkbox {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--steel-blue);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .checkbox:hover {
+      transform: scale(1.1);
+    }
+
+    /* Enhanced loading state */
+    .loading-state {
+      padding: 24px 20px;
+      text-align: center;
+      color: var(--steel-blue);
+      border: none;
+      font-size: 0.8rem;
+    }
+
+    .loading-state i {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+      display: block;
+      opacity: 0.5;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 0.8; }
+    }
+
+    /* 🚀 GLASS MORPHISM SUBMIT SECTION */
+    .submit-section {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(189, 216, 233, 0.4);
+      box-shadow: 
+        0 8px 32px rgba(1, 29, 57, 0.1),
+        0 1px 0 rgba(255, 255, 255, 0.6) inset;
+      padding: 12px 16px;
+      margin: 8px 16px 16px 16px;
+      border-radius: 12px;
+    }
+    
+    .submit-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--ocean-blue), var(--steel-blue));
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transform: translateY(0);
+      box-shadow: 
+        0 4px 15px rgba(10, 65, 116, 0.3),
+        0 1px 0 rgba(255, 255, 255, 0.3) inset;
+    }
+    
+    .submit-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--navy-deep), var(--ocean-blue));
+      transform: translateY(-2px);
+      box-shadow: 
+        0 8px 25px rgba(1, 29, 57, 0.4),
+        0 1px 0 rgba(255, 255, 255, 0.3) inset;
+    }
+    
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .fa-spin {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes slideInFromTop {
+      0% {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
       }
     }
-  </script>
+
+    .class-info-card:not(.hidden) {
+      animation: slideInFromTop 0.3s ease-out;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* 🎯 GLASS MORPHISM NOTIFICATIONS */
+    .notification {
+      position: fixed;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      z-index: 9999;
+      padding: 12px 16px;
+      border-radius: 10px;
+      color: white;
+      font-weight: 600;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      max-width: 320px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .notification.success {
+      background: linear-gradient(135deg, var(--steel-blue), var(--teal-blue));
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 
+        0 8px 25px rgba(73, 118, 159, 0.3),
+        0 1px 0 rgba(255, 255, 255, 0.4) inset;
+    }
+
+    .notification.error {
+      background: rgba(239, 83, 80, 0.1);
+      color: var(--absent);
+      border: 1px solid rgba(239, 83, 80, 0.3);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .notification.info {
+      background: rgba(255, 213, 79, 0.1);
+      color: var(--accent);
+      border: 1px solid rgba(255, 213, 79, 0.3);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    /* 📱 MOBILE RESPONSIVE */
+    @media (max-width: 380px) {
+      .class-info-details {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+
+      .form-section, .submit-section {
+        padding: 10px 12px;
+      }
+
+      .stats {
+        padding: 6px 10px;
+      }
+
+      th, td {
+        padding: 6px 4px;
+        font-size: 0.65rem;
+      }
+    }
+
+    /* Modern blue scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(189, 216, 233, 0.2);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, var(--steel-blue), var(--teal-blue));
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(135deg, var(--ocean-blue), var(--steel-blue));
+    }
+
+    /* Enhanced focus states for accessibility */
+    button:focus-visible,
+    select:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--steel-blue);
+      outline-offset: 2px;
+    }
+
+    /* Smooth transitions for theme consistency */
+    * {
+      transition: background-color 0.3s ease, 
+                  border-color 0.3s ease, 
+                  color 0.3s ease;
+    }
+</style>
 </head>
 
 <body>
-  <!-- Main Wrapper -->
-  <div id="homePage" class="hidden">
-    
-    <!-- Header Section -->
-    <header class="relative w-full px-5 py-6 text-white overflow-hidden flex items-center justify-center h-[200vh]">
-      
-      <!-- Toggle Button -->
-      <div class="menu-icon cursor-pointer" onclick="toggleMenu()">
-        <div class="line long bg-gray-800 h-1 w-6 mb-1"></div>
-        <div class="line short bg-gray-800 h-1 w-4"></div>
-      </div>
-
-      <!-- User Icon -->
-      <div class="absolute top-4 right-4 flex items-center space-x-2">
-        <span class="text-sm font-medium" style="color: #060D0C;" id="userName"></span>
-        <img id="profilePic" src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="User"
-             class="w-8 h-8 rounded-full shadow-lg border" style="border-color: #8B9B8F;"/>
-      </div>
-
-      <!-- Side Menu -->
-      <div id="mobileMenu" class="side-menu hidden fixed top-0 left-0 w-64 h-full bg-white shadow z-50 p-4 transition-transform transform -translate-x-full">
-        <div class="mb-8">
-          <div class="text-2xl font-bold flex items-center" style="color: #060D0C;">
-            <i class="fas fa-chalkboard-teacher mr-2"></i>
-            Smart Panel
-          </div>
-          <div class="text-xs mt-1" style="color: #8B9B8F;">Teacher Dashboard</div>
-        </div>
-        
-        <div class="user-profile flex flex-col items-center mb-8">
-          <div class="relative mb-4">
-            <img id="profilePic" src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="User" 
-                 class="w-20 h-20 rounded-full border-4 object-cover shadow-lg" style="border-color: #F0EDE5;"/>
-            <div class="absolute bottom-0 right-0 w-6 h-6 bg-green-400 rounded-full border-2 border-white"></div>
-          </div>
-          <span id="userName" class="font-semibold text-lg" style="color: #060D0C;"></span>
-          <span id="userEmail" class="text-sm mt-1" style="color: #8B9B8F;"></span>
-        </div>
-        
-        <ul class="space-y-4 text-black">
-          <li>
-            <button onclick="window.location.href = 'myclass.html'" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl transition" style="color: #060D0C;" onmouseover="this.style.backgroundColor='#F0EDE5'" onmouseout="this.style.backgroundColor='transparent'">
-              <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #F0EDE5; color: #060D0C;">
-                <i class="fas fa-home text-sm"></i>
-              </div>
-              <span>Dashboard</span>
-            </button>
-          </li>
-          <li>
-            <a href="/myclass.html" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl transition block" style="color: #060D0C;" onmouseover="this.style.backgroundColor='#F0EDE5'" onmouseout="this.style.backgroundColor='transparent'">
-              <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #F0EDE5; color: #060D0C;">
-                <i class="fas fa-comments text-sm"></i>
-            </div>
-            <span>My class</span>
-            </a>
-          </li>
-          
-        
-          <!-- ✅ NEW: Promote Students Button -->
-          <li>
-            <a href="/promotion.html" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl transition block" style="color: #060D0C;" onmouseover="this.style.backgroundColor='#F0EDE5'" onmouseout="this.style.backgroundColor='transparent'">
-              <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #F0EDE5; color: #060D0C;">
-                <i class="fas fa-user-graduate text-sm"></i>
-              </div>
-              <span>Promote Students</span>
-            </a>
-          </li>
-          <li>
-            <a href="/msg.html" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl transition block" style="color: #060D0C;" onmouseover="this.style.backgroundColor='#F0EDE5'" onmouseout="this.style.backgroundColor='transparent'">
-              <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #F0EDE5; color: #060D0C;">
-                <i class="fas fa-comments text-sm"></i>
-            </div>
-            <span>WhatsApp</span>
-            </a>
-          </li>
-          
-          <li>
-            <a href="/report.html" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl transition block" style="color: #060D0C;" onmouseover="this.style.backgroundColor='#F0EDE5'" onmouseout="this.style.backgroundColor='transparent'">
-              <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #F0EDE5; color: #060D0C;">
-                <i class="fas fa-user-graduate text-sm"></i>
-              </div>
-              <span>Reports</span>
-            </a>
-          </li>
-          
-       
-        </ul>
-        
-        <!-- Logout Button -->
-        <div class="mt-auto pt-4">
-          <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition" style="color: #060D0C;" onmouseover="this.style.backgroundColor='#F0EDE5'" onmouseout="this.style.backgroundColor='transparent'">
-            <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #F0EDE5; color: #060D0C;">
-              <i class="fas fa-sign-out-alt text-sm"></i>
-            </div>
-            <span>Logout</span>
-          </button>
-        </div>
-        
-    </header>
-
-    <div class="banner-wrapper">
-      <div class="banner">
-        <div class="banner-text">
-          <div class="badge">MLA AHL</div>
-          <h1>Smart Attendance System</h1>
-          <p>Mark it. View it.</p>
-             <P>Stay on track.</p>
-        </div>
-        <div class="banner-img">
-          <img src="b1.png" 
-         alt="Attendance Illustration" 
-         class="w-40 sm:w-40 drop-shadow-lg" />
-        </div>
-
-        <div class="circle circle-1"></div>
-        <div class="circle circle-2"></div>
+    <!-- 🌊 ENHANCED GLASS HEADER -->
+    <div class="header">
+      <button class="back-btn" onclick="window.location.href='myclass.html'">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <h1 class="title">Mark Attendance</h1>
+      <div class="header-icon">
+        <i class="fas fa-user-graduate"></i>
       </div>
     </div>
 
-
-  </div> <!-- End of #homePage -->
-
-
-    <div id="tabs">
-      <!-- ✅ MOBILE HEADER: Optimized spacing -->
-      <header class="w-full shadow-sm border-b px-3 py-3 mb-4" style="background-color: #F0EDE5; border-color: #8B9B8F;">
-        <div class="flex items-center justify-between">
-          <!-- Left: Back Button -->
-          <button onclick="window.location.href = 'myclass.html'" class="w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-200 active:scale-95" style="background-color: #F0EDE5; border-color: #8B9B8F;" onmouseover="this.style.backgroundColor='#060D0C'; this.style.color='#F0EDE5'" onmouseout="this.style.backgroundColor='#F0EDE5'; this.style.color='#060D0C'">
-            <i class="fa-solid fa-angle-left text-xs" style="color: #060D0C;"></i>
-          </button>
-          
-          
-          <!-- Center: Title -->
-          <div class="flex items-center space-x-3 rounded-lg px-3 py-2">
-            <div class="text-center">
-              <p class="font-semibold text-sm" style="color: #060D0C;">Attendance Management</p>
-            </div>
-          </div>
-          
-          <!-- Right: Spacer -->
-          <div class="w-8 h-8"></div>
-          
-        </div>
-      </header>
-      
-      <!-- ✅ TAB BUTTONS: Better spacing -->
-      <div class="px-4 mb-6">
-        <div class="flex rounded-full shadow-md p-1 max-w-sm mx-auto" style="background-color: #F0EDE5;">
-          <button onclick="showTab('markTab')" id="markBtn"
-            class="tablinks flex-1 px-4 py-2 text-white rounded-full transition-all duration-300 shadow-md text-xs font-medium" style="background-color: #060D0C;">
-            Mark Attendance
-          </button>
-          <button onclick="showTab('viewTab')" id="viewBtn"
-            class="tablinks flex-1 px-4 py-2 rounded-full transition-all duration-300 text-xs font-medium" style="color: #8B9B8F;" onmouseover="this.style.color='#060D0C'; this.style.backgroundColor='#F0EDE5'" onmouseout="this.style.color='#8B9B8F'; this.style.backgroundColor='transparent'">
-            View Attendance
-          </button>
-        </div>
+    <!-- 📋 GLASS MORPHISM CLASS INFO CARD -->
+    <div id="classInfoCard" class="class-info-card hidden">
+      <div class="class-info-title">
+        <i class="fas fa-chalkboard-teacher"></i>
+        <span id="classSubjectName">Loading...</span>
+      </div>
+      <div class="class-info-details">
+        <span id="classStreamSem">
+          <i class="fas fa-graduation-cap"></i>
+          Loading...
+        </span>
+        <span id="classDate">
+          <i class="fas fa-calendar-alt"></i>
+          Today
+        </span>
+        <span id="classTimeSlot">
+          <i class="fas fa-clock"></i>
+          Period TBD
+        </span>
       </div>
     </div>
-    
-    
-    <div id="markTab" class="tabcontent p-3 sm:p-4">
-      <!-- ✅ COMPACT: Title with responsive spacing -->
-      <h3 class="text-base sm:text-lg font-semibold mb-3 flex items-center" style="color: #060D0C;">
-        <i class="fas fa-edit mr-2" style="color: #060D0C;"></i>
-        Mark Attendance
-      </h3>
-    
-      <!-- ✅ RESPONSIVE: Date and subject layout -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 px-1">
-        <!-- Date Input -->
-        <div class="relative">
-          <label class="block text-xs mb-1" style="color: #8B9B8F;">Date</label>
-          <input 
-            type="date" 
-            id="date" 
-            class="w-full p-2 text-sm border rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2" style="border-color: #8B9B8F; color: #060D0C;" onfocus="this.style.borderColor='#2A3B36'" onblur="this.style.borderColor='#8B9B8F'" 
-            onchange="checkDateWarnings()"
-          />
-          <div id="dateWarning" class="hidden mt-1 text-xs flex items-center" style="color: #8B9B8F;">
-            <i class="fas fa-exclamation-triangle mr-1"></i>
-            <span id="dateWarningText"></span>
-          </div>
+
+    <!-- 📱 GLASS MORPHISM FORM SECTION -->
+    <div class="form-section">
+      <div class="form-group">
+        <label class="label">Date</label>
+        <input type="date" id="date" class="input" />
+      </div>
+
+      <div class="form-group">
+        <label class="label">Subject</label>
+        
+        <div id="subjectDisplay" class="subject-display hidden">
+          <span id="selectedSubjectName">Loading...</span>
+          <span class="subject-badge">Selected</span>
         </div>
         
-        <!-- Subject Select -->
-        <div>
-          <label class="block text-xs mb-1" style="color: #8B9B8F;">Subject</label>
-          <select id="subject-mark" class="w-full px-3 py-2 text-sm bg-white rounded-lg shadow focus:outline-none focus:ring-2 transition duration-200" style="border-color: #8B9B8F; color: #060D0C;" onfocus="this.style.borderColor='#2A3B36'" onblur="this.style.borderColor='#8B9B8F'">
-            <option value="">-- Select Subject --</option>
-          </select>
-        </div>
-      </div>
-    
-      <!-- ✅ RESPONSIVE: Students table -->
-      <div class="overflow-x-auto rounded-lg shadow mb-4">
-        <table class="table-auto w-full border bg-white rounded-lg overflow-hidden" style="border-color: #8B9B8F; color: #060D0C;">
-          <thead class="text-white" style="background: linear-gradient(to right, #060D0C, #2A3B36);">
-            <tr>
-              <th class="p-2 sm:p-3 border text-center text-xs sm:text-sm" style="border-color: #8B9B8F;">#</th>
-              <th class="p-2 sm:p-3 border text-center text-xs sm:text-sm" style="border-color: #8B9B8F;">ID</th>
-              <th class="p-2 sm:p-3 border text-left text-xs sm:text-sm" style="border-color: #8B9B8F;">Name</th>
-              <th class="p-2 sm:p-3 border text-center text-xs sm:text-sm" style="border-color: #8B9B8F;">Present</th>
-            </tr>
-          </thead>
-          <tbody id="students-list" class="text-xs sm:text-sm"></tbody>
-        </table>
-      </div>
-    
-      <!-- ✅ RESPONSIVE: Submit button -->
-      <div class="flex justify-center mt-4">
-        <button id="submitAttendance" class="text-white px-6 py-2 sm:px-8 sm:py-3 rounded-full font-medium hover:shadow-lg transition flex items-center text-sm sm:text-base" style="background: linear-gradient(to right, #060D0C, #2A3B36);" onmouseover="this.style.background='linear-gradient(to right, #2A3B36, #060D0C)'" onmouseout="this.style.background='linear-gradient(to right, #060D0C, #2A3B36)'">
-          <i class="fas fa-paper-plane mr-2"></i> 
-          <span class="hidden sm:inline">Submit Attendance</span>
-          <span class="sm:hidden">Submit</span>
-        </button>
-      </div>
-    </div>
-    
-    <div id="viewTab" class="tabcontent hidden p-2 sm:p-4">
-      <!-- Mobile-optimized header -->
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="text-base font-semibold flex items-center" style="color: #060D0C;">
-          <i class="fas fa-table mr-2 text-sm" style="color: #060D0C;"></i>
-          Register
-        </h3>
-        <!-- Back to My Class button (only shown in teacher mode) -->
-        <button id="backToMyClassBtn" onclick="backToMyClass()" class="hidden px-3 py-1 text-xs rounded-lg transition-all" style="background-color: #F0EDE5; color: #060D0C; border: 1px solid #8B9B8F;" onmouseover="this.style.backgroundColor='#E8E3D8'" onmouseout="this.style.backgroundColor='#F0EDE5'">
-          <i class="fas fa-arrow-left mr-1"></i>My Class
-        </button>
-      </div>
-    
-      <!-- Stream/Semester/Subject selection for teacher mode -->
-      <div id="teacherSelectionInterface" class="hidden space-y-3 mb-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label for="teacher-stream-select" class="block text-xs font-medium mb-1" style="color: #8B9B8F;">Select Stream</label>
-            <select id="teacher-stream-select" class="w-full p-2 text-sm border rounded-lg focus:ring-2 bg-white" style="border-color: #8B9B8F; color: #060D0C;" onfocus="this.style.borderColor='#2A3B36'" onblur="this.style.borderColor='#8B9B8F'">
-              <option value="">-- Select Stream --</option>
-            </select>
-          </div>
-          <div>
-            <label for="teacher-semester-select" class="block text-xs font-medium mb-1" style="color: #8B9B8F;">Select Semester</label>
-            <select id="teacher-semester-select" class="w-full p-2 text-sm border rounded-lg focus:ring-2 bg-white" style="border-color: #8B9B8F; color: #060D0C;" onfocus="this.style.borderColor='#2A3B36'" onblur="this.style.borderColor='#8B9B8F'">
-              <option value="">-- Select Semester --</option>
-            </select>
-          </div>
-        </div>
-        <div>
-          <label for="teacher-subject-select" class="block text-xs font-medium mb-1" style="color: #8B9B8F;">Select Subject</label>
-          <select id="teacher-subject-select" class="w-full p-2 text-sm border rounded-lg focus:ring-2 bg-white" style="border-color: #8B9B8F; color: #060D0C;" onfocus="this.style.borderColor='#2A3B36'" onblur="this.style.borderColor='#8B9B8F'">
-            <option value="">-- Select Subject --</option>
-          </select>
-        </div>
-        <button id="teacherLoadRegisterBtn" class="w-full sm:w-auto px-4 py-2 text-white rounded-lg text-sm font-medium transition-all" style="background: linear-gradient(to right, #060D0C, #2A3B36);" onmouseover="this.style.background='linear-gradient(to right, #2A3B36, #060D0C)'" onmouseout="this.style.background='linear-gradient(to right, #060D0C, #2A3B36)'">
-          <i class="fas fa-search mr-2"></i>Load Attendance Register
-        </button>
-      </div>
-
-      <!-- Original subject selection (for normal mode) -->
-      <div id="normalSelectionInterface" class="space-y-2 mb-4">
-        <label for="subject-view" class="block text-xs font-medium" style="color: #8B9B8F;">Select Subject</label>
-        <select id="subject-view" class="w-full p-2 text-sm border rounded-lg focus:ring-2 bg-white" style="border-color: #8B9B8F; color: #060D0C;" onfocus="this.style.borderColor='#2A3B36'" onblur="this.style.borderColor='#8B9B8F'">
-          <option value="">-- Select Subject --</option>
+        <select id="subject" class="select">
+          <option value="">Select Subject</option>
         </select>
-        <button id="loadRegisterBtn" class="w-full sm:w-auto px-4 py-2 text-white rounded-lg text-sm font-medium transition-all" style="background: linear-gradient(to right, #060D0C, #2A3B36);" onmouseover="this.style.background='linear-gradient(to right, #2A3B36, #060D0C)'" onmouseout="this.style.background='linear-gradient(to right, #060D0C, #2A3B36)'">
-          <i class="fas fa-search mr-2"></i>Load Attendance Register
-        </button>
-      </div>
-    
-      <!-- Register display -->
-      <div id="registerTable" class="hidden">
-        <!-- Action buttons -->
-        <div class="flex justify-end gap-2 mb-3">
-          <button id="saveChangesBtn" onclick="saveAttendanceChanges()" class="flex-1 sm:flex-none px-2 sm:px-3 py-2 text-white rounded-lg text-xs sm:text-sm font-medium hidden transition-all" style="background-color: #2A3B36;" onmouseover="this.style.backgroundColor='#060D0C'" onmouseout="this.style.backgroundColor='#2A3B36'">
-            <i class="fas fa-save text-sm mr-1"></i>
-            <span class="hidden sm:inline">Save Changes</span>
-            <span class="sm:hidden text-xs">Save</span>
-          </button>
-          <button id="exportExcelBtn" onclick="exportToExcel()" class="flex-1 sm:flex-none px-2 sm:px-3 py-2 text-white rounded-lg text-xs sm:text-sm font-medium hidden transition-all" style="background-color: #060D0C;" onmouseover="this.style.backgroundColor='#2A3B36'" onmouseout="this.style.backgroundColor='#060D0C'">
-            <i class="fas fa-file-excel text-sm mr-1"></i>
-            <span class="hidden sm:inline">Export Excel</span>
-            <span class="sm:hidden text-xs">Export</span>
-          </button>
-        </div>
-        
-      
-        <!-- ✅ FIXED: Table with sticky student column -->
-        <div class="rounded-lg shadow border overflow-hidden bg-white" style="border-color: #8B9B8F;">
-          <div class="overflow-x-auto relative">
-            <table class="min-w-full text-xs sm:text-sm border-collapse">
-              <thead class="text-white sticky top-0 z-30" style="background-color: #060D0C;" id="view-thead">
-                <!-- Headers will be populated by JavaScript -->
-              </thead>
-              <tbody class="bg-white divide-y" style="color: #060D0C; border-color: #F0EDE5;" id="view-tbody">
-                <!-- Rows will be populated by JavaScript -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-    
-        <!-- Mobile scroll hint -->
-        <div class="mt-2 text-xs text-center flex items-center justify-center gap-2" style="color: #8B9B8F;">
-          <i class="fas fa-arrows-alt-h"></i>
-          <span>Student column stays fixed • Scroll horizontally to view all dates</span>
-        </div>
-        
-        <!-- ✅ Stats summary -->
-        <div class="mt-3 p-2 rounded-lg text-xs grid grid-cols-2 sm:grid-cols-4 gap-2" style="background-color: #F0EDE5; color: #060D0C;" id="attendanceStats">
-          <!-- Stats will be populated by JavaScript -->
-        </div>
       </div>
     </div>
-    
-    
-    
-    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
-    <script>
-    // ✅ COMPLETE FIXED ATTENDANCE MANAGEMENT SYSTEM
-    // Enhanced with proper error handling, language subject filtering, and WhatsApp integration
-    
-    // ✅ Global Variables
-    let selectedStream = "";
-    let selectedSem = "";
-    let subjectChangeListenerAdded = false;
-    let menuClickListenerAdded = false;
-    
-    // ✅ DOM Element References
-    const streamSection = document.getElementById("streamSection");
-    const semesterSection = document.getElementById("semesterSection");
-    const tabs = document.getElementById("tabs");
-    const markTab = document.getElementById("markTab");
-    const viewTab = document.getElementById("viewTab");
-    const subjectMark = document.getElementById("subject-mark");
-    const subjectView = document.getElementById("subject-view");
-    const studentsList = document.getElementById("students-list");
-    const submitBtn = document.getElementById("submitAttendance");
-    const viewThead = document.getElementById("view-thead");
-    const viewTbody = document.getElementById("view-tbody");
-    const markBtn = document.getElementById("markBtn");
-    const viewBtn = document.getElementById("viewBtn");
-    
-    // ✅ CRITICAL FIX: Date Validation Function (Must be defined first)
-    function validateAttendanceDates(dates) {
-      const invalidDates = [];
-      const validatedDates = [];
-    
-      dates.forEach(dateStr => {
-        const cleanDateStr = String(dateStr).trim();
-        
-        // Basic ISO format check (YYYY-MM-DD)
-        const isoRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!isoRegex.test(cleanDateStr)) {
-          invalidDates.push({ 
-            date: cleanDateStr, 
-            issue: 'Invalid format - use YYYY-MM-DD' 
-          });
-          return;
-        }
-    
+
+    <!-- 📊 GLASS MORPHISM STATS -->
+    <div class="stats">
+      <div class="stat-item">
+        <i class="fas fa-user-check" style="color: var(--present); font-size: 0.8rem;"></i>
+        Present: <strong id="presentCount">0</strong>
+      </div>
+      <div class="stat-item">
+        <i class="fas fa-user-times" style="color: var(--absent); font-size: 0.8rem;"></i>
+        Absent: <strong id="absentCount">0</strong>
+      </div>
+    </div>
+
+    <!-- 📋 ENHANCED GLASS MORPHISM TABLE -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 10%;">#</th>
+            <th style="width: 25%;">Student ID</th>
+            <th style="width: 45%;">Student Name</th>
+            <th style="width: 20%;">Present</th>
+          </tr>
+        </thead>
+        <tbody id="students-list">
+          <tr>
+            <td colspan="4" class="loading-state">
+              <i class="fas fa-users"></i>
+              Loading students...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 🚀 GLASS MORPHISM SUBMIT -->
+    <div class="submit-section">
+      <button id="submitAttendance" class="submit-btn">
+        <i class="fas fa-paper-plane"></i>
+        Submit Attendance
+      </button>
+    </div>
+
+
+
+
+  <script>
+    let currentClassInfo = null;
+    let isPreSelectedSubject = false;
+
+    // DOM Elements
+    const dateInput = document.getElementById('date');
+    const subjectSelect = document.getElementById('subject');
+    const subjectDisplay = document.getElementById('subjectDisplay');
+    const selectedSubjectName = document.getElementById('selectedSubjectName');
+    const studentsList = document.getElementById('students-list');
+    const presentCountSpan = document.getElementById('presentCount');
+    const absentCountSpan = document.getElementById('absentCount');
+    const submitBtn = document.getElementById('submitAttendance');
+    const classInfoCard = document.getElementById('classInfoCard');
+
+    // ✅ ENHANCED PERSISTENCE
+    function saveToLocalStorage() {
+      const attendanceData = {
+        date: dateInput.value,
+        subject: getSelectedSubject(),
+        students: [],
+        presentCount: presentCountSpan.textContent,
+        absentCount: absentCountSpan.textContent,
+        classInfo: currentClassInfo,
+        isPreSelected: isPreSelectedSubject,
+        timestamp: new Date().toISOString()
+      };
+
+      const checkboxes = studentsList.querySelectorAll('input[type="checkbox"]');
+      checkboxes.forEach(checkbox => {
+        attendanceData.students.push({
+          studentID: checkbox.dataset.studentId || checkbox.value,
+          name: checkbox.dataset.studentName || 'Unknown',
+          present: checkbox.checked
+        });
+      });
+
+      localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
+    }
+
+    function loadFromLocalStorage() {
+      const savedData = localStorage.getItem('attendanceData');
+      if (savedData) {
         try {
-          // Parse date with UTC to avoid timezone issues
-          const date = new Date(cleanDateStr + 'T00:00:00.000Z');
+          const attendanceData = JSON.parse(savedData);
           
-          if (isNaN(date.getTime())) {
-            invalidDates.push({ 
-              date: cleanDateStr, 
-              issue: 'Invalid date value' 
-            });
-            return;
+          if (attendanceData.date) {
+            dateInput.value = attendanceData.date;
           }
-    
-          // ✅ RELAXED: Allow reasonable date range (1 year back, 1 year forward)
-          const today = new Date();
-          const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
-          const oneYearFromNow = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
-    
-          if (date < oneYearAgo) {
-            invalidDates.push({ 
-              date: cleanDateStr, 
-              issue: 'Date too far in past (>1 year)' 
-            });
-            return;
+          
+          if (attendanceData.classInfo && attendanceData.isPreSelected) {
+            currentClassInfo = attendanceData.classInfo;
+            isPreSelectedSubject = true;
+            showPreSelectedSubject(currentClassInfo.subject);
+            showClassInfo(currentClassInfo);
+            loadStudentsFromDatabase(currentClassInfo);
           }
-    
-          if (date > oneYearFromNow) {
-            invalidDates.push({ 
-              date: cleanDateStr, 
-              issue: 'Date too far in future (>1 year)' 
-            });
-            return;
-          }
-    
-          // Date is valid
-          validatedDates.push(cleanDateStr);
-    
+          
+          // Restore student attendance
+          setTimeout(() => {
+            if (attendanceData.students && attendanceData.students.length > 0) {
+              restoreStudentAttendance(attendanceData.students);
+            }
+          }, 1000);
+          
         } catch (error) {
-          invalidDates.push({ 
-            date: cleanDateStr, 
-            issue: `Date parsing error: ${error.message}` 
-          });
+          console.error('Error loading from localStorage:', error);
+        }
+      }
+    }
+
+    function restoreStudentAttendance(savedStudents) {
+      const checkboxes = studentsList.querySelectorAll('input[type="checkbox"]');
+      
+      checkboxes.forEach(checkbox => {
+        const studentID = checkbox.dataset.studentId || checkbox.value;
+        const savedStudent = savedStudents.find(s => s.studentID === studentID);
+        
+        if (savedStudent) {
+          checkbox.checked = savedStudent.present;
         }
       });
-    
-      return { invalidDates, validatedDates };
+      
+      const total = checkboxes.length;
+      const present = Array.from(checkboxes).filter(cb => cb.checked).length;
+      updateCounts(present, total - present);
     }
-    
-    // ✅ FALLBACK: Simple date validation
-    function validateAttendanceDatesSimple(dates) {
-      const invalidDates = [];
-      const validatedDates = [];
-    
-      for (const dateStr of dates) {
-        const cleanDate = String(dateStr).trim();
-        
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(cleanDate)) {
-          invalidDates.push({ date: cleanDate, issue: 'Invalid format' });
-          continue;
-        }
-    
-        const date = new Date(cleanDate);
-        if (isNaN(date.getTime())) {
-          invalidDates.push({ date: cleanDate, issue: 'Invalid date' });
-          continue;
-        }
-    
-        validatedDates.push(cleanDate);
-      }
-    
-      return { invalidDates, validatedDates };
+
+    function clearLocalStorage() {
+      localStorage.removeItem('attendanceData');
     }
-    
-    // ✅ TEACHER VIEW MODE SETUP
-    function setupTeacherViewMode(teacherInfo) {
-      console.log('🔧 Setting up teacher view mode...');
-      
-      // Add teacher mode class to body
-      document.body.classList.add('teacher-mode');
-      
-      // Hide the header/banner for teacher mode
-      const header = document.querySelector('header');
-      if (header) {
-        header.style.display = 'none';
+
+    // ✅ NEW: Get selected subject from either dropdown or pre-selected
+    function getSelectedSubject() {
+      if (isPreSelectedSubject && currentClassInfo) {
+        return currentClassInfo.subject;
       }
-      
-      // Hide the home page content and show only tabs
-      const homePage = document.getElementById("homePage");
-      if (homePage) {
-        homePage.classList.remove("hidden");
-        
-        // Hide everything except the tabs section
-        const children = homePage.children;
-        for (let i = 0; i < children.length; i++) {
-          const child = children[i];
-          if (!child.id || (child.id !== 'tabs' && child.id !== 'viewTab')) {
-            child.style.display = 'none';
-          }
-        }
-      }
-      
-      // Show tabs section
-      const tabs = document.getElementById('tabs');
-      if (tabs) {
-        tabs.classList.remove('hidden');
-        tabs.style.display = 'block';
-      }
-      
-      // Auto-navigate to view attendance tab after a short delay
-      setTimeout(() => {
-        // Show the view attendance tab directly
-        showTab('viewTab');
-        
-        // Hide the mark attendance tab button completely
-        const markBtn = document.getElementById('markBtn');
-        const viewBtn = document.getElementById('viewBtn');
-        
-        if (markBtn) {
-          markBtn.style.display = 'none';
-        }
-        
-        if (viewBtn) {
-          viewBtn.style.backgroundColor = '#060D0C';
-          viewBtn.style.color = 'white';
-          viewBtn.style.width = '100%'; // Make it full width since mark button is hidden
-        }
-        
-        // Show stream/semester selection interface
-        setupTeacherStreamSelection();
-        
-        // Show a welcome message
-        showTeacherWelcomeMessage(teacherInfo);
-        
-        // Show the back to my class button
-        const backBtn = document.getElementById('backToMyClassBtn');
-        if (backBtn) {
-          backBtn.classList.remove('hidden');
-        }
-        
-      }, 500);
+      return subjectSelect.value;
     }
-    
-    // ✅ BACK TO MY CLASS FUNCTION
-    function backToMyClass() {
-      window.location.href = 'myclass.html';
+
+    // ✅ NEW: Show pre-selected subject (no dropdown)
+    function showPreSelectedSubject(subjectName) {
+      selectedSubjectName.textContent = subjectName;
+      subjectDisplay.classList.remove('hidden');
+      subjectSelect.classList.add('hidden');
+      isPreSelectedSubject = true;
     }
-    
-    // ✅ SETUP TEACHER STREAM SELECTION
-    function setupTeacherStreamSelection() {
-      console.log('🔧 Setting up teacher stream selection interface...');
-      
-      // Hide normal interface, show teacher interface
-      const normalInterface = document.getElementById('normalSelectionInterface');
-      const teacherInterface = document.getElementById('teacherSelectionInterface');
-      
-      if (normalInterface) normalInterface.classList.add('hidden');
-      if (teacherInterface) teacherInterface.classList.remove('hidden');
-      
-      // Populate streams (same as myclass.html)
-      populateTeacherStreams();
-      
-      // Setup event listeners
-      setupTeacherSelectionListeners();
+
+    // ✅ NEW: Show dropdown for manual selection
+    function showSubjectDropdown() {
+      subjectDisplay.classList.add('hidden');
+      subjectSelect.classList.remove('hidden');
+      isPreSelectedSubject = false;
     }
-    
-    // ✅ POPULATE TEACHER STREAMS
-    function populateTeacherStreams() {
-      const streamSelect = document.getElementById('teacher-stream-select');
-      if (!streamSelect) return;
-      
-      // Same streams as in myclass.html
-      const streams = [
-        'BCA', 'BBA', 'BCom', 'BCom Section A', 'BCom Section B', 
-        'BSc', 'BA', 'MA', 'MSc', 'MCom', 'MCA'
-      ];
-      
-      streamSelect.innerHTML = '<option value="">-- Select Stream --</option>';
-      streams.forEach(stream => {
-        const option = document.createElement('option');
-        option.value = stream;
-        option.textContent = stream;
-        streamSelect.appendChild(option);
-      });
-    }
-    
-    // ✅ SETUP TEACHER SELECTION LISTENERS
-    function setupTeacherSelectionListeners() {
-      const streamSelect = document.getElementById('teacher-stream-select');
-      const semesterSelect = document.getElementById('teacher-semester-select');
-      const subjectSelect = document.getElementById('teacher-subject-select');
-      const loadBtn = document.getElementById('teacherLoadRegisterBtn');
-      
-      if (streamSelect) {
-        streamSelect.addEventListener('change', () => {
-          const selectedStream = streamSelect.value;
-          populateTeacherSemesters(selectedStream);
-          
-          // Clear subject selection
-          if (subjectSelect) {
-            subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
-          }
-        });
-      }
-      
-      if (semesterSelect) {
-        semesterSelect.addEventListener('change', () => {
-          const selectedStream = streamSelect.value;
-          const selectedSemester = semesterSelect.value;
-          
-          if (selectedStream && selectedSemester) {
-            loadTeacherSubjects(selectedStream, selectedSemester);
-          }
-        });
-      }
-      
-      if (loadBtn) {
-        loadBtn.addEventListener('click', loadTeacherAttendanceRegister);
-      }
-    }
-    
-    // ✅ POPULATE TEACHER SEMESTERS
-    function populateTeacherSemesters(stream) {
-      const semesterSelect = document.getElementById('teacher-semester-select');
-      if (!semesterSelect || !stream) return;
-      
-      // Same logic as myclass.html
-      let maxSemesters = 6; // Default
-      
-      if (stream.includes('BCA') || stream.includes('BBA') || stream.includes('BSc')) {
-        maxSemesters = 6;
-      } else if (stream.includes('BCom') || stream.includes('BA')) {
-        maxSemesters = 6;
-      } else if (stream.includes('MA') || stream.includes('MSc') || stream.includes('MCom') || stream.includes('MCA')) {
-        maxSemesters = 4;
-      }
-      
-      semesterSelect.innerHTML = '<option value="">-- Select Semester --</option>';
-      for (let i = 1; i <= maxSemesters; i++) {
-        const option = document.createElement('option');
-        option.value = i;
-        option.textContent = `Semester ${i}`;
-        semesterSelect.appendChild(option);
-      }
-    }
-    
-    // ✅ LOAD TEACHER SUBJECTS
-    async function loadTeacherSubjects(stream, semester) {
-      const subjectSelect = document.getElementById('teacher-subject-select');
-      if (!subjectSelect) return;
-      
+    function calculateCurrentTimeSlot() {
       try {
-        console.log(`📚 Loading subjects for: ${stream} Semester ${semester}`);
+        const now = new Date();
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
         
-        const response = await fetch(`/api/subjects/${stream}/sem${semester}`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        // Convert current time to minutes since midnight for easier comparison
+        const currentTotalMinutes = currentHour * 60 + currentMinute;
         
-        const data = await response.json();
-        const subjects = data.subjects || [];
+        // Define time slots (in 24-hour format)
+        const timeSlots = [
+          { start: 9 * 60, end: 10 * 60, period: "9:00 AM - 10:00 AM" },
+          { start: 10 * 60, end: 11 * 60, period: "10:00 AM - 11:00 AM" },
+          { start: 11 * 60, end: 12 * 60, period: "11:00 AM - 12:00 PM" },
+          { start: 12 * 60, end: 13 * 60, period: "12:00 PM - 1:00 PM" },
+          { start: 13 * 60, end: 14 * 60, period: "1:00 PM - 2:00 PM" },
+          { start: 14 * 60, end: 15 * 60, period: "2:00 PM - 3:00 PM" },
+          { start: 15 * 60, end: 16 * 60, period: "3:00 PM - 4:00 PM" },
+          { start: 16 * 60, end: 17 * 60, period: "4:00 PM - 5:00 PM" }
+        ];
         
-        subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
-        
-        // Group by type
-        const coreSubjects = subjects.filter(s => s.subjectType === 'CORE');
-        const languageSubjects = subjects.filter(s => s.subjectType === 'LANGUAGE');
-        
-        if (coreSubjects.length > 0) {
-          const coreGroup = document.createElement('optgroup');
-          coreGroup.label = 'Core Subjects';
-          coreSubjects.forEach(subject => {
-            const option = document.createElement('option');
-            option.value = subject.subjectName;
-            option.textContent = subject.subjectName;
-            coreGroup.appendChild(option);
-          });
-          subjectSelect.appendChild(coreGroup);
+        // Find current time slot
+        for (let slot of timeSlots) {
+          if (currentTotalMinutes >= slot.start && currentTotalMinutes < slot.end) {
+            return slot.period;
+          }
         }
         
-        if (languageSubjects.length > 0) {
-          const langGroup = document.createElement('optgroup');
-          langGroup.label = 'Language Subjects';
-          languageSubjects.forEach(subject => {
-            const option = document.createElement('option');
-            option.value = subject.subjectName;
-            option.textContent = subject.subjectName;
-            langGroup.appendChild(option);
-          });
-          subjectSelect.appendChild(langGroup);
+        // If outside regular hours, show smart period based on 30-minute threshold
+        let startHour, startMinute;
+        
+        if (currentMinute <= 30) {
+          startHour = currentHour;
+          startMinute = 0;
+        } else {
+          startHour = currentHour;
+          startMinute = 30;
         }
         
-        console.log(`✅ Loaded ${subjects.length} subjects (${coreSubjects.length} core, ${languageSubjects.length} language)`);
+        // Calculate end time (1 hour later)
+        let endHour = startHour;
+        let endMinute = startMinute + 60;
+        
+        if (endMinute >= 60) {
+          endMinute -= 60;
+          endHour += 1;
+        }
+        
+        // Format with AM/PM
+        const formatTime = (h, m) => {
+          const period = h >= 12 ? 'PM' : 'AM';
+          const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+          const displayMinute = m.toString().padStart(2, '0');
+          return `${displayHour}:${displayMinute} ${period}`;
+        };
+        
+        return `${formatTime(startHour, startMinute)} - ${formatTime(endHour, endMinute)}`;
         
       } catch (error) {
-        console.error('❌ Error loading subjects:', error);
-        subjectSelect.innerHTML = '<option value="">-- Error Loading Subjects --</option>';
+        console.warn('Error calculating time slot:', error);
+        return 'Current Period';
       }
     }
     
-    // ✅ LOAD TEACHER ATTENDANCE REGISTER
-    async function loadTeacherAttendanceRegister() {
-      const streamSelect = document.getElementById('teacher-stream-select');
-      const semesterSelect = document.getElementById('teacher-semester-select');
-      const subjectSelect = document.getElementById('teacher-subject-select');
-      const loadBtn = document.getElementById('teacherLoadRegisterBtn');
-      
-      const stream = streamSelect?.value;
-      const semester = semesterSelect?.value;
-      const subject = subjectSelect?.value;
-      
-      if (!stream || !semester || !subject) {
-        showAlert("Missing Information", "Please select stream, semester, and subject.", "error");
-        return;
-      }
-      
-      try {
-        loadBtn.disabled = true;
-        loadBtn.innerHTML = '<span class="loading-spinner"></span> Loading...';
-        
-        console.log(`📊 Loading register for: ${stream} Semester ${semester} - ${subject}`);
-        
-        const res = await fetch(`/api/attendance-register/${stream}/sem${semester}/${encodeURIComponent(subject)}`);
-        
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        
-        const data = await res.json();
-        console.log('📊 Register response:', data);
-        
-        let students, attendanceMap, subjectInfo;
-        
-        if (data.success && data.data) {
-          ({ students, attendanceMap, subjectInfo } = data.data);
-        } else if (data.students && data.attendanceMap) {
-          ({ students, attendanceMap } = data);
-          subjectInfo = data.subjectInfo;
-        } else {
-          throw new Error(data.message || 'Failed to load register');
-        }
-        
-        const dates = Object.keys(attendanceMap).sort();
-        
-        console.log(`✅ Loaded: ${students.length} students, ${dates.length} dates`);
-        
-        if (students.length === 0) {
-          const message = subjectInfo?.isLanguageSubject ? 
-            `No students found who chose ${subjectInfo.languageType} language` :
-            'No students found for this subject';
-          showAlert("No Students", message, "warning");
-          return;
-        }
-        
-        await renderAttendanceTable(students, dates, attendanceMap);
-        
-        const registerTable = document.getElementById("registerTable");
-        const saveBtn = document.getElementById("saveChangesBtn");
-        const exportExcelBtn = document.getElementById("exportExcelBtn");
-        
-        if (registerTable) registerTable.classList.remove("hidden");
-        if (saveBtn) saveBtn.classList.remove("hidden");
-        if (exportExcelBtn) exportExcelBtn.classList.remove("hidden");
-        
-        const avgAttendance = students.length > 0 ?
-          (students.reduce((sum, stu) => {
-            const attendedCount = dates.filter(date => attendanceMap[date]?.includes(stu.studentID)).length;
-            return sum + (dates.length > 0 ? (attendedCount / dates.length) * 100 : 0);
-          }, 0) / students.length).toFixed(1) : 0;
-        
-        let successMessage = `Register loaded successfully!\n\n`;
-        successMessage += `Subject: ${subject}\n`;
-        successMessage += `Stream: ${stream} Semester ${semester}\n`;
-        if (subjectInfo?.isLanguageSubject) {
-          successMessage += `Language: ${subjectInfo.languageType} students only\n`;
-        }
-        successMessage += `Students: ${students.length}\n`;
-        successMessage += `Days: ${dates.length}\n`;
-        successMessage += `Average Attendance: ${avgAttendance}%`;
-        
-        showAlert("Success", successMessage, "success");
-        
-      } catch (err) {
-        console.error("Error loading attendance register:", err);
-        showAlert("Loading Error", `Failed to load register: ${err.message}`, "error");
-      } finally {
-        loadBtn.disabled = false;
-        loadBtn.innerHTML = '<i class="fas fa-search mr-2"></i>Load Attendance Register';
-      }
+    // ✅ NEW: Show class info card
+    function showClassInfo(classInfo) {
+      document.getElementById('classSubjectName').textContent = classInfo.subject;
+      document.getElementById('classStreamSem').textContent = `${classInfo.stream} • Semester ${classInfo.semester}`;
+      document.getElementById('classDate').textContent = new Date().toLocaleDateString();
+      classInfoCard.classList.remove('hidden');
     }
-    
-    // ✅ SHOW TEACHER WELCOME MESSAGE
-    function showTeacherWelcomeMessage(teacherInfo) {
-      // Create a temporary welcome message
-      const welcomeDiv = document.createElement('div');
-      welcomeDiv.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2 rounded-lg shadow-lg';
-      welcomeDiv.style.backgroundColor = '#060D0C';
-      welcomeDiv.style.color = 'white';
-      welcomeDiv.innerHTML = `
-        <div class="flex items-center gap-2">
-          <i class="fas fa-chalkboard-teacher"></i>
-          <span>Welcome ${teacherInfo.name}! View attendance for any subject</span>
-        </div>
+    const timeSlot = calculateCurrentTimeSlot();
+    const timeSlotElement = document.getElementById('classTimeSlot');
+    if (timeSlotElement) {
+      timeSlotElement.innerHTML = `
+        <i class="fas fa-clock" style="margin-right: 4px; opacity: 0.8;"></i>
+        ${timeSlot}
       `;
-      
-      document.body.appendChild(welcomeDiv);
-      
-      // Remove after 3 seconds
-      setTimeout(() => {
-        if (welcomeDiv.parentNode) {
-          welcomeDiv.parentNode.removeChild(welcomeDiv);
-        }
-      }, 3000);
     }
     
+    classInfoCard.classList.remove('hidden');
+  
     // ✅ MAIN INITIALIZATION
-    document.addEventListener("DOMContentLoaded", () => {
-      // Check for teacher view mode from myclass.html
-      const teacherViewMode = sessionStorage.getItem('teacherViewMode');
-      if (teacherViewMode === 'true') {
-        try {
-          const teacherInfo = JSON.parse(sessionStorage.getItem('teacherInfo') || '{}');
-          
-          console.log('👨‍🏫 Teacher view mode activated:', {
-            teacherInfo
-          });
-          
-          // Set up teacher view mode
-          setupTeacherViewMode(teacherInfo);
-          
-          // Clear the session data
-          sessionStorage.removeItem('teacherViewMode');
-          sessionStorage.removeItem('teacherInfo');
-          
-        } catch (error) {
-          console.error('❌ Error setting up teacher view mode:', error);
-        }
-      }
-      
-      // Check for auto-selection from myclass.html
+    document.addEventListener("DOMContentLoaded", async () => {
+      // Set today's date
+      const today = new Date().toISOString().split('T')[0];
+      dateInput.value = today;
+      dateInput.max = today;
+
+      // ✅ Check for class info from myclass.html
       const selectedClassInfo = sessionStorage.getItem('selectedClass');
       if (selectedClassInfo) {
         try {
-          const classInfo = JSON.parse(selectedClassInfo);
-          console.log('🎯 Auto-selecting class from myclass.html:', classInfo);
+          currentClassInfo = JSON.parse(selectedClassInfo);
+          console.log('🎯 Auto-loading class:', currentClassInfo);
           
+          isPreSelectedSubject = true;
+          showPreSelectedSubject(currentClassInfo.subject);
+          showClassInfo(currentClassInfo);
+          
+          await loadStudentsFromDatabase(currentClassInfo);
           sessionStorage.removeItem('selectedClass');
-          
-          setTimeout(async () => {
-            await autoSelectClass(classInfo);
-          }, 500);
         } catch (error) {
-          console.error('❌ Error parsing selected class info:', error);
+          console.error('❌ Error parsing class info:', error);
+          showSubjectDropdown();
+          await loadAllSubjects();
         }
-      }
-    
-      initializeSystem();
-    });
-    
-    // ✅ Auto-selection function from myclass.html
-    async function autoSelectClass(classInfo) {
-      const { stream, semester, subject } = classInfo;
-      
-      try {
-        console.log(`🚀 Auto-selecting: ${stream} Semester ${semester} - ${subject}`);
-        
-        selectedStream = stream;
-        selectedSem = semester;
-        
-        
-        document.getElementById("homePage").classList.add("hidden");
-        tabs.classList.remove("hidden");
-        showTab("markTab");
-        
-        await loadSubjectsAndStudents(stream, semester);
-        
-        setTimeout(() => {
-          const subjectOption = Array.from(subjectMark.options).find(
-            option => option.value === subject
-          );
-          
-          if (subjectOption) {
-            subjectMark.value = subject;
-            subjectView.value = subject;
-            subjectMark.dispatchEvent(new Event('change'));
-            
-            console.log(`✅ Auto-selected subject: ${subject}`);
-            showAutoSelectMessage(stream, semester, subject);
-          } else {
-            console.warn(`⚠️ Subject "${subject}" not found in dropdown`);
-            showAlert("Warning", `Subject "${subject}" not found. Please select manually.`, "warning");
-          }
-        }, 1000);
-        
-      } catch (error) {
-        console.error('❌ Error auto-selecting class:', error);
-        showAlert("Error", 'Error loading class data. Please try selecting manually.', "error");
-      }
-    }
-    
-    // ✅ Auto-select success message
-    function showAutoSelectMessage(stream, semester, subject) {
-      const messageDiv = document.createElement('div');
-      messageDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 max-w-sm';
-      messageDiv.innerHTML = `
-        <div class="flex items-center">
-          <i class="fas fa-check-circle mr-2"></i>
-          <div>
-            <div class="font-semibold">Class Auto-Selected!</div>
-            <div class="text-sm">${stream} Sem ${semester} - ${subject}</div>
-          </div>
-        </div>
-      `;
-      
-      document.body.appendChild(messageDiv);
-      
-      setTimeout(() => {
-        if (document.body.contains(messageDiv)) {
-          document.body.removeChild(messageDiv);
-        }
-      }, 4000);
-    }
-    
-    // ✅ SYSTEM INITIALIZATION
-    function initializeSystem() {
-      addMenuClickListener();
-      setupDateInput();
-      setupSubmitButton();
-      setupTabButtons();
-      setupViewButtons();
-      initializeExcelExport();
-      console.log("✅ Attendance system initialized successfully");
-    }
-    
-    // ✅ HOME NAVIGATION
-    function goToStreamsHome() {
-      console.log("🏠 Navigating back to myclass.html");
-      window.location.href = 'myclass.html';
-    }
-    
-    // ✅ TAB MANAGEMENT - LUXE NOIR Theme
-    function showTab(tabId) {
-      markTab.classList.add("hidden");
-      viewTab.classList.add("hidden");
-      document.getElementById(tabId).classList.remove("hidden");
-      
-      // Reset both buttons to inactive state (LUXE NOIR)
-      document.getElementById('markBtn').className =
-        "tablinks flex-1 px-4 py-2 rounded-full transition-all duration-300 text-xs font-medium";
-      document.getElementById('markBtn').style.cssText = "color: #8B9B8F; background-color: transparent;";
-      document.getElementById('markBtn').onmouseover = function() { this.style.color='#060D0C'; this.style.backgroundColor='#F0EDE5'; };
-      document.getElementById('markBtn').onmouseout = function() { this.style.color='#8B9B8F'; this.style.backgroundColor='transparent'; };
-      
-      document.getElementById('viewBtn').className =
-        "tablinks flex-1 px-4 py-2 rounded-full transition-all duration-300 text-xs font-medium";
-      document.getElementById('viewBtn').style.cssText = "color: #8B9B8F; background-color: transparent;";
-      document.getElementById('viewBtn').onmouseover = function() { this.style.color='#060D0C'; this.style.backgroundColor='#F0EDE5'; };
-      document.getElementById('viewBtn').onmouseout = function() { this.style.color='#8B9B8F'; this.style.backgroundColor='transparent'; };
-    
-      // Set active tab (LUXE NOIR)
-      if (tabId === 'markTab') {
-        document.getElementById('markBtn').className =
-          "tablinks flex-1 px-4 py-2 text-white rounded-full transition-all duration-300 shadow-md text-xs font-medium";
-        document.getElementById('markBtn').style.cssText = "background-color: #060D0C; color: #F0EDE5;";
-        document.getElementById('markBtn').onmouseover = null;
-        document.getElementById('markBtn').onmouseout = null;
       } else {
-        document.getElementById('viewBtn').className =
-          "tablinks flex-1 px-4 py-2 text-white rounded-full transition-all duration-300 shadow-md text-xs font-medium";
-        document.getElementById('viewBtn').style.cssText = "background-color: #060D0C; color: #F0EDE5;";
-        document.getElementById('viewBtn').onmouseover = null;
-        document.getElementById('viewBtn').onmouseout = null;
-      }
-    }
-    
-    // ✅ ENHANCED SUBJECTS AND STUDENTS LOADING
-    async function loadSubjectsAndStudents(stream, sem) {
-      try {
-        console.log(`🔄 Loading data for: ${stream} Sem ${sem}`);
-        
-        window.selectedStream = stream;
-        window.selectedSem = sem;
-        
-        const subjectsRes = await fetch(`/api/subjects/${stream}/sem${sem}`);
-        
-        if (!subjectsRes.ok) {
-          throw new Error(`Failed to fetch subjects: ${subjectsRes.status} ${subjectsRes.statusText}`);
-        }
-        
-        const subjectsData = await subjectsRes.json();
-        console.log('📚 Subjects response:', subjectsData);
-        
-        const subjects = subjectsData.subjects || subjectsData || [];
-        
-        populateSubjectDropdowns(subjects);
-        await loadAllStudents(stream, sem);
-        setupSubjectFilteringListener(stream, sem);
-        
-        console.log(`✅ Data loaded successfully: ${subjects.length} subjects`);
-        
-      } catch (error) {
-        console.error("❌ Error loading data:", error);
-        handleLoadingError(error, stream, sem);
-      }
-    }
-    
-    // ✅ ENHANCED SUBJECT DROPDOWN POPULATION WITH LANGUAGE SUPPORT
-    function populateSubjectDropdowns(subjects) {
-      subjectMark.innerHTML = '<option value="">-- Select Subject --</option>';
-      subjectView.innerHTML = '<option value="">-- Select Subject --</option>';
-      
-      if (!Array.isArray(subjects) || subjects.length === 0) {
-        console.warn('⚠️ No subjects found');
-        return;
-      }
-      
-      subjects.forEach(sub => {
-        const subjectName = sub.subjectName || sub.name || sub;
-        
-        const markOption = new Option(subjectName, subjectName);
-        const viewOption = new Option(subjectName, subjectName);
-        
-        if (sub.isLanguageSubject || (sub.subjectType === 'LANGUAGE')) {
-          markOption.setAttribute('data-type', 'LANGUAGE');
-          markOption.setAttribute('data-language', sub.languageType);
-          viewOption.setAttribute('data-type', 'LANGUAGE');  
-          viewOption.setAttribute('data-language', sub.languageType);
-          
-          console.log(`🔤 Language subject: ${subjectName} (${sub.languageType})`);
+        // ✅ Check localStorage for persistence
+        const savedData = localStorage.getItem('attendanceData');
+        if (savedData) {
+          loadFromLocalStorage();
         } else {
-          markOption.setAttribute('data-type', 'CORE');
-          viewOption.setAttribute('data-type', 'CORE');
+          showSubjectDropdown();
+          await loadAllSubjects();
         }
-        
-        subjectMark.appendChild(markOption);
-        subjectView.appendChild(viewOption);
-      });
-      
-      console.log(`✅ Populated ${subjects.length} subjects with language attributes`);
-    }
-    
-    // ✅ LOAD ALL STUDENTS INITIALLY
-    async function loadAllStudents(stream, sem) {
-      try {
-        const studentsRes = await fetch(`/api/students/${stream}/sem${sem}`);
-        
-        if (!studentsRes.ok) {
-          throw new Error(`Failed to fetch students: ${studentsRes.status} ${studentsRes.statusText}`);
-        }
-        
-        const studentsData = await studentsRes.json();
-        console.log('👥 Students response:', studentsData);
-        
-        const students = studentsData.students || studentsData || [];
-        displayStudents(students);
-        
-        console.log(`✅ Loaded ${students.length} students initially`);
-        
-      } catch (error) {
-        console.error("❌ Error loading students:", error);
-        throw error;
       }
-    }
-    
-    // ✅ SUBJECT FILTERING WITH LANGUAGE SUPPORT
-    function setupSubjectFilteringListener(stream, sem) {
-      if (window.subjectChangeListenerAdded) return;
-      
-      subjectMark.addEventListener("change", async function(event) {
-        const selectedSubject = event.target.value;
-        const selectedOption = event.target.selectedOptions[0];
+
+      setupEventListeners();
+    });
+
+    // ✅ LOAD STUDENTS FROM DATABASE
+    async function loadStudentsFromDatabase(classInfo) {
+      try {
+        showLoadingState();
         
-        if (!selectedSubject) {
-          console.log("🔄 No subject selected, showing all students");
-          await loadAllStudents(stream, sem);
-          return;
-        }
+        const response = await fetch(`/api/attendance-students/${classInfo.stream}/sem${classInfo.semester}/${encodeURIComponent(classInfo.subject)}`);
         
-        const subjectType = selectedOption.getAttribute('data-type');
-        const languageType = selectedOption.getAttribute('data-language');
-        
-        console.log(`🎯 Subject selected: ${selectedSubject}`);
-        console.log(`📋 Subject type: ${subjectType}`);
-        if (languageType) console.log(`🔤 Language type: ${languageType}`);
-        
-        try {
-          studentsList.innerHTML = `
-            <tr>
-              <td colspan="4" class="p-6 text-center">
-                <div class="flex items-center justify-center">
-                  <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 mr-3"></div>
-                  Loading ${languageType ? languageType + ' ' : ''}students...
-                </div>
-              </td>
-            </tr>
-          `;
-          
-          const response = await fetch(`/api/attendance-students/${stream}/sem${sem}/${encodeURIComponent(selectedSubject)}`);
-          
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-          
+        if (response.ok) {
           const data = await response.json();
-          
-          if (!data.success) {
-            throw new Error(data.message || 'Failed to get students');
+          if (data.success && data.students) {
+            displayStudents(data.students);
+            return;
           }
-          
-          const students = data.students || [];
-          displayStudents(students);
-          
-          if (subjectType === 'LANGUAGE' && languageType) {
-            console.log(`✅ Filtered to ${students.length} ${languageType} students`);
-            
-            if (students.length === 0) {
-              studentsList.innerHTML = `
-                <tr>
-                  <td colspan="4" class="p-6 text-center text-yellow-500">
-                    <i class="fas fa-info-circle text-3xl mb-2"></i>
-                    <p class="font-semibold">No ${languageType} Students Found</p>
-                    <p class="text-sm">No students have chosen ${languageType} as their language subject.</p>
-                  </td>
-                </tr>
-              `;
-            }
-          } else {
-            console.log(`✅ Showing ${students.length} total students`);
-          }
-          
-        } catch (error) {
-          console.error('❌ Error filtering students:', error);
-          
-          studentsList.innerHTML = `
-            <tr>
-              <td colspan="4" class="p-6 text-center text-red-500">
-                <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
-                <p class="font-semibold">Error Loading Students</p>
-                <p class="text-sm">${error.message}</p>
-                <button 
-                  onclick="loadAllStudents('${stream}', '${sem}')"
-                  class="mt-2 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
-                >
-                  Show All Students
-                </button>
-              </td>
-            </tr>
-          `;
         }
-      });
-      
-      subjectView.addEventListener("change", async function(event) {
-        const selectedSubject = event.target.value;
         
-        if (selectedSubject) {
-          subjectMark.value = selectedSubject;
-          subjectMark.dispatchEvent(new Event('change'));
-        } else {
-          await loadAllStudents(stream, sem);
-        }
-      });
-      
-      window.subjectChangeListenerAdded = true;
-      console.log("✅ Subject filtering setup with language support");
+        // Fallback
+        const fallbackResponse = await fetch(`/api/students/${classInfo.stream}/sem${classInfo.semester}`);
+        const fallbackData = await fallbackResponse.json();
+        displayStudents(fallbackData.students || []);
+        
+      } catch (error) {
+        console.error('Error loading students:', error);
+        showErrorState('Failed to load students from database');
+      }
     }
-    
-    // ✅ DISPLAY STUDENTS WITH ENHANCED SORTING
+
+    // ✅ LOAD ALL SUBJECTS (for dropdown mode)
+    async function loadAllSubjects() {
+      try {
+        const response = await fetch('/api/subjects/all');
+        if (!response.ok) throw new Error('Failed to fetch subjects');
+        
+        const data = await response.json();
+        const subjects = data.subjects || data || [];
+        
+        subjectSelect.innerHTML = '<option value="">Select Subject</option>';
+        subjects.forEach(subj => {
+          const option = document.createElement('option');
+          option.value = subj.name || subj.subjectName || subj;
+          option.textContent = subj.name || subj.subjectName || subj;
+          subjectSelect.appendChild(option);
+        });
+        
+      } catch (error) {
+        console.error('Error loading subjects:', error);
+        subjectSelect.innerHTML = '<option value="">❌ Failed to load subjects</option>';
+      }
+    }
+
+    // ✅ DISPLAY STUDENTS
     function displayStudents(students) {
-      studentsList.innerHTML = '';
-      
-      if (!Array.isArray(students) || students.length === 0) {
+      if (!students || students.length === 0) {
         studentsList.innerHTML = `
           <tr>
-            <td colspan="4" class="p-6 text-center text-gray-500">
-              <i class="fas fa-users-slash text-4xl mb-3 text-gray-300"></i>
-              <p class="font-semibold text-lg">No students found</p>
-              <p class="text-sm">Please verify the data in your database.</p>
+            <td colspan="4" style="padding: 20px; text-align: center; color: #6b7280; border-right: none;">
+              <i class="fas fa-users-slash" style="color: #d1d5db; font-size: 2rem; display: block; margin-bottom: 8px;"></i>
+              No students found
             </td>
           </tr>
         `;
+        updateCounts(0, 0);
+        saveToLocalStorage();
         return;
       }
       
-      // Sort students by Student ID
       const sortedStudents = students.sort((a, b) => {
         const aNum = parseInt(a.studentID);
         const bNum = parseInt(b.studentID);
@@ -1204,1172 +1035,554 @@
           return aNum - bNum;
         }
         
-        return a.studentID.localeCompare(b.studentID, undefined, {
-          numeric: true,
-          sensitivity: 'base'
-        });
+        return a.studentID.localeCompare(b.studentID, undefined, { numeric: true });
       });
       
-      sortedStudents.forEach((student, index) => {
-        const serialNumber = index + 1;
-        const studentID = student.studentID || student.id || 'N/A';
-        const studentName = student.name || 'Unknown';
-        
-        const tableRow = document.createElement('tr');
-        tableRow.className = `${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-indigo-100 transition duration-200`;
-        
-        tableRow.innerHTML = `
-          <td class="p-3 border border-gray-300 text-[#0f172a] font-medium text-center">
-            ${serialNumber}
-          </td>
-          <td class="p-3 border border-gray-300 text-[#0f172a] font-medium">
-            ${studentID}
-          </td>
-          <td class="p-3 border border-gray-300 text-[#0f172a]">
-            ${studentName}
-          </td>
-          <td class="p-3 border border-gray-300 text-center">
+      studentsList.innerHTML = sortedStudents.map((student, index) => `
+        <tr>
+          <td style="font-weight: 600;">${index + 1}</td>
+          <td class="student-id">${student.studentID}</td>
+          <td class="student-name">${student.name}</td>
+          <td>
             <input 
               type="checkbox" 
-              value="${studentID}" 
+              class="checkbox" 
+              data-student-id="${student.studentID}" 
+              data-student-name="${student.name}"
+              value="${student.studentID}"
               checked 
-              class="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-400 transition duration-200"
             />
           </td>
-        `;
-        
-        studentsList.appendChild(tableRow);
-      });
-      
-      console.log(`✅ Displayed ${sortedStudents.length} students (sorted by Student ID)`);
+        </tr>
+      `).join('');
+
+      updateCounts(students.length, 0);
+      saveToLocalStorage();
     }
-    
-    // ✅ ENHANCED ERROR HANDLING
-    function handleLoadingError(error, stream, sem) {
-      showAlert("Error", `Error loading data for ${stream} Semester ${sem}: ${error.message}`, "error");
-      
-      if (subjectMark) subjectMark.innerHTML = '<option value="">-- Error Loading Subjects --</option>';
-      if (subjectView) subjectView.innerHTML = '<option value="">-- Error Loading Subjects --</option>';
-      if (studentsList) {
-        studentsList.innerHTML = `
-          <tr>
-            <td colspan="4" class="p-6 text-center text-red-500">
-              <i class="fas fa-exclamation-triangle text-4xl mb-2"></i>
-              <p class="font-semibold">Error loading data</p>
-              <p class="text-sm">${error.message}</p>
-              <button 
-                onclick="loadSubjectsAndStudents('${stream}', '${sem}')" 
-                class="mt-3 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-              >
-                <i class="fas fa-redo mr-2"></i>
-                Retry
-              </button>
-            </td>
-          </tr>
-        `;
-      }
+
+    // ✅ UTILITY FUNCTIONS
+    function updateCounts(present, absent) {
+      presentCountSpan.textContent = present;
+      absentCountSpan.textContent = absent;
     }
-    
-    // ✅ DATE INPUT SETUP
-    function setupDateInput() {
-      const today = new Date().toISOString().split("T")[0];
-      const dateInput = document.getElementById("date");
-      if (dateInput) {
-        dateInput.value = today;
-        dateInput.max = today;
-        
-        dateInput.addEventListener('input', function() {
-          const selectedDate = this.value;
-          if (selectedDate > today) {
-            showAlert('Warning', 'Future dates are not allowed for attendance marking!', 'warning');
-            this.value = today;
-          }
-        });
-      }
-    }
-    
-    // ✅ SUBMIT BUTTON SETUP WITH ENHANCED VALIDATION
-    function setupSubmitButton() {
-      if (submitBtn) {
-        submitBtn.addEventListener("click", async () => {
-          const subject = subjectMark.value;
-          const dateInput = document.getElementById("date");
-          const date = dateInput ? dateInput.value : '';
-    
-          if (!subject || !date) {
-            showAlert("Missing Information", "Please fill in both Date and Subject.", "error");
-            return;
-          }
-    
-          const today = new Date().toISOString().split("T")[0];
-          if (date > today) {
-            showAlert("Invalid Date", "Future dates are not allowed for attendance marking.", "error");
-            return;
-          }
-    
-          try {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="loading-spinner"></span> Checking...';
-    
-            const attendanceExists = await checkAttendanceExists(window.selectedStream, window.selectedSem, subject, date);
-            
-            if (attendanceExists) {
-              const overwriteConfirm = await showConfirmDialog(
-                "Attendance Already Exists",
-                `Subject: ${subject}\nDate: ${date}\nClass: ${window.selectedStream} Semester ${window.selectedSem}\n\nAttendance has already been recorded.\nDo you want to OVERWRITE it?`,
-                "warning"
-              );
-              
-              if (!overwriteConfirm) {
-                showAlert("Cancelled", "Attendance submission cancelled.", "info");
-                return;
-              }
-            }
-    
-            if (isWeekend(date)) {
-              const dayName = isSunday(date) ? "SUNDAY" : "SATURDAY";
-              const weekendConfirm = await showConfirmDialog(
-                "Weekend Alert",
-                `Selected date (${date}) is a ${dayName}.\n\nAre you sure about weekend attendance?`,
-                "warning"
-              );
-              
-              if (!weekendConfirm) {
-                showAlert("Cancelled", "Please select a different date.", "info");
-                return;
-              }
-            }
-    
-            const checkboxes = studentsList.querySelectorAll("input[type='checkbox']");
-            const checkedBoxes = studentsList.querySelectorAll("input:checked");
-            const totalStudents = checkboxes.length;
-            const presentStudents = checkedBoxes.length;
-            const absentStudents = totalStudents - presentStudents;
-    
-            const confirmMessage = `Subject: ${subject}\nDate: ${date}\nClass: ${window.selectedStream} Semester ${window.selectedSem}\n\nTotal Students: ${totalStudents}\nPresent: ${presentStudents}\nAbsent: ${absentStudents}\n\nWhatsApp notifications will be sent to parents.\n\nProceed?`;
-    
-            const finalConfirm = await showConfirmDialog("Confirm Submission", confirmMessage, "info");
-    
-            if (!finalConfirm) {
-              showAlert("Cancelled", "Attendance submission cancelled.", "info");
-              return;
-            }
-    
-            const studentsPresent = Array.from(checkedBoxes).map(cb => cb.value);
-    
-            submitBtn.innerHTML = '<span class="loading-spinner"></span> Submitting...';
-            
-            const res = await fetch(
-              `/api/attendance/${window.selectedStream}/sem${window.selectedSem}/${encodeURIComponent(subject)}`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ date, subject, studentsPresent })
-              }
-            );
-    
-            const result = await res.json();
-    
-            if (res.ok) {
-              const { summary } = result;
-              const successMessage = `✅ Attendance Submitted Successfully!\n\nSubject: ${subject}\nDate: ${date}\n\nTotal Students: ${summary?.totalStudents || totalStudents}\nPresent: ${summary?.presentStudents || presentStudents}\nAbsent: ${summary?.absentStudents || absentStudents}`;
-              
-              showAlert("Success", successMessage, "success");
-              
-              subjectMark.value = "";
-              if (dateInput) dateInput.value = new Date().toISOString().split("T")[0];
-              
-              await loadAllStudents(window.selectedStream, window.selectedSem);
-              
-            } else {
-              showAlert("Submission Failed", result.message || "Unknown error occurred.", "error");
-            }
-    
-          } catch (err) {
-            console.error("Submission error:", err);
-            showAlert("Network Error", "Failed to submit attendance. Please check your connection.", "error");
-          } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<span class="check-icon"></span> Submit Attendance';
-          }
-        });
-      }
-    }
-    
-    // ✅ TAB BUTTONS SETUP
-    function setupTabButtons() {
-      if (markBtn) {
-        markBtn.addEventListener('click', () => showTab('markTab'));
-      }
-      if (viewBtn) {
-        viewBtn.addEventListener('click', () => showTab('viewTab'));
-      }
-    }
-    
-    // ✅ VIEW BUTTONS SETUP
-    function setupViewButtons() {
-      const loadRegisterBtn = document.getElementById("loadRegisterBtn");
-      const saveChangesBtn = document.getElementById("saveChangesBtn");
-    
-      if (loadRegisterBtn) {
-        loadRegisterBtn.addEventListener("click", loadAttendanceRegister);
-      }
-    
-      if (saveChangesBtn) {
-        saveChangesBtn.addEventListener("click", saveAttendanceChanges);
-      }
-    
-      if (subjectView) {
-        subjectView.addEventListener("change", () => {
-          const subject = subjectView.value;
-          const registerTable = document.getElementById("registerTable");
-          const saveBtn = document.getElementById("saveChangesBtn");
-          const exportExcelBtn = document.getElementById("exportExcelBtn");
-    
-          if (registerTable) registerTable.classList.add("hidden");
-          if (saveBtn) saveBtn.classList.add("hidden");
-          if (exportExcelBtn) exportExcelBtn.classList.add("hidden");
-        });
-      }
-    }
-    
-    // ✅ LOAD ATTENDANCE REGISTER
-    async function loadAttendanceRegister() {
-      const subject = subjectView.value;
-      const registerTable = document.getElementById("registerTable");
-      const saveBtn = document.getElementById("saveChangesBtn");
-      const exportExcelBtn = document.getElementById("exportExcelBtn");
-      const loadBtn = document.getElementById("loadRegisterBtn");
-    
-      if (!subject) {
-        showAlert("Missing Subject", "Please select a subject.", "error");
-        return;
-      }
-    
-      try {
-        loadBtn.disabled = true;
-        loadBtn.innerHTML = '<span class="loading-spinner"></span> Loading...';
-    
-        console.log(`📊 Loading register for: ${subject}`);
-        
-        // Get stream and semester from selected option (for teacher subjects)
-        const selectedOption = subjectView.options[subjectView.selectedIndex];
-        const streamFromOption = selectedOption.getAttribute('data-stream');
-        const semesterFromOption = selectedOption.getAttribute('data-semester');
-        
-        // Use stream/semester from option if available (teacher mode), otherwise use global variables
-        const streamToUse = streamFromOption || selectedStream;
-        const semesterToUse = semesterFromOption || selectedSem;
-        
-        console.log(`📊 Using stream: ${streamToUse}, semester: ${semesterToUse} for subject: ${subject}`);
-    
-        const res = await fetch(`/api/attendance-register/${streamToUse}/sem${semesterToUse}/${encodeURIComponent(subject)}`);
-        
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-    
-        const data = await res.json();
-        console.log('📊 Register response:', data);
-    
-        let students, attendanceMap, subjectInfo;
-        
-        if (data.success && data.data) {
-          ({ students, attendanceMap, subjectInfo } = data.data);
-        } else if (data.students && data.attendanceMap) {
-          ({ students, attendanceMap } = data);
-          subjectInfo = data.subjectInfo;
-        } else {
-          throw new Error(data.message || 'Failed to load register');
-        }
-    
-        const dates = Object.keys(attendanceMap).sort();
-    
-        console.log(`✅ Loaded: ${students.length} students, ${dates.length} dates`);
-    
-        if (students.length === 0) {
-          const message = subjectInfo?.isLanguageSubject ? 
-            `No students found who chose ${subjectInfo.languageType} language` :
-            'No students found for this subject';
-          showAlert("No Students", message, "warning");
-          return;
-        }
-    
-        await renderAttendanceTable(students, dates, attendanceMap);
-    
-        if (registerTable) registerTable.classList.remove("hidden");
-        if (saveBtn) saveBtn.classList.remove("hidden");
-        if (exportExcelBtn) exportExcelBtn.classList.remove("hidden");
-    
-        const avgAttendance = students.length > 0 ?
-          (students.reduce((sum, stu) => {
-            const attendedCount = dates.filter(date => attendanceMap[date]?.includes(stu.studentID)).length;
-            return sum + (dates.length > 0 ? (attendedCount / dates.length) * 100 : 0);
-          }, 0) / students.length).toFixed(1) : 0;
-    
-        let successMessage = `Register loaded successfully!\n\n`;
-        successMessage += `Subject: ${subject}\n`;
-        if (subjectInfo?.isLanguageSubject) {
-          successMessage += `Language: ${subjectInfo.languageType} students only\n`;
-        }
-        successMessage += `Students: ${students.length}\n`;
-        successMessage += `Days: ${dates.length}\n`;
-        successMessage += `Average Attendance: ${avgAttendance}%`;
-    
-        showAlert("Success", successMessage, "success");
-    
-      } catch (err) {
-        console.error("Error loading attendance register:", err);
-        showAlert("Loading Error", `Failed to load register: ${err.message}`, "error");
-      } finally {
-        loadBtn.disabled = false;
-        loadBtn.innerHTML = '<i class="fas fa-table mr-2"></i>Load Register';
-      }
-    }
-    
-    // ✅ RENDER ATTENDANCE TABLE
-    async function renderAttendanceTable(students, dates, attendanceMap) {
-      if (!viewThead || !viewTbody) {
-        console.error('❌ Table elements not found');
-        return;
-      }
-    
-      // Sort students by Student ID
-      const sortedStudents = students.sort((a, b) => {
-        const aNum = parseInt(a.studentID);
-        const bNum = parseInt(b.studentID);
-        
-        if (!isNaN(aNum) && !isNaN(bNum) && 
-            a.studentID === aNum.toString() && 
-            b.studentID === bNum.toString()) {
-          return aNum - bNum;
-        }
-        
-        return a.studentID.localeCompare(b.studentID, undefined, {
-          numeric: true,
-          sensitivity: 'base'
-        });
-      });
-    
-      // Create table header
-      viewThead.innerHTML = `
-        <tr class="bg-gradient-to-r from-indigo-500 to-blue-500 text-white">
-          <th class="p-3 text-center font-bold text-sm">#</th>
-          <th class="p-3 text-left font-bold text-sm">Student ID</th>
-          <th class="p-3 text-left font-bold text-sm">Name</th>
-          ${dates.map(d => {
-            const dateObj = new Date(d);
-            const displayDate = dateObj.toLocaleDateString('en-GB', {day: '2-digit', month: '2-digit'});
-            const title = dateObj.toLocaleDateString('en-IN', { 
-              weekday: 'short', 
-              month: 'short', 
-              day: 'numeric' 
-            });
-            
-            return `<th class="p-2 text-center font-semibold text-xs min-w-12" data-date="${d}" title="${title}">${displayDate}</th>`;
-          }).join('')}
-          
-          <th class="p-3 text-center font-bold bg-gray-700 text-xs">Total</th>
-          <th class="p-3 text-center font-bold bg-blue-700 text-xs">Present</th>
-          <th class="p-3 text-center font-bold bg-green-700 text-xs">%</th>
+
+    function showLoadingState() {
+      studentsList.innerHTML = `
+        <tr>
+          <td colspan="4" style="padding: 20px; text-align: center; color: #22c55e; border-right: none;">
+            <i class="fas fa-spinner fa-spin"></i> Loading students from database...
+          </td>
         </tr>
       `;
-    
-      // Create table body
-      viewTbody.innerHTML = "";
-      
-      sortedStudents.forEach((stu, index) => {
-        let attended = 0;
-        const row = [];
-    
-        row.push(`<td class="p-3 text-center font-medium">${index + 1}</td>`);
-        row.push(`
-          <td class="p-3 font-medium">
-            <span class="text-xs font-bold text-indigo-600 bg-indigo-100 px-2 py-1 rounded-md whitespace-nowrap">${stu.studentID}</span>
+      updateCounts(0, 0);
+    }
+
+    function showErrorState(message) {
+      studentsList.innerHTML = `
+        <tr>
+          <td colspan="4" style="padding: 20px; text-align: center; color: #ef4444; border-right: none;">
+            <i class="fas fa-exclamation-triangle"></i> ${message}
           </td>
-        `);
-        row.push(`
-          <td class="p-3 font-medium">
-            <span class="text-gray-800 text-sm">${stu.name}</span>
-          </td>
-        `);
-    
-        dates.forEach(date => {
-          const present = attendanceMap[date]?.includes(stu.studentID);
-          if (present) attended++;
-          
-          row.push(`
-            <td class="p-2 text-center">
-              <input 
-                type="checkbox" 
-                ${present ? "checked" : ""} 
-                data-date="${date}"
-                data-student-id="${stu.studentID}"
-                class="form-checkbox h-4 w-4 text-indigo-600 rounded focus:ring-indigo-400 transition duration-200"
-                onchange="markUnsavedChanges()"
-              />
-            </td>
-          `);
-        });
-    
-        const total = dates.length;
-        const percentage = total ? ((attended / total) * 100).toFixed(1) : "0.0";
-        const percentClass = percentage < 75 ? 'text-red-600 bg-red-50' : 
-                            percentage >= 85 ? 'text-green-600 bg-green-50' : 
-                            'text-yellow-600 bg-yellow-50';
-    
-        row.push(`<td class="p-3 text-center font-semibold text-gray-700 bg-gray-50">${total}</td>`);
-        row.push(`<td class="p-3 text-center font-semibold text-blue-600 bg-blue-50">${attended}</td>`);
-        row.push(`<td class="p-3 text-center font-bold ${percentClass} rounded-md">${percentage}%</td>`);
-    
-        const tr = document.createElement('tr');
-        tr.className = `hover:bg-indigo-50 transition duration-200 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`;
-        tr.dataset.studentId = stu.studentID;
-        tr.innerHTML = row.join("");
-        
-        viewTbody.appendChild(tr);
-      });
-    
-      console.log(`✅ Table rendered with ${sortedStudents.length} students (sorted by Student ID)`);
+        </tr>
+      `;
+      updateCounts(0, 0);
     }
-    
-    // ✅ FIXED: SAVE ATTENDANCE CHANGES WITH PROPER DATE VALIDATION
-    async function saveAttendanceChanges() {
-      const subject = subjectView.value;
-      const saveBtn = document.getElementById("saveChangesBtn");
-    
-      if (!subject) {
-        showAlert("Missing Subject", "Please select a subject.", "error");
-        return;
-      }
-    
-      try {
-        saveBtn.disabled = true;
-        saveBtn.innerHTML = '<span class="loading-spinner"></span> Saving...';
-    
-        const confirmUpdate = await showConfirmDialog(
-          "Confirm Update",
-          `Subject: ${subject}\n\nThis will overwrite the existing attendance data.\nAre you sure you want to continue?`,
-          "warning"
-        );
-    
-        if (!confirmUpdate) {
-          showAlert("Cancelled", "Update cancelled.", "info");
-          return;
-        }
-    
-        const rows = document.querySelectorAll("#view-tbody tr");
-        const dateHeaders = Array.from(document.querySelectorAll("#view-thead th[data-date]"))
-          .map(th => th.dataset.date)
-          .filter(date => date && date !== 'undefined' && date !== 'null');
-    
-        console.log(`📅 Found ${dateHeaders.length} date headers:`, dateHeaders);
-    
-        if (dateHeaders.length === 0) {
-          showAlert("No Dates", "No valid date columns found. Please reload the register.", "error");
-          return;
-        }
-    
-        const attendanceMap = {};
-        dateHeaders.forEach(date => (attendanceMap[date] = []));
-    
-        rows.forEach((row, rowIndex) => {
-          const studentID = row.dataset.studentId;
-          
-          if (!studentID) {
-            console.warn(`⚠️ Row ${rowIndex} missing studentId`);
-            return;
-          }
-    
-          const checkboxes = row.querySelectorAll("input[type='checkbox'][data-date]");
-          
-          checkboxes.forEach(cb => {
-            const cbDate = cb.dataset.date;
-            
-            if (cb.checked && cbDate && attendanceMap.hasOwnProperty(cbDate)) {
-              attendanceMap[cbDate].push(studentID);
-            }
-          });
-        });
-    
-        console.log(`📊 Attendance data to save:`, attendanceMap);
-    
-        // ✅ FIXED: Use the proper validation function
-        let validationResult;
-        
-        try {
-          // Try the main validation function
-          validationResult = validateAttendanceDates(Object.keys(attendanceMap));
-        } catch (validationError) {
-          console.warn("⚠️ Main validation failed, using simple validation:", validationError);
-          // Fallback to simple validation
-          validationResult = validateAttendanceDatesSimple(Object.keys(attendanceMap));
-        }
-        
-        const { invalidDates, validatedDates } = validationResult;
-        
-        if (invalidDates.length > 0) {
-          showAlert("Invalid Dates", `Found invalid date formats: ${invalidDates.map(d => d.date).join(', ')}`, "error");
-          return;
-        }
-    
-        // Send to server
-        const res = await fetch(`/api/update-attendance/${selectedStream}/sem${selectedSem}/${encodeURIComponent(subject)}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ attendanceMap })
-        });
-    
-        let result;
-        try {
-          result = await res.json();
-        } catch (parseError) {
-          console.error("❌ JSON Parse Error:", parseError);
-          throw new Error("Invalid response from server");
-        }
-    
-        console.log(`📊 Server response:`, result);
-    
-        if (res.ok && result.success) {
-          const totalDates = Object.keys(attendanceMap).length;
-          const totalEntries = Object.values(attendanceMap).reduce((sum, arr) => sum + arr.length, 0);
-          
-          showAlert("Success", `✅ Attendance updated successfully!\n\nUpdated: ${totalDates} dates\nTotal entries: ${totalEntries}\n\nRegister will refresh automatically.`, "success");
-          
-          saveBtn.classList.add("hidden");
-          saveBtn.classList.remove("animate-pulse", "bg-yellow-500", "hover:bg-yellow-600");
-          saveBtn.classList.add("bg-yellow-500", "hover:bg-yellow-600");
-          
-          console.log("🔄 Silently refreshing register...");
-          await silentReloadRegister(subject);
-          console.log("✅ Register refreshed silently");
-          
-        } else {
-          const errorMsg = result.message || result.error || "Unknown error occurred.";
-          showAlert("Update Failed", errorMsg, "error");
-        }
-    
-      } catch (err) {
-        console.error("❌ Update error:", err);
-        showAlert("Network Error", `Failed to update attendance: ${err.message}`, "error");
-      } finally {
-        saveBtn.disabled = false;
-        saveBtn.innerHTML = '<i class="fas fa-save mr-1"></i>Save Changes';
-      }
-    }
-    
-    // ✅ SILENT RELOAD FUNCTION
-    async function silentReloadRegister(subject) {
-      try {
-        console.log(`🔄 Silent reload for: ${subject}`);
-    
-        const res = await fetch(`/api/attendance-register/${selectedStream}/sem${selectedSem}/${encodeURIComponent(subject)}`);
-        
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-    
-        const data = await res.json();
-        console.log('📊 Silent reload response:', data);
-        
-        let students, attendanceMap, subjectInfo;
-        
-        if (data.success && data.data) {
-          ({ students, attendanceMap, subjectInfo } = data.data);
-        } else if (data.students && data.attendanceMap) {
-          ({ students, attendanceMap } = data);
-          subjectInfo = data.subjectInfo;
-        } else {
-          throw new Error(data.message || 'Invalid response format');
-        }
-    
-        const dates = Object.keys(attendanceMap).sort();
-    
-        console.log(`✅ Silent reload: ${students.length} students, ${dates.length} dates`);
-    
-        if (students.length === 0) {
-          console.warn('⚠️ No students found in silent reload');
-          return;
-        }
-    
-        await renderAttendanceTable(students, dates, attendanceMap);
-    
-      } catch (error) {
-        console.error("❌ Silent reload failed:", error);
-      }
-    }
-    
-    // ✅ HELPER FUNCTIONS
-    function markUnsavedChanges() {
-      const saveBtn = document.getElementById("saveChangesBtn");
-      if (saveBtn) {
-        saveBtn.classList.remove("hidden");
-        saveBtn.classList.add("animate-pulse", "bg-red-500", "hover:bg-red-600");
-        saveBtn.classList.remove("bg-yellow-500", "hover:bg-yellow-600", "bg-indigo-500", "hover:bg-indigo-600");
-        saveBtn.innerHTML = '<i class="fas fa-save mr-1"></i>Save Changes *';
-      }
-    }
-    
-    async function checkAttendanceExists(stream, sem, subject, date) {
-      try {
-        const response = await fetch(`/api/check-attendance/${stream}/sem${sem}/${encodeURIComponent(subject)}/${date}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const result = await response.json();
-        return result.exists || false;
-      } catch (error) {
-        console.error("Error checking attendance:", error);
-        return false;
-      }
-    }
-    
-    function isSunday(dateString) {
-      const date = new Date(dateString);
-      return date.getDay() === 0;
-    }
-    
-    function isSaturday(dateString) {
-      const date = new Date(dateString);
-      return date.getDay() === 6;
-    }
-    
-    function isWeekend(dateString) {
-      return isSunday(dateString) || isSaturday(dateString);
-    }
-    
-    function addMenuClickListener() {
-      if (!menuClickListenerAdded) {
-        document.addEventListener("click", (event) => {
-          const menu = document.getElementById("mobileMenu");
-          const toggle = document.querySelector(".menu-icon");
-          if (menu && toggle && !menu.contains(event.target) && !toggle.contains(event.target)) {
-            menu.classList.add("hidden");
-            menu.classList.add("-translate-x-full");
-          }
-        });
-        menuClickListenerAdded = true;
-      }
-    }
-    
-    function backToSemesters() {
-      document.getElementById("markTab").classList.add("hidden");
-      document.getElementById("viewTab").classList.add("hidden");
-      document.getElementById("tabs").classList.add("hidden");
-      document.getElementById("semesterSection").classList.remove("hidden");
-    }
-    
-    window.toggleMenu = () => {
-      const menu = document.getElementById("mobileMenu");
-      if (menu) {
-        menu.classList.toggle("hidden");
-        menu.classList.toggle("-translate-x-full");
-      }
-    };
-    
-    // ✅ ENHANCED ALERT FUNCTIONS
-    function showAlert(title, message, type = "info") {
-      const prefixes = {
-        success: "✅ SUCCESS: ",
-        error: "❌ ERROR: ",
-        warning: "⚠️ WARNING: ",
-        info: "ℹ️ INFO: "
-      };
-      
-      alert(`${prefixes[type]}${title}\n\n${message}`);
-    }
-    
-    async function showConfirmDialog(title, message, type = "info") {
-      const prefixes = {
-        success: "✅ CONFIRM: ",
-        error: "❌ CONFIRM: ",
-        warning: "⚠️ CONFIRM: ",
-        info: "❓ CONFIRM: "
-      };
-      
-      return confirm(`${prefixes[type]}${title}\n\n${message}`);
-    }
-    
-    // ✅ EXCEL/CSV EXPORT FUNCTIONALITY
-    function initializeExcelExport() {
-      const exportExcelBtn = document.getElementById("exportExcelBtn");
-      
-      if (!exportExcelBtn) {
-        console.warn("⚠️ Export Excel button not found");
-        return;
-      }
-    
-      exportExcelBtn.addEventListener("click", async () => {
-        console.log("🚀 Excel export started");
-        
-        const originalText = exportExcelBtn.innerHTML;
-        exportExcelBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Exporting...';
-        exportExcelBtn.disabled = true;
-    
-        try {
-          if (typeof XLSX === 'undefined') {
-            console.log("📄 XLSX not available, creating CSV export instead");
-            await exportToCSV();
-            return;
-          }
-          
-          const table = document.querySelector("#registerTable table") || 
-                       document.querySelector("#registerTable") ||
-                       document.querySelector("table");
-          
-          if (!table) {
-            throw new Error("No attendance table found. Please load the register first.");
-          }
-    
-          const tbody = table.querySelector("tbody");
-          const rows = tbody ? tbody.querySelectorAll("tr") : [];
-          
-          if (rows.length === 0) {
-            throw new Error("No student data found. Please load attendance register first.");
-          }
-    
-          const subject = (window.subjectView && subjectView.value) ? subjectView.value : "Attendance";
-          const stream = window.selectedStream || "Unknown";
-          const sem = window.selectedSem || "0";
-    
-          const processedData = [];
-          
-          const headerRow = ["#", "Student ID", "Name"];
-          const dateHeaders = table.querySelectorAll("th[data-date]");
-          
-          dateHeaders.forEach(header => {
-            if (header.dataset.date) {
-              const date = new Date(header.dataset.date);
-              if (!isNaN(date.getTime())) {
-                headerRow.push(date.toLocaleDateString('en-GB', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: '2-digit'
-                }));
-              }
-            }
-          });
-          
-          headerRow.push("Total", "Present", "Percentage");
-          processedData.push(headerRow);
-    
-          rows.forEach((row, rowIndex) => {
-            try {
-              const cells = row.querySelectorAll("td");
-              if (cells.length < 3) return;
-    
-              let studentID = `Student_${rowIndex + 1}`;
-              let studentName = "Unknown";
-              let attended = 0;
-              let totalDays = 0;
-    
-              if (cells[1]) {
-                const span = cells[1].querySelector('span');
-                studentID = span ? span.textContent.trim() : cells[1].textContent.trim();
-              }
-              
-              if (cells[2]) {
-                const span = cells[2].querySelector('span');
-                studentName = span ? span.textContent.trim() : cells[2].textContent.trim();
-              }
-    
-              const dataRow = [rowIndex + 1, studentID, studentName];
-    
-              const checkboxes = row.querySelectorAll("input[type='checkbox']");
-              checkboxes.forEach(checkbox => {
-                totalDays++;
-                const isPresent = checkbox.checked;
-                if (isPresent) attended++;
-                dataRow.push(isPresent ? "Present" : "Absent");
-              });
-    
-              const percentage = totalDays > 0 ? (attended / totalDays) * 100 : 0;
-              
-              dataRow.push(totalDays, attended, `${percentage.toFixed(1)}%`);
-              processedData.push(dataRow);
-    
-            } catch (e) {
-              console.warn(`⚠️ Error processing row ${rowIndex}:`, e);
-            }
-          });
-    
-          if (processedData.length <= 1) {
-            throw new Error("No valid student data found.");
-          }
-    
-          const ws = XLSX.utils.aoa_to_sheet(processedData);
-          
-          ws['!cols'] = [
-            { wch: 5 },  // #
-            { wch: 15 }, // Student ID
-            { wch: 25 }, // Name
-            ...Array(dateHeaders.length).fill({ wch: 10 }), // Dates
-            { wch: 8 },  // Total
-            { wch: 10 }, // Present
-            { wch: 10 }  // %
-          ];
-    
-          const wb = XLSX.utils.book_new();
-          const sheetName = `${subject.substring(0, 15)}_Attendance`.substring(0, 31);
-          XLSX.utils.book_append_sheet(wb, ws, sheetName);
-    
-          const now = new Date();
-          const dateStr = now.toLocaleDateString('en-GB').replace(/\//g, '-');
-          const timeStr = now.toLocaleTimeString('en-GB', { 
-            hour12: false, 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          }).replace(/:/g, '');
-          
-          const filename = `${subject.replace(/[^\w]/g, '_')}_${stream.replace(/\s/g, '_')}_S${sem}_${dateStr}_${timeStr}.xlsx`;
-    
-          XLSX.writeFile(wb, filename);
-    
-          showAlert("Export Success", `✅ Excel exported successfully!\n\n📚 Subject: ${subject}\n📁 File: ${filename}`, "success");
-    
-        } catch (error) {
-          console.error("❌ Excel export error:", error);
-          console.log("📄 Falling back to CSV export");
-          await exportToCSV();
-          
-        } finally {
-          exportExcelBtn.innerHTML = originalText;
-          exportExcelBtn.disabled = false;
+
+    // ✅ EVENT LISTENERS
+    function setupEventListeners() {
+      // Event delegation for checkboxes
+      studentsList.addEventListener('change', function(event) {
+        if (event.target && event.target.matches('input[type="checkbox"]')) {
+          const checkboxes = studentsList.querySelectorAll('input[type="checkbox"]');
+          const total = checkboxes.length;
+          const present = Array.from(checkboxes).filter(cb => cb.checked).length;
+          updateCounts(present, total - present);
+          saveToLocalStorage();
         }
       });
-    
-      async function exportToCSV() {
-        try {
-          const table = document.querySelector("#registerTable table");
-          if (!table) throw new Error("No table found");
-    
-          const rows = table.querySelectorAll("tbody tr");
-          if (rows.length === 0) throw new Error("No data found");
-    
-          let csvContent = "data:text/csv;charset=utf-8,";
-          
-          csvContent += "#,Student ID,Name";
-          const dateHeaders = table.querySelectorAll("th[data-date]");
-          dateHeaders.forEach(header => {
-            if (header.dataset.date) {
-              const date = new Date(header.dataset.date);
-              csvContent += "," + date.toLocaleDateString('en-GB', {
-                day: '2-digit',
-                month: '2-digit',
-                year: '2-digit'
-              });
-            }
-          });
-          csvContent += ",Total,Present,Percentage\n";
-    
-          rows.forEach((row, index) => {
-            const cells = row.querySelectorAll("td");
-            if (cells.length < 3) return;
-    
-            let studentID = cells[1] ? cells[1].textContent.trim() : `Student_${index + 1}`;
-            let studentName = cells[2] ? cells[2].textContent.trim() : "Unknown";
-            let attended = 0;
-            let totalDays = 0;
-    
-            studentID = studentID.replace(/,/g, ' ');
-            studentName = studentName.replace(/,/g, ' ');
-    
-            let rowData = `${index + 1},"${studentID}","${studentName}"`;
-    
-            const checkboxes = row.querySelectorAll("input[type='checkbox']");
-            checkboxes.forEach(checkbox => {
-              totalDays++;
-              const isPresent = checkbox.checked;
-              if (isPresent) attended++;
-              rowData += "," + (isPresent ? "Present" : "Absent");
-            });
-    
-            const percentage = totalDays > 0 ? (attended / totalDays) * 100 : 0;
-            rowData += `,${totalDays},${attended},${percentage.toFixed(1)}%\n`;
-            
-            csvContent += rowData;
-          });
-    
-          const encodedUri = encodeURI(csvContent);
-          const link = document.createElement("a");
-          link.setAttribute("href", encodedUri);
-          
-          const subject = (window.subjectView && subjectView.value) ? subjectView.value : "Attendance";
-          const stream = window.selectedStream || "Unknown";
-          const sem = window.selectedSem || "0";
-          const now = new Date();
-          const dateStr = now.toLocaleDateString('en-GB').replace(/\//g, '-');
-          
-          const filename = `${subject.replace(/[^\w]/g, '_')}_${stream.replace(/\s/g, '_')}_S${sem}_${dateStr}.csv`;
-          link.setAttribute("download", filename);
-          
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-    
-          showAlert("CSV Export Success", `✅ Data exported as CSV!\n\n📚 Subject: ${subject}\n📁 File: ${filename}`, "success");
-    
-        } catch (error) {
-          console.error("❌ CSV export error:", error);
-          showAlert("Export Error", `❌ Export failed: ${error.message}`, "error");
+
+      // Subject dropdown change (only for non-preselected)
+      subjectSelect.addEventListener('change', async () => {
+        if (!isPreSelectedSubject && subjectSelect.value) {
+          try {
+            const response = await fetch(`/api/students/subject/${encodeURIComponent(subjectSelect.value)}`);
+            const data = await response.json();
+            displayStudents(data.students || []);
+          } catch (error) {
+            showErrorState('Error loading students');
+          }
         }
-      }
+        saveToLocalStorage();
+      });
+
+      // Date change
+      dateInput.addEventListener('change', () => {
+        const selectedDate = dateInput.value;
+        const today = new Date().toISOString().split('T')[0];
+        
+        if (selectedDate > today) {
+          alert('⚠️ Future dates are not allowed!');
+          dateInput.value = today;
+        }
+        
+        saveToLocalStorage();
+      });
+
+      // Submit button
+      setupSubmitButton();
     }
-    
-    // ✅ SUBJECT MANAGEMENT FUNCTIONALITY
-    let subjectsToAdd = [];
-    
-    function addSubjectToList() {
-      const subjectInput = document.getElementById('newSubject');
-      const subjectName = subjectInput.value.trim();
+
+    // 🎉 SUCCESS CONFIRMATION DIALOG
+function showSubmittedConfirmation(subject, date, presentStudents, totalStudents) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 29, 57, 0.7); z-index: 10000;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    backdrop-filter: blur(8px);
+    animation: fadeIn 0.3s ease;
+  `;
+
+  overlay.innerHTML = `
+    <div style="
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-radius: 20px; 
+      padding: 28px; 
+      max-width: 340px; 
+      width: 100%;
+      box-shadow: 0 20px 40px rgba(10, 65, 116, 0.3); 
+      text-align: center;
+      border: 1px solid rgba(189, 216, 233, 0.4);
+      position: relative;
+      overflow: hidden;
+      animation: slideUp 0.4s ease;
+    ">
+      <!-- Success Animation Circle -->
+      <div style="
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--present), #66bb6a);
+        margin: 0 auto 20px auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+        animation: successPulse 0.6s ease;
+      ">
+        <i class="fas fa-check" style="
+          color: white; 
+          font-size: 2.2rem;
+          animation: checkMark 0.8s ease 0.2s both;
+        "></i>
+      </div>
       
-      if (!subjectName) {
-        showAlert('Error', 'Subject name cannot be empty', 'error');
-        return;
-      }
+      <!-- Title -->
+      <h3 style="
+        color: var(--navy-deep); 
+        margin: 0 0 16px 0; 
+        font-size: 1.3rem; 
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      ">Attendance Submitted!</h3>
       
-      if (subjectName.length < 2) {
-        showAlert('Error', 'Subject name must be at least 2 characters long', 'error');
-        return;
-      }
-      
-      if (subjectsToAdd.some(s => s.toLowerCase() === subjectName.toLowerCase())) {
-        showAlert('Warning', 'Subject already added to the list', 'warning');
-        return;
-      }
-      
-      subjectsToAdd.push(subjectName);
-      updateSubjectsList();
-      subjectInput.value = '';
-      subjectInput.focus();
-      
-      console.log('📚 Subject added to list:', subjectName);
-    }
-    
-    function updateSubjectsList() {
-      const listDiv = document.getElementById('subjectsList');
-      
-      if (subjectsToAdd.length === 0) {
-        listDiv.innerHTML = '<p class="text-gray-500 text-center py-8 text-lg">📚 No subjects added yet</p>';
-        return;
-      }
-      
-      listDiv.innerHTML = subjectsToAdd.map((subject, index) => `
-        <div class="flex justify-between items-center p-4 bg-blue-50 rounded-xl border border-blue-200 hover:bg-blue-100 transition-all">
-          <span class="font-semibold text-gray-800 text-lg">${subject}</span>
-          <button onclick="removeSubject(${index})" class="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-100 transition-all">
-            <i class="fas fa-trash text-lg"></i>
-          </button>
+      <!-- Success Details -->
+      <div style="
+        background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(102, 187, 106, 0.05) 100%);
+        padding: 16px 20px; 
+        border-radius: 12px; 
+        margin-bottom: 20px;
+        border: 1px solid rgba(76, 175, 80, 0.2);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      ">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+          <i class="fas fa-book" style="color: var(--steel-blue); font-size: 1rem; width: 18px;"></i>
+          <span style="color: var(--navy-deep); font-weight: 600; font-size: 0.9rem;">${subject}</span>
         </div>
-      `).join('');
+        
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+          <i class="fas fa-calendar-check" style="color: var(--steel-blue); font-size: 1rem; width: 18px;"></i>
+          <span style="color: var(--navy-deep); font-weight: 500; font-size: 0.9rem;">${date}</span>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <i class="fas fa-user-check" style="color: var(--present); font-size: 1rem; width: 18px;"></i>
+          <span style="color: var(--present); font-weight: 700; font-size: 1rem;">
+            ${presentStudents}/${totalStudents} Present
+          </span>
+        </div>
+      </div>
+      
+      <!-- Success Message -->
+      <p style="
+        color: rgba(1, 29, 57, 0.7); 
+        font-size: 0.85rem; 
+        margin-bottom: 24px; 
+        line-height: 1.5;
+        font-weight: 500;
+      ">
+        ✨ Your attendance has been successfully recorded. You can submit again if needed.
+      </p>
+      
+      <!-- OK Button -->
+      <button id="okBtn" style="
+        width: 100%;
+        padding: 14px 20px; 
+        border: none; 
+        background: linear-gradient(135deg, var(--present), #66bb6a);
+        color: white; 
+        border-radius: 12px; 
+        font-weight: 700; 
+        cursor: pointer; 
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      ">
+        <i class="fas fa-thumbs-up" style="margin-right: 8px;"></i>
+        Perfect!
+      </button>
+    </div>
+  `;
+
+  // Add animations
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
     
-    function removeSubject(index) {
-      const subjectName = subjectsToAdd[index];
-      subjectsToAdd.splice(index, 1);
-      updateSubjectsList();
-      console.log('🗑️ Subject removed:', subjectName);
+    @keyframes slideUp {
+      from { 
+        opacity: 0; 
+        transform: translateY(30px) scale(0.9); 
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+      }
     }
     
-    async function saveAllSubjects() {
-      console.log('💾 Starting to save subjects...');
-      
-      if (subjectsToAdd.length === 0) {
-        showAlert('Error', 'No subjects to save. Please add at least one subject.', 'error');
-        return;
+    @keyframes successPulse {
+      0% { 
+        transform: scale(0);
+        opacity: 0;
       }
-      
-      if (!window.promotionStream || !window.promotionSemester) {
-        showAlert('Error', 'Please select stream and semester first from the promotion section', 'error');
-        return;
+      50% { 
+        transform: scale(1.1);
+        opacity: 1;
       }
-      
-      const confirmSave = confirm(`💾 Save ${subjectsToAdd.length} subjects for ${window.promotionStream} Semester ${window.promotionSemester}?\n\nSubjects to be added:\n${subjectsToAdd.map(s => `• ${s}`).join('\n')}\n\nContinue?`);
-      
-      if (!confirmSave) {
-        return;
+      100% { 
+        transform: scale(1);
+        opacity: 1;
       }
+    }
+    
+    @keyframes checkMark {
+      0% { 
+        transform: scale(0) rotate(-45deg);
+        opacity: 0;
+      }
+      100% { 
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+
+  document.body.appendChild(overlay);
+
+  // Button hover effect
+  const okBtn = overlay.querySelector('#okBtn');
+  okBtn.addEventListener('mouseenter', () => {
+    okBtn.style.transform = 'translateY(-2px)';
+    okBtn.style.boxShadow = '0 8px 25px rgba(76, 175, 80, 0.4)';
+  });
+  okBtn.addEventListener('mouseleave', () => {
+    okBtn.style.transform = 'translateY(0)';
+    okBtn.style.boxShadow = '0 6px 20px rgba(76, 175, 80, 0.3)';
+  });
+
+  // Event listeners
+  okBtn.onclick = () => {
+    overlay.style.animation = 'fadeOut 0.3s ease';
+    setTimeout(() => overlay.remove(), 300);
+  };
+  
+  overlay.onclick = (e) => {
+    if (e.target === overlay) {
+      overlay.style.animation = 'fadeOut 0.3s ease';
+      setTimeout(() => overlay.remove(), 300);
+    }
+  };
+
+  // Auto close after 4 seconds
+  setTimeout(() => {
+    if (overlay.parentElement) {
+      overlay.style.animation = 'fadeOut 0.3s ease';
+      setTimeout(() => overlay.remove(), 300);
+    }
+  }, 4000);
+}
+
+// 💬 ENHANCED CONFIRM DIALOG WITH CLEAN LAYOUT
+function showConfirm(message, subject, date, totalStudents, presentStudents, absentStudents, onConfirm) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 29, 57, 0.7); z-index: 10000;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    backdrop-filter: blur(5px);
+  `;
+
+  overlay.innerHTML = `
+    <div style="
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-radius: 16px; 
+      padding: 24px; 
+      max-width: 320px; 
+      width: 100%;
+      box-shadow: 0 15px 35px rgba(10, 65, 116, 0.3); 
+      text-align: left;
+      border: 1px solid rgba(189, 216, 233, 0.4);
+    ">
+      <!-- Header -->
+      <div style="text-align: center; margin-bottom: 20px;">
+        <i class="fas fa-question-circle" style="color: var(--steel-blue); font-size: 2.5rem; margin-bottom: 12px;"></i>
+        <h3 style="color: var(--navy-deep); margin: 0; font-size: 1.1rem; font-weight: 700;">Submit Attendance?</h3>
+      </div>
       
-      const saveButton = document.querySelector('button[onclick="saveAllSubjects()"]');
-      const originalText = saveButton.innerHTML;
-      saveButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
-      saveButton.disabled = true;
-      
-      try {
-        const response = await fetch(`/api/setup-subjects/${window.promotionStream}/sem${window.promotionSemester}`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({ 
-            subjects: subjectsToAdd 
-          })
-        });
+      <!-- Details -->
+      <div style="margin-bottom: 20px; line-height: 1.6;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+          <i class="fas fa-book" style="color: var(--steel-blue); font-size: 1rem; width: 16px;"></i>
+          <span style="color: var(--navy-deep); font-weight: 600; font-size: 0.9rem;">${subject}</span>
+        </div>
         
-        const result = await response.json();
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+          <i class="fas fa-calendar-alt" style="color: var(--steel-blue); font-size: 1rem; width: 16px;"></i>
+          <span style="color: var(--navy-deep); font-weight: 500; font-size: 0.9rem;">${date}</span>
+        </div>
         
-        if (response.ok && result.success) {
-          let successMessage = `✅ Subjects Setup Complete!\n\n`;
-          successMessage += `Stream: ${result.stream}\n`;
-          successMessage += `Semester: ${result.semester}\n`;
-          successMessage += `Successfully Added: ${result.added}/${result.total}`;
-          
-          showAlert("Success", successMessage, "success");
-          
-          subjectsToAdd = [];
-          updateSubjectsList();
-          
-        } else {
-          throw new Error(result.message || 'Unknown server error');
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+          <i class="fas fa-users" style="color: var(--steel-blue); font-size: 1rem; width: 16px;"></i>
+          <span style="color: var(--navy-deep); font-weight: 500; font-size: 0.9rem;">Total: ${totalStudents}</span>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+          <i class="fas fa-user-check" style="color: var(--present); font-size: 1rem; width: 16px;"></i>
+          <span style="color: var(--present); font-weight: 600; font-size: 0.9rem;">Present: ${presentStudents}</span>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fas fa-user-times" style="color: var(--absent); font-size: 1rem; width: 16px;"></i>
+          <span style="color: var(--absent); font-weight: 600; font-size: 0.9rem;">Absent: ${absentStudents}</span>
+        </div>
+      </div>
+      
+      <!-- Note -->
+      <div style="
+        background: linear-gradient(135deg, rgba(123, 189, 232, 0.1) 0%, rgba(189, 216, 233, 0.05) 100%);
+        padding: 10px 12px; border-radius: 8px; margin-bottom: 20px;
+        border-left: 3px solid var(--light-blue);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      ">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-info-circle" style="color: var(--light-blue); font-size: 0.9rem;"></i>
+          <span style="color: var(--navy-deep); font-size: 0.8rem; font-weight: 500;">Multiple submissions allowed</span>
+        </div>
+      </div>
+      
+      <!-- Buttons -->
+      <div style="display: flex; gap: 12px;">
+        <button id="cancelBtn" style="
+          flex: 1; padding: 12px 16px; 
+          border: 2px solid var(--steel-blue); 
+          background: rgba(255, 255, 255, 0.9); 
+          color: var(--steel-blue); 
+          border-radius: 8px; 
+          font-weight: 600; cursor: pointer; font-size: 0.9rem;
+          transition: all 0.2s ease;
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+        ">
+          <i class="fas fa-times" style="margin-right: 6px;"></i>Cancel
+        </button>
+        
+        <button id="confirmBtn" style="
+          flex: 1; padding: 12px 16px; border: none; 
+          background: linear-gradient(135deg, var(--navy-deep), var(--steel-blue)); 
+          color: white; border-radius: 8px; 
+          font-weight: 600; cursor: pointer; font-size: 0.9rem;
+          transition: all 0.2s ease;
+          box-shadow: 0 4px 12px rgba(10, 65, 116, 0.3);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+        ">
+          <i class="fas fa-paper-plane" style="margin-right: 6px;"></i>Submit
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  // Button hover effects
+  const cancelBtn = overlay.querySelector('#cancelBtn');
+  const confirmBtn = overlay.querySelector('#confirmBtn');
+
+  cancelBtn.addEventListener('mouseenter', () => {
+    cancelBtn.style.background = 'var(--steel-blue)';
+    cancelBtn.style.color = 'white';
+  });
+  cancelBtn.addEventListener('mouseleave', () => {
+    cancelBtn.style.background = 'rgba(255, 255, 255, 0.9)';
+    cancelBtn.style.color = 'var(--steel-blue)';
+  });
+
+  confirmBtn.addEventListener('mouseenter', () => {
+    confirmBtn.style.transform = 'translateY(-1px)';
+    confirmBtn.style.boxShadow = '0 6px 16px rgba(10, 65, 116, 0.4)';
+  });
+  confirmBtn.addEventListener('mouseleave', () => {
+    confirmBtn.style.transform = 'translateY(0)';
+    confirmBtn.style.boxShadow = '0 4px 12px rgba(10, 65, 116, 0.3)';
+  });
+
+  // Event listeners
+  cancelBtn.onclick = () => overlay.remove();
+  confirmBtn.onclick = () => {
+    overlay.remove();
+    onConfirm();
+  };
+  overlay.onclick = (e) => {
+    if (e.target === overlay) overlay.remove();
+  };
+}
+
+// ✅ UPDATED SUBMIT FUNCTION WITH SUCCESS CONFIRMATION
+function setupSubmitButton() {
+  if (submitBtn) {
+    submitBtn.addEventListener("click", async () => {
+      const subject = getSelectedSubject();
+      const date = dateInput.value;
+
+      // Validation
+      if (!subject || !date) {
+        showNotification("Please select date and subject", "error");
+        return;
+      }
+
+      const today = new Date().toISOString().split("T")[0];
+      if (date > today) {
+        showNotification("Future dates are not allowed", "error");
+        return;
+      }
+
+      const checkboxes = studentsList.querySelectorAll("input[type='checkbox']");
+      const checkedBoxes = studentsList.querySelectorAll("input:checked");
+      const totalStudents = checkboxes.length;
+      const presentStudents = checkedBoxes.length;
+      const absentStudents = totalStudents - presentStudents;
+
+      if (totalStudents === 0) {
+        showNotification("No students found for attendance", "error");
+        return;
+      }
+
+      // Format date for display
+      const formattedDate = new Date(date).toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short', 
+        day: 'numeric',
+        year: 'numeric'
+      });
+
+      // Show enhanced confirm dialog
+      showConfirm(
+        "confirm",
+        subject,
+        formattedDate,
+        totalStudents,
+        presentStudents,
+        absentStudents,
+        async () => {
+          try {
+            // Set loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+            const studentsPresent = Array.from(checkedBoxes).map(cb => 
+              cb.dataset.studentId || cb.value
+            );
+
+            let apiUrl = '/api/attendance';
+            if (currentClassInfo) {
+              apiUrl = `/api/attendance/${currentClassInfo.stream}/sem${currentClassInfo.semester}/${encodeURIComponent(subject)}`;
+            }
+
+            const res = await fetch(apiUrl, {
+              method: "POST",
+              headers: { 
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+              },
+              body: JSON.stringify({ 
+                date, subject, studentsPresent, totalStudents,
+                presentCount: presentStudents, absentCount: absentStudents,
+                classInfo: currentClassInfo, allowMultipleSubmissions: true
+              })
+            });
+
+            if (!res.ok) {
+              const errorText = await res.text();
+              throw new Error(`HTTP ${res.status}: ${errorText}`);
+            }
+
+            const result = await res.json();
+
+            if (result.success !== false) {
+              // 🎉 Show beautiful success confirmation
+              showSubmittedConfirmation(subject, formattedDate, presentStudents, totalStudents);
+              
+              // Reset form
+              clearLocalStorage();
+              dateInput.value = new Date().toISOString().split("T")[0];
+              
+              if (!isPreSelectedSubject) {
+                subjectSelect.value = "";
+              }
+              
+              checkboxes.forEach(cb => cb.checked = false);
+              updateCounts(0, 0);
+              
+            } else {
+              showNotification("Submission failed: " + (result.message || "Unknown error"), "error");
+            }
+
+          } catch (err) {
+            console.error("Submission error:", err);
+            showNotification("Network error: " + err.message, "error");
+          } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Attendance';
+          }
         }
-        
-      } catch (error) {
-        console.error('❌ Error saving subjects:', error);
-        showAlert("Error", `Failed to save subjects: ${error.message}`, "error");
-        
-      } finally {
-        saveButton.innerHTML = originalText;
-        saveButton.disabled = false;
-      }
-    }
-    
-    // ✅ MAKE FUNCTIONS GLOBALLY AVAILABLE
-    window.validateAttendanceDates = validateAttendanceDates;
-    window.validateAttendanceDatesSimple = validateAttendanceDatesSimple;
-    window.goToStreamsHome = goToStreamsHome;
-    window.showTab = showTab;
-    window.backToSemesters = backToSemesters;
-    window.loadSubjectsAndStudents = loadSubjectsAndStudents;
-    window.loadAllStudents = loadAllStudents;
-    window.checkAttendanceExists = checkAttendanceExists;
-    window.showAlert = showAlert;
-    window.showConfirmDialog = showConfirmDialog;
-    window.saveAttendanceChanges = saveAttendanceChanges;
-    window.silentReloadRegister = silentReloadRegister;
-    window.renderAttendanceTable = renderAttendanceTable;
-    window.markUnsavedChanges = markUnsavedChanges;
-    window.addSubjectToList = addSubjectToList;
-    window.removeSubject = removeSubject;
-    window.saveAllSubjects = saveAllSubjects;
-    
-    console.log("✅ Complete attendance system loaded with validateAttendanceDates function properly defined");
-    
-    </script>
-    
-    <script type="module">
-    // ✅ FIREBASE AUTHENTICATION MODULE
-    import { firebaseConfig } from './firebase-config.js';
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-    
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    let authStateChecked = false;
-    
-    function showAuthLoading() {
-      const loadingScreen = document.getElementById('authLoadingScreen');
-      const mainContent = document.getElementById('mainContent');
-      
-      if (loadingScreen) loadingScreen.style.display = 'flex';
-      if (mainContent) mainContent.style.display = 'none';
-    }
-    
-    function hideAuthLoading() {
-      const loadingScreen = document.getElementById('authLoadingScreen');
-      const mainContent = document.getElementById('mainContent');
-      
-      if (loadingScreen) loadingScreen.style.display = 'none';
-      if (mainContent) mainContent.style.display = 'block';
-    }
-    
-    function isAuthorizedUser(email) {
-      // Allow all users with valid email addresses
-      return email && email.includes('@') && email.includes('.');
-    }
-    
-    onAuthStateChanged(auth, (user) => {
-      authStateChecked = true;
-    
-      if (user) {
-        const email = user.email;
-        
-        if (!email || !isAuthorizedUser(email)) {
-          signOut(auth).then(() => {
-            window.location.href = "login.html";
-          });
-          return;
-        }
-    
-        updateUserInterface(user, email);
-        hideAuthLoading();
-    
-      } else {
-        setTimeout(() => {
-          window.location.href = "login.html";
-        }, 100);
-      }
+      );
     });
-    
-    function updateUserInterface(user, email) {
-      try {
-        const userName = localStorage.getItem("userName") || user.displayName || email.split('@')[0];
-        const profilePhoto = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=8b5cf6&color=fff&size=64`;
-        
-        const userNameElement = document.getElementById("userName");
-        const userEmailElement = document.getElementById("userEmail");
-        const profilePicElement = document.getElementById("profilePic");
-        
-        if (userNameElement) userNameElement.textContent = userName;
-        if (userEmailElement) userEmailElement.textContent = email;
-        if (profilePicElement) {
-          profilePicElement.src = profilePhoto;
-          profilePicElement.onerror = () => {
-            profilePicElement.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=8b5cf6&color=fff&size=64`;
-          };
-        }
-    
-        localStorage.setItem("userName", userName);
-        localStorage.setItem("userEmail", email);
-    
-      } catch (error) {
-        console.error('❌ Error updating UI:', error);
-      }
-    }
-    
-    window.logout = async () => {
-      try {
-        const confirmLogout = confirm("Are you sure you want to logout?");
-        
-        if (!confirmLogout) {
-          return;
-        }
-        
-        await signOut(auth);
-        localStorage.clear();
-        sessionStorage.clear();
-        window.location.href = "/login.html";
-        
-      } catch (error) {
-        console.error('❌ Logout error:', error);
-        localStorage.clear();
-        sessionStorage.clear();
-        window.location.href = "/login.html";
-      }
-    };
-    
-    // Initialize
-    showAuthLoading();
-    
-    setTimeout(() => {
-      if (!authStateChecked) {
-        window.location.href = "login.html";
-      }
-    }, 10000);
-    
-    </script>
-    
+  }
+}
 
-
+  </script>
 </body>
 </html>
