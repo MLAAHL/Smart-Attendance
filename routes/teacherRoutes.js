@@ -233,35 +233,29 @@ subjectSchema.index({ stream: 1, semester: 1 });
 subjectSchema.index({ subjectType: 1 });
 subjectSchema.index({ isLanguageSubject: 1, languageType: 1 });
 
-// ✅ ENHANCED: Attendance Schema with Language Group Support
+
+// ✅ SIMPLE: Attendance Schema WITHOUT recordId field
 const attendanceSchema = new mongoose.Schema({
   date: {
     type: Date,
-    required: [true, 'Date is required'],
-    validate: {
-      validator: function(v) {
-        return v <= new Date();
-      },
-      message: 'Attendance date cannot be in the future'
-    }
+    required: true
   },
   subject: {
     type: String,
-    required: [true, 'Subject is required']
+    required: true,
+    uppercase: true
   },
   stream: {
     type: String,
-    required: [true, 'Stream is required'],
+    required: true,
     uppercase: true
   },
   semester: {
     type: Number,
-    required: [true, 'Semester is required'],
-    min: 1,
-    max: 8
+    required: true
   },
   
-  // ✅ ENHANCED: Language group support
+  // Language support
   isLanguageSubject: {
     type: Boolean,
     default: false
@@ -269,54 +263,58 @@ const attendanceSchema = new mongoose.Schema({
   languageType: {
     type: String,
     uppercase: true,
-    enum: {
-      values: ['KANNADA', 'HINDI', 'SANSKRIT', null],
-      message: 'Invalid language type'
-    },
+    enum: ['KANNADA', 'HINDI', 'SANSKRIT', null],
     default: null
   },
   languageGroup: {
     type: String,
-    uppercase: true,
     default: null
   },
   
   studentsPresent: {
     type: [String],
-    default: [],
-    validate: {
-      validator: function(arr) {
-        return arr.length <= this.totalPossibleStudents;
-      },
-      message: 'Present students cannot exceed total possible students'
-    }
+    default: []
   },
   totalStudents: {
     type: Number,
-    default: 0,
-    min: 0
+    default: 0
   },
   totalPossibleStudents: {
     type: Number,
-    default: 0,
-    min: 0
+    default: 0
   },
   attendancePercentage: {
     type: Number,
+    default: 0
+  },
+  
+  // ✅ Session tracking (time difference only)
+  sessionTime: {
+    type: String,
     default: function() {
-      if (this.totalPossibleStudents > 0) {
-        return ((this.studentsPresent.length / this.totalPossibleStudents) * 100).toFixed(2);
-      }
-      return 0;
+      return new Date().toLocaleTimeString('en-IN', { hour12: false });
     }
   }
+  // ✅ REMOVED: recordId field (causing duplicate errors)
+  // ✅ REMOVED: recordNumber field (not needed)
 }, {
-  timestamps: true
+  timestamps: true // createdAt and updatedAt provide unique timestamps
 });
 
-// ✅ FIXED: Add indexes for attendance
-attendanceSchema.index({ date: 1, subject: 1, stream: 1, semester: 1 }, { unique: true });
-attendanceSchema.index({ languageGroup: 1 });
+// ✅ NO unique indexes - Allow multiple records
+attendanceSchema.index({ date: 1, subject: 1, stream: 1, semester: 1 });
+attendanceSchema.index({ createdAt: -1 });
+
+// ✅ Pre-save: Calculate percentage only
+attendanceSchema.pre('save', function(next) {
+  if (this.totalPossibleStudents > 0) {
+    this.attendancePercentage = Math.round(
+      (this.studentsPresent.length / this.totalPossibleStudents) * 100 * 100
+    ) / 100;
+  }
+  next();
+});
+
 
 // ✅ ENHANCED: Message Log Schema with WhatsApp Cloud API details
 const messageLogSchema = new mongoose.Schema({
@@ -1085,11 +1083,10 @@ router.get("/subjects/:stream/sem:sem", validateParams, asyncHandler(async (req,
     collectionUsed: Subject.collection.name
   });
 }));
-
-// ✅ FIXED: POST Mark Attendance with Language Subject Filtering
+// ✅ COMPLETE FIXED: POST Mark Attendance with All Variables Properly Defined
 router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler(async (req, res) => {
   const { stream, sem, subject } = req.params;
-  const { date, studentsPresent, forceOverwrite } = req.body;
+  const { date, studentsPresent } = req.body;
 
   if (!date || !subject || !Array.isArray(studentsPresent)) {
     return res.status(400).json({ 
@@ -1098,13 +1095,13 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
     });
   }
 
-  console.log(`📝 Marking attendance for: ${stream} Sem ${sem} - ${subject} on ${date}`);
+  console.log(`📝 Creating attendance session for: ${stream} Sem ${sem} - ${subject} on ${date}`);
   
   const Attendance = getAttendanceModel(stream, sem, subject);
   const Student = getStudentModel(stream, sem);
   const Subject = getSubjectModel(stream, sem);
   
-  // ✅ Get subject details to determine filtering
+  // ✅ Get subject details
   const subjectDoc = await Subject.findOne({ 
     subjectName: subject.toUpperCase(),
     isActive: { $ne: false }
@@ -1117,7 +1114,7 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
     });
   }
   
-  // ✅ KEY FIX: Filter students based on subject type
+  // ✅ CRITICAL: Get relevant students and declare totalRelevantStudents properly
   let relevantStudents;
   let attendanceScope;
   
@@ -1146,13 +1143,16 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
     attendanceScope = {
       type: 'ALL_STUDENTS',
       language: null,
-      note: 'All students attend together'
+      note: 'All students attend this subject'
     };
     
     console.log(`📚 Core subject: Found ${relevantStudents.length} total students`);
   }
 
-  const totalRelevantStudents = relevantStudents.length;
+  // ✅ ENSURE: totalRelevantStudents is properly defined from relevantStudents
+  const totalRelevantStudents = relevantStudents ? relevantStudents.length : 0;
+  
+  console.log(`✅ Total relevant students: ${totalRelevantStudents}`);
 
   if (totalRelevantStudents === 0) {
     return res.status(404).json({ 
@@ -1163,33 +1163,7 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
     });
   }
 
-  // ✅ Check for existing record
-  if (!forceOverwrite) {
-    const existingRecord = await Attendance.findOne({
-      date: new Date(date),
-      subject: subject
-    });
-
-    if (existingRecord) {
-      return res.status(409).json({
-        success: false,
-        exists: true,
-        message: "Attendance already taken for this subject and date",
-        date: date,
-        subject: subject,
-        stream: stream,
-        semester: sem,
-        attendanceScope,
-        existingData: {
-          studentsPresent: existingRecord.studentsPresent,
-          recordId: existingRecord._id,
-          createdAt: existingRecord.createdAt
-        }
-      });
-    }
-  }
-
-  // ✅ Validate that all present students are in the relevant student list
+  // ✅ Validate present students are in the relevant list
   const relevantStudentIDs = relevantStudents.map(s => s.studentID);
   const invalidStudents = studentsPresent.filter(id => !relevantStudentIDs.includes(id));
   
@@ -1204,111 +1178,149 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
         "Only enrolled students can be marked present"
     });
   }
-  
-  const existingRecord = await Attendance.findOne({
-    date: new Date(date),
-    subject: subject
-  });
-  const isOverwrite = !!existingRecord;
 
-  // ✅ Store attendance in database with language info
+  // ✅ Create attendance record (no duplicate checking - always allow new sessions)
+  const currentTime = new Date();
   const attendanceData = {
     date: new Date(date),
-    subject: subject,
+    subject: subject.toUpperCase(),
     stream: stream.toUpperCase(),
     semester: parseInt(sem),
     studentsPresent: studentsPresent,
     totalStudents: totalRelevantStudents,
     totalPossibleStudents: totalRelevantStudents,
-    isLanguageSubject: subjectDoc.isLanguageSubject,
+    isLanguageSubject: subjectDoc.isLanguageSubject || false,
     languageType: subjectDoc.languageType || null,
-    languageGroup: subjectDoc.isLanguageSubject ? 
-      `${stream.toUpperCase()}_SEM${sem}_${subjectDoc.languageType}` : null
+    languageGroup: (subjectDoc.isLanguageSubject && subjectDoc.languageType) ? 
+      `${stream.toUpperCase()}_SEM${sem}_${subjectDoc.languageType}` : null,
+    sessionTime: currentTime.toLocaleTimeString('en-IN', { hour12: false })
   };
   
-  const record = await Attendance.findOneAndUpdate(
-    { 
-      date: new Date(date), 
-      subject: subject 
-    },
-    { $set: attendanceData },
-    { upsert: true, new: true }
-  );
+  try {
+    // ✅ Always create new session record
+    const record = new Attendance(attendanceData);
+    await record.save();
 
-  // ✅ Update base attendance collection
-  await BaseAttendance.findOneAndUpdate(
-    {
-      date: new Date(date).toISOString().slice(0, 10),
+    // ✅ Count total sessions for this date/subject
+    const sessionCount = await Attendance.countDocuments({
+      date: new Date(date),
+      subject: subject.toUpperCase(),
       stream: stream.toUpperCase(),
-      semester: Number(sem),
-      subject: subject,
-    },
-    {
-      $set: {
-        studentsPresent: studentsPresent,
-        studentsTotal: totalRelevantStudents,
-        isLanguageSubject: subjectDoc.isLanguageSubject,
-        languageType: subjectDoc.languageType || null
+      semester: parseInt(sem)
+    });
+
+    // ✅ Update base attendance with latest session
+    await BaseAttendance.findOneAndUpdate(
+      {
+        date: new Date(date).toISOString().slice(0, 10),
+        stream: stream.toUpperCase(),
+        semester: Number(sem),
+        subject: subject.toUpperCase(),
       },
-    },
-    { upsert: true, new: true }
-  );
+      {
+        $set: {
+          studentsPresent: studentsPresent,
+          studentsTotal: totalRelevantStudents,
+          isLanguageSubject: subjectDoc.isLanguageSubject || false,
+          languageType: subjectDoc.languageType || null,
+          lastSessionTime: currentTime.toLocaleTimeString('en-IN', { hour12: false }),
+          totalSessions: sessionCount,
+          lastUpdated: currentTime
+        },
+      },
+      { upsert: true, new: true }
+    );
 
-  // ✅ Calculate absent students from relevant student pool
-  const absentStudents = relevantStudents.filter(
-    student => !studentsPresent.includes(student.studentID)
-  );
+    // ✅ Calculate absent students from relevant student pool
+    const absentStudents = relevantStudents.filter(
+      student => !studentsPresent.includes(student.studentID)
+    );
 
-  const absentWithPhone = absentStudents.filter(s => s.parentPhone).length;
-  const absentWithoutPhone = absentStudents.filter(s => !s.parentPhone).length;
+    const absentWithPhone = absentStudents.filter(s => s.parentPhone && s.parentPhone.trim() !== '').length;
+    const absentWithoutPhone = absentStudents.filter(s => !s.parentPhone || s.parentPhone.trim() === '').length;
 
-  console.log(`✅ Attendance ${isOverwrite ? 'updated' : 'marked'} for ${stream} Semester ${sem} - ${subject} on ${date}`);
-  console.log(`   Attendance Scope: ${attendanceScope.note}`);
-  console.log(`   Relevant Students: ${totalRelevantStudents}`);
-  console.log(`   Present: ${studentsPresent.length}, Absent: ${absentStudents.length}`);
-  console.log(`   Absent with phone: ${absentWithPhone}, Absent without phone: ${absentWithoutPhone}`);
+    console.log(`✅ Attendance session created at ${record.sessionTime}`);
+    console.log(`   Present: ${studentsPresent.length}/${totalRelevantStudents} students`);
+    console.log(`   Absent: ${absentStudents.length} (${absentWithPhone} with phone, ${absentWithoutPhone} without)`);
+    console.log(`   Total sessions today: ${sessionCount}`);
+    console.log(`   Attendance %: ${record.attendancePercentage}%`);
 
-  res.status(200).json({ 
-    success: true,
-    message: `✅ Attendance ${isOverwrite ? 'updated' : 'marked'} successfully for ${subjectDoc.isLanguageSubject ? 'language ' : ''}subject. Use manual messaging system to send WhatsApp notifications.`, 
-    data: record,
-    isOverwrite,
-    subject: {
-      name: subjectDoc.subjectName,
-      type: subjectDoc.subjectType,
-      isLanguageSubject: subjectDoc.isLanguageSubject,
-      languageType: subjectDoc.languageType,
-      credits: subjectDoc.credits
-    },
-    attendanceScope,
-    summary: {
-      totalRelevantStudents: totalRelevantStudents,
-      presentStudents: studentsPresent.length,
-      absentStudents: absentStudents.length,
-      absentWithPhone: absentWithPhone,
-      absentWithoutPhone: absentWithoutPhone,
-      attendancePercentage: ((studentsPresent.length / totalRelevantStudents) * 100).toFixed(1),
-      absentStudentsList: absentStudents.map(s => ({
-        studentID: s.studentID,
-        name: s.name,
-        hasPhone: !!s.parentPhone,
-        parentPhone: s.parentPhone ? 'Available' : 'Not Available',
-        languageSubject: s.languageSubject || null
-      }))
-    },
-    manualMessaging: {
-      enabled: true,
-      note: `Attendance data stored for ${attendanceScope.note.toLowerCase()}. Use manual messaging system to send consolidated WhatsApp messages.`,
-      nextSteps: [
-        "Go to Manual Messaging System",
-        `Select ${stream} - Semester ${sem}`,
-        subjectDoc.isLanguageSubject ? `Filter by ${subjectDoc.languageType} students` : "Include all students",
-        `Set date to ${new Date(date).toLocaleDateString('en-IN')}`,
-        "Click 'Send Messages Now' when ready"
-      ]
+    res.status(200).json({ 
+      success: true,
+      message: `✅ Attendance session recorded at ${record.sessionTime}. Multiple sessions allowed.`,
+      data: {
+        _id: record._id,
+        date: record.date,
+        subject: record.subject,
+        stream: record.stream,
+        semester: record.semester,
+        sessionTime: record.sessionTime,
+        studentsPresent: record.studentsPresent,
+        totalStudents: record.totalStudents,
+        attendancePercentage: record.attendancePercentage,
+        createdAt: record.createdAt,
+        isLanguageSubject: record.isLanguageSubject,
+        languageType: record.languageType
+      },
+      sessionInfo: {
+        sessionTime: record.sessionTime,
+        totalSessionsToday: sessionCount,
+        uniqueId: record._id.toString(),
+        note: "Each session is differentiated by timestamp - multiple sessions allowed"
+      },
+      subject: {
+        name: subjectDoc.subjectName,
+        type: subjectDoc.subjectType || 'CORE',
+        isLanguageSubject: subjectDoc.isLanguageSubject || false,
+        languageType: subjectDoc.languageType || null,
+        credits: subjectDoc.credits || 0
+      },
+      attendanceScope,
+      summary: {
+        totalRelevantStudents: totalRelevantStudents,
+        presentStudents: studentsPresent.length,
+        absentStudents: absentStudents.length,
+        absentWithPhone: absentWithPhone,
+        absentWithoutPhone: absentWithoutPhone,
+        attendancePercentage: record.attendancePercentage,
+        absentStudentsList: absentStudents.map(s => ({
+          studentID: s.studentID,
+          name: s.name,
+          hasPhone: !!(s.parentPhone && s.parentPhone.trim() !== ''),
+          parentPhone: (s.parentPhone && s.parentPhone.trim() !== '') ? 'Available' : 'Not Available',
+          languageSubject: s.languageSubject || null
+        }))
+      },
+      multipleRecords: {
+        enabled: true,
+        totalToday: sessionCount,
+        note: "System allows multiple attendance sessions for the same subject on the same date"
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error creating attendance record:', error);
+    
+    // Handle any remaining duplicate key errors gracefully
+    if (error.code === 11000) {
+      return res.status(500).json({
+        success: false,
+        message: "Database constraint error. Please contact administrator to remove unique indexes.",
+        error: "Duplicate key constraint still exists",
+        solution: "Run: db.collection.dropIndex() to remove unique constraints"
+      });
     }
-  });
+    
+    // Handle other errors
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create attendance record",
+      error: error.message
+    });
+  }
 }));
+
+
 // ✅ FIXED: Manual Send Consolidated WhatsApp Messages (Updated for WhatsApp Cloud API)
 router.post("/send-absence-messages/:stream/sem:sem/:date", 
   validateParams, 
