@@ -34,17 +34,37 @@
   <!-- Note: All Firebase users are now allowed to access the system -->
 
   <style>
+    :root {
+      /* Beautiful Blue Gradient Palette */
+      --navy-deep: #001D39;
+      --ocean-blue: #0A4174;
+      --steel-blue: #49769F;
+      --teal-blue: #4E8EA2;
+      --sky-blue: #6EA2B3;
+      --light-blue: #7BBDE8;
+      --pale-blue: #BDD8E9;
+      
+      /* Status Colors */
+      --present: #4CAF50;
+      --absent: #EF5350;
+      --accent: #FFD54F;
+    }
+
     * {
       scroll-behavior: smooth;
     }
 
     body {
-      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(125deg, #F0EDE5 0%, #E8E3D8 95%);
+      font-family: 'poppins', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, var(--pale-blue) 0%, rgba(255, 255, 255, 0.9) 100%);
       min-height: 100vh;
       position: relative;
+      color: var(--navy-deep);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
+    /* Subtle gradient overlay */
     body::before {
       content: '';
       position: fixed;
@@ -53,53 +73,76 @@
       width: 100%;
       height: 100%;
       background: 
-        radial-gradient(circle at 20% 50%, rgba(6, 13, 12, 0.08), transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(42, 59, 54, 0.08), transparent 50%),
-        radial-gradient(circle at 40% 80%, rgba(139, 155, 143, 0.08), transparent 50%);
+        radial-gradient(circle at 20% 50%, rgba(1, 29, 57, 0.03), transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(10, 65, 116, 0.05), transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(73, 118, 159, 0.04), transparent 50%);
       pointer-events: none;
       z-index: -1;
     }
     
+    /* Glass card with blue gradient accents */
     .glass-card {
       background: rgba(255, 255, 255, 0.85);
       backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(189, 216, 233, 0.4);
+      box-shadow: 
+        0 8px 32px rgba(1, 29, 57, 0.1),
+        0 1px 0 rgba(255, 255, 255, 0.6) inset;
     }
 
+    /* Glass header with blue tint */
     .glass-header {
-      background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid rgba(189, 216, 233, 0.5);
+      box-shadow: 0 4px 20px rgba(1, 29, 57, 0.08);
     }
 
+    /* Primary buttons with blue gradient */
     .btn-primary {
-      background: linear-gradient(135deg, #060D0C 0%, #2A3B36 100%);
+      background: linear-gradient(135deg, var(--ocean-blue), var(--steel-blue));
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       transform: translateY(0);
+      box-shadow: 
+        0 4px 15px rgba(10, 65, 116, 0.3),
+        0 1px 0 rgba(255, 255, 255, 0.3) inset;
     }
 
     .btn-primary:hover {
+      background: linear-gradient(135deg, var(--navy-deep), var(--ocean-blue));
       transform: translateY(-2px);
-      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+      box-shadow: 
+        0 8px 25px rgba(1, 29, 57, 0.4),
+        0 1px 0 rgba(255, 255, 255, 0.3) inset;
     }
 
+    /* Secondary buttons with glass effect */
     .btn-secondary {
-      background: rgba(255, 255, 255, 0.9);
-      border: 2px solid rgba(102, 126, 234, 0.3);
-      transition: all 0.3s ease;
+      background: rgba(189, 216, 233, 0.2);
       backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(123, 189, 232, 0.3);
+      color: var(--steel-blue);
+      transition: all 0.3s ease;
     }
 
     .btn-secondary:hover {
-      background: rgba(102, 126, 234, 0.1);
-      border-color: rgba(102, 126, 234, 0.6);
+      background: rgba(123, 189, 232, 0.1);
+      border-color: var(--steel-blue);
       transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(73, 118, 159, 0.2);
     }
     
+    /* Loading spinner with blue accent */
     .loading-spinner {
-      border: 3px solid rgba(102, 126, 234, 0.2);
-      border-top: 3px solid #667eea;
+      border: 3px solid rgba(73, 118, 159, 0.2);
+      border-top: 3px solid var(--steel-blue);
       border-radius: 50%;
       width: 20px;
       height: 20px;
@@ -111,14 +154,20 @@
       100% { transform: rotate(360deg); }
     }
 
+    /* Queue items with blue hover effects */
     .queue-item {
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       transform: translateY(0);
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid rgba(189, 216, 233, 0.3);
     }
     
     .queue-item:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 8px 25px rgba(73, 118, 159, 0.15);
+      border-color: var(--sky-blue);
     }
     
     .queue-item.removing {
@@ -126,36 +175,62 @@
       opacity: 0;
     }
 
+    /* Form inputs with blue focus states */
     .form-input {
       transition: all 0.3s ease;
-      border: 2px solid rgba(102, 126, 234, 0.2);
-      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(123, 189, 232, 0.2);
+      background: rgba(255, 255, 255, 0.8);
       backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: var(--navy-deep);
     }
 
     .form-input:focus {
-      border-color: #667eea;
-      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+      border-color: var(--steel-blue);
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 
+        0 0 0 3px rgba(73, 118, 159, 0.1),
+        0 4px 15px rgba(78, 142, 162, 0.15);
       outline: none;
       transform: translateY(-1px);
     }
 
+    /* Back button with blue hover */
     .back-button {
       transition: all 0.3s ease;
+      background: rgba(123, 189, 232, 0.15);
+      color: var(--ocean-blue);
     }
 
     .back-button:hover {
-      background: rgba(255, 255, 255, 0.3);
+      background: rgba(123, 189, 232, 0.25);
       transform: translateX(-3px);
     }
 
+    /* Status indicators */
+    .status-present {
+      color: var(--present);
+      background: rgba(76, 175, 80, 0.1);
+    }
+
+    .status-absent {
+      color: var(--absent);
+      background: rgba(239, 83, 80, 0.1);
+    }
+
+    .status-accent {
+      color: var(--accent);
+      background: rgba(255, 213, 79, 0.1);
+    }
+
+    /* Animations */
     .pulse-animation {
       animation: pulse 2s infinite;
     }
 
     @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.05); }
     }
 
     .slide-in {
@@ -177,109 +252,167 @@
       animation: float 3s ease-in-out infinite;
     }
 
-    /* Enhanced Menu Icon Styles with Animation */
-    .menu-icon {
-      cursor: pointer;
-      transition: transform 0.2s ease;
-      padding: 8px;
-      border-radius: 6px;
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-3px); }
+    }
+/* Fixed Enhanced Menu Icon with Blue Accent */
+.menu-icon {
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(123, 189, 232, 0.15);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 40px;
+  height: 36px;
+  position: relative;
+  user-select: none;
+}
+
+.menu-icon:hover {
+  background: rgba(123, 189, 232, 0.25);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(78, 142, 162, 0.2);
+}
+
+.menu-icon:active {
+  transform: scale(0.95);
+  transition: transform 0.1s ease;
+}
+
+.menu-icon .line {
+  height: 2px;
+  background: linear-gradient(90deg, #0A4174, #49769F);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 1px;
+  transform-origin: center;
+  box-shadow: 0 1px 3px rgba(1, 29, 57, 0.15);
+  position: relative;
+}
+
+.menu-icon .line.long {
+  width: 20px;
+  margin-bottom: 4px;
+}
+
+.menu-icon .line.short {
+  width: 16px;
+  margin-left: auto;
+}
+
+/* Fixed Hamburger Animation */
+.menu-icon.active .line.long {
+  transform: rotate(45deg) translateY(3px);
+  width: 18px;
+  margin-left: 2px;
+  margin-bottom: 0;
+}
+
+.menu-icon.active .line.short {
+  transform: rotate(-45deg) translateY(-3px);
+  width: 18px;
+  margin-left: 2px;
+}
+
+/* Enhanced Side Menu with Optimized Glass Effect */
+.side-menu {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(135deg, 
+    rgba(189, 216, 233, 0.95) 0%, 
+    rgba(255, 255, 255, 0.95) 100%);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-right: 1px solid rgba(189, 216, 233, 0.4);
+  box-shadow: 
+    0 8px 32px rgba(1, 29, 57, 0.1),
+    0 1px 0 rgba(255, 255, 255, 0.6) inset;
+}
+
+/* Menu Icon States */
+.menu-icon:focus {
+  outline: 2px solid rgba(123, 189, 232, 0.5);
+  outline-offset: 2px;
+}
+
+.menu-icon:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Improved Animation Timing */
+.menu-icon.active .line {
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Mobile Optimization */
+@media (max-width: 640px) {
+  .menu-icon {
+    width: 44px;
+    height: 40px;
+    padding: 10px;
+  }
+  
+  .menu-icon .line.long {
+    width: 22px;
+  }
+  
+  .menu-icon .line.short {
+    width: 18px;
+  }
+}
+
+/* RTL Support */
+[dir="rtl"] .menu-icon .line.short {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+[dir="rtl"] .menu-icon.active .line.short,
+[dir="rtl"] .menu-icon.active .line.long {
+  margin-left: 0;
+  margin-right: 2px;
+}
+
+    /* Tab navigation with blue gradient */
+    .tab-active {
+      background: linear-gradient(135deg, var(--steel-blue), var(--teal-blue));
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      box-shadow: 
+        0 2px 8px rgba(73, 118, 159, 0.3),
+        0 1px 0 rgba(255, 255, 255, 0.4) inset;
     }
 
-    .menu-icon:hover {
-      transform: scale(1.1);
-      background-color: rgba(0, 0, 0, 0.05);
+    .tab-inactive {
+      background: transparent;
+      color: rgba(1, 29, 57, 0.6);
     }
 
-    .menu-icon:active {
-      transform: scale(0.95);
+    .tab-inactive:hover {
+      background: rgba(123, 189, 232, 0.1);
+      color: var(--steel-blue);
     }
 
-    .menu-icon .line {
-      transition: all 0.3s ease;
-      border-radius: 2px;
-    }
-
-    /* Hamburger menu styling and animation - MAXIMUM VISIBILITY */
-    .menu-icon {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      width: 28px;
-      height: 22px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      padding: 3px;
-      border-radius: 4px;
-      position: relative;
-    }
-    
-    .menu-icon:hover {
-      background-color: rgba(6, 13, 12, 0.1);
-    }
-    
-    .menu-icon .line {
-      height: 4px !important;
-      background: #000000 !important;
-      background-image: linear-gradient(135deg, #000000 0%, #333333 100%) !important;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-      transform-origin: center !important;
-      opacity: 1 !important;
-      border-radius: 2px !important;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
-      display: block !important;
-      visibility: visible !important;
-      position: relative !important;
-      z-index: 10 !important;
-      border: 1px solid #000000 !important;
-    }
-    
-    /* Additional fallback styling */
-    .menu-icon .line::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: #000000;
-      border-radius: 2px;
-    }
-    
-    .menu-icon .line.long {
-      width: 24px !important;
-      margin-bottom: 5px !important;
-    }
-    
-    .menu-icon .line.short {
-      width: 18px !important;
-      margin-left: auto !important;
-    }
-
-    /* Hamburger animation when menu is open */
-    .menu-icon.active .line.long {
-      transform: rotate(45deg) translate(4px, 4px) !important;
-      width: 22px !important;
-    }
-
-    .menu-icon.active .line.short {
-      transform: rotate(-45deg) translate(4px, -4px) !important;
-      width: 22px !important;
-      margin-left: 0 !important;
-    }
-
-    /* Enhanced Side Menu Styles */
-    .side-menu {
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Icon containers with blue glass */
+    .icon-container {
+      background: linear-gradient(135deg, 
+        rgba(123, 189, 232, 0.2), 
+        rgba(189, 216, 233, 0.3));
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid rgba(123, 189, 232, 0.3);
+      box-shadow: 
+        0 4px 15px rgba(78, 142, 162, 0.1),
+        0 1px 0 rgba(255, 255, 255, 0.5) inset;
     }
 
     /* Backdrop transition */
     #menuBackdrop {
       transition: opacity 0.3s ease;
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-5px); }
     }
 
     /* Stream container hover effects */
@@ -288,516 +421,790 @@
     }
 
     .stream-container:hover {
-      transform: translateY(-2px) scale(1.02);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px) scale(1.01);
+      box-shadow: 0 12px 30px rgba(73, 118, 159, 0.15);
     }
 
-    /* Modern scrollbar */
+    /* Modern blue scrollbar */
     ::-webkit-scrollbar {
       width: 6px;
     }
 
     ::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
+      background: rgba(189, 216, 233, 0.2);
+      border-radius: 3px;
     }
 
     ::-webkit-scrollbar-thumb {
-      background: linear-gradient(135deg, #060D0C, #2A3B36);
-      border-radius: 10px;
+      background: linear-gradient(135deg, var(--steel-blue), var(--teal-blue));
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(135deg, var(--ocean-blue), var(--steel-blue));
+    }
+
+    /* Alert styling with blue accents */
+    .alert-success {
+      background: rgba(76, 175, 80, 0.1);
+      color: var(--present);
+      border: 1px solid rgba(76, 175, 80, 0.3);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .alert-danger {
+      background: rgba(239, 83, 80, 0.1);
+      color: var(--absent);
+      border: 1px solid rgba(239, 83, 80, 0.3);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .alert-warning {
+      background: rgba(255, 213, 79, 0.1);
+      color: var(--accent);
+      border: 1px solid rgba(255, 213, 79, 0.3);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
 
     /* Mobile optimizations */
     @media (max-width: 640px) {
       .mobile-only { display: block !important; }
       .desktop-only { display: none !important; }
+      body { font-size: 14px; }
+      .glass-card { margin: 0.5rem; border-radius: 0.75rem; }
+      .menu-icon { width: 28px; height: 24px; }
     }
 
     @media (min-width: 641px) {
       .mobile-only { display: none !important; }
       .desktop-only { display: block !important; }
     }
+
+    /* Enhanced focus states for accessibility */
+    button:focus-visible,
+    select:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--steel-blue);
+      outline-offset: 2px;
+    }
+
+    /* Smooth transitions for theme consistency */
+    * {
+      transition: background-color 0.3s ease, 
+                  border-color 0.3s ease, 
+                  color 0.3s ease;
+    }
+</style>
+<style>
+  /* Animation for active state */
+  .hamburger-menu.active .line-1 {
+    transform: rotate(45deg) translateY(3px);
+    width: 18px;
+    margin-left: 2px;
+    margin-bottom: 0;
+  }
+  
+  .hamburger-menu.active .line-2 {
+    transform: rotate(-45deg) translateY(-3px);
+    width: 18px;
+    margin-left: 2px;
+  }
   </style>
 </head>
 
 <body>
   <!-- Compact Mobile Header -->
-  <header class="glass-header sticky top-0 z-50 mx-3 mt-3 rounded-xl">
-    <div class="flex items-center justify-between p-3">
-      <!-- Hamburger Menu Button -->
-      <div class="menu-icon cursor-pointer">
-        <div class="line long"></div>
-        <div class="line short"></div>
-      </div>
+  <!-- Simplified Header with Blue Gradient -->
+  <header class="sticky top-0 z-50 mx-3 mt-3 rounded-xl font-work shadow-lg" style="background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(189, 216, 233, 0.5);">
+    <div class="flex items-center justify-between p-4">
+      
+      <!-- Menu Button with Proper Classes and Click Handler -->
+    <!-- Clean Hamburger Menu -->
+<!-- Enhanced Hamburger with Animation -->
+<button class="hamburger-menu p-2.5 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 flex flex-col justify-center w-11 h-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50" style="background: rgba(123, 189, 232, 0.15);" onmouseover="this.style.backgroundColor='rgba(123, 189, 232, 0.25)'; this.style.boxShadow='0 4px 12px rgba(78, 142, 162, 0.2)'" onmouseout="this.style.backgroundColor='rgba(123, 189, 232, 0.15)'; this.style.boxShadow='none'" onclick="toggleMenu()">
+  <span class="line-1 block w-5 h-0.5 rounded-full mb-1 transition-all duration-300 transform origin-center" style="background: linear-gradient(90deg, #0A4174, #49769F); box-shadow: 0 1px 2px rgba(1, 29, 57, 0.2);"></span>
+  <span class="line-2 block w-4 h-0.5 rounded-full ml-auto transition-all duration-300 transform origin-center" style="background: linear-gradient(90deg, #0A4174, #49769F); box-shadow: 0 1px 2px rgba(1, 29, 57, 0.2);"></span>
+</button>
 
-      <!-- Back Button for Form -->
-      <button id="backButtonForm" onclick="showHomePage()" class="back-button w-10 h-10 rounded-lg flex items-center justify-center text-gray-700 hidden">
-        <i class="fas fa-arrow-left"></i>
+
+      <!-- Back Button -->
+      <button id="backButtonForm" onclick="showHomePage()" class="hidden w-10 h-10 rounded-lg flex items-center justify-center transition-all hover:scale-105" style="background: rgba(123, 189, 232, 0.15); color: #0A4174;" onmouseover="this.style.backgroundColor='rgba(123, 189, 232, 0.25)'" onmouseout="this.style.backgroundColor='rgba(123, 189, 232, 0.15)'">
+        <i class="fas fa-arrow-left text-sm"></i>
       </button>
-
-      <!-- Compact Logo & Title -->
-      <div class="flex items-center space-x-2">
-        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, #060D0C 0%, #2A3B36 100%);">
-          <i class="fas fa-list-ol" style="color: #F0EDE5;"></i>
+  
+      <!-- Logo & Title -->
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg transition-transform hover:scale-105" style="background: linear-gradient(135deg, #0A4174, #49769F); box-shadow: 0 4px 15px rgba(10, 65, 116, 0.3), 0 1px 0 rgba(255, 255, 255, 0.3) inset;">
+          <i class="fas fa-chalkboard-teacher text-sm text-white"></i>
         </div>
         <div>
-          <h1 class="text-base font-bold" style="color: #060D0C;">smart classes</h1>
-          <p class="text-xs" style="color: #8B9B8F;">Teacher Panel</p>
+          <h1 class="text-base font-semibold tracking-tight" style="color: #001D39;">Smart Classes</h1>
+          <p class="text-xs font-medium" style="color: #49769F;">Teacher Panel</p>
         </div>
       </div>
-
-      <!-- Compact User Avatar -->
+  
+      <!-- User Avatar -->
       <div class="relative">
-        <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, #060D0C 0%, #2A3B36 100%);">
-          <i class="fas fa-user-graduate text-sm" style="color: #F0EDE5;"></i>
+        <div class="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg transition-transform hover:scale-105" style="background: linear-gradient(135deg, #6EA2B3, #7BBDE8); box-shadow: 0 4px 15px rgba(110, 162, 179, 0.3), 0 1px 0 rgba(255, 255, 255, 0.3) inset;">
+          <i class="fas fa-user-graduate text-sm text-white"></i>
         </div>
-        <div class="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white pulse-animation"></div>
+        <div class="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white shadow-sm" style="background: #4CAF50; animation: pulse 2s infinite;"></div>
       </div>
     </div>
   </header>
-
-  <!-- Menu Backdrop Overlay -->
-  <div id="menuBackdrop" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40"></div>
-
-  <!-- Side Menu -->
-  <div id="mobileMenu" class="side-menu hidden fixed top-0 left-0 w-64 h-full shadow z-50 transition-transform transform -translate-x-full overflow-y-auto" style="background-color: #F0EDE5;">
-    <div class="flex flex-col h-full p-4">
-      <!-- Close button -->
-      <div class="flex justify-end mb-4">
-        <button id="menuCloseBtn" class="p-2 rounded-lg transition" style="color: #8B9B8F;" onmouseover="this.style.backgroundColor='#E8E3D8'" onmouseout="this.style.backgroundColor='transparent'">
-          <i class="fas fa-times" style="color: #8B9B8F;"></i>
-        </button>
-      </div>
+  <script>
+    // Enhanced showHomePage function
+    function showHomePage() {
+      console.log('🏠 showHomePage called');
       
-      <div class="mb-8">
-          <div class="text-2xl font-bold flex items-center" style="color: #060D0C;">
-          <i class="fas fa-chalkboard-teacher mr-2"></i>
-          Smart Panel
+      // Hide all form pages
+      const formPages = ['createSubjectPage', 'addClassPage'];
+      formPages.forEach(pageId => {
+        const page = document.getElementById(pageId);
+        if (page) {
+          page.classList.add('hidden');
+        }
+      });
+      
+      // Show home page
+      const homePage = document.getElementById('homePage');
+      if (homePage) {
+        homePage.classList.remove('hidden');
+      }
+      
+      // Hide back button
+      const backButton = document.getElementById('backButtonForm');
+      if (backButton) {
+        backButton.classList.add('hidden');
+      }
+      
+      console.log('✅ Home page shown');
+    }
+    
+    // Enhanced showCreateSubjectForm function
+    function showCreateSubjectForm() {
+      console.log('📝 showCreateSubjectForm called');
+      
+      // Hide home page
+      const homePage = document.getElementById('homePage');
+      if (homePage) {
+        homePage.classList.add('hidden');
+      }
+      
+      // Show create subject page
+      const createPage = document.getElementById('createSubjectPage');
+      if (createPage) {
+        createPage.classList.remove('hidden');
+      }
+      
+      // Show back button
+      const backButton = document.getElementById('backButtonForm');
+      if (backButton) {
+        backButton.classList.remove('hidden');
+      }
+      
+      console.log('✅ Create subject form shown');
+    }
+    
+    // Make functions globally available
+    window.showHomePage = showHomePage;
+    window.showCreateSubjectForm = showCreateSubjectForm;
+    
+    console.log('✅ Header functions loaded');
+    </script>
+  <!-- Menu Backdrop -->
+<div id="menuBackdrop" class="hidden fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"></div>
+
+<!-- Compact Side Menu - No Icon Backgrounds -->
+<div id="mobileMenu" class="hidden fixed top-0 left-0 w-60 h-full shadow-2xl z-50 transition-transform duration-300 transform -translate-x-full overflow-y-auto font-work" style="background: linear-gradient(135deg, rgba(189, 216, 233, 0.95) 0%, rgba(255, 255, 255, 0.95) 100%); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border-right: 1px solid rgba(189, 216, 233, 0.4);">
+  <div class="flex flex-col h-full p-4">
+    
+    <!-- Close Button -->
+    <div class="flex justify-end mb-4">
+      <button id="menuCloseBtn" class="p-2 rounded-lg transition-all hover:scale-105" style="background: rgba(123, 189, 232, 0.15); color: #0A4174;" onmouseover="this.style.backgroundColor='rgba(123, 189, 232, 0.25)'" onmouseout="this.style.backgroundColor='rgba(123, 189, 232, 0.15)'">
+        <i class="fas fa-times text-sm"></i>
+      </button>
+    </div>
+    
+    <!-- Compact User Profile -->
+    <div class="user-profile flex flex-col items-center mb-6">
+      <div class="relative mb-3">
+        <div class="w-16 h-16 rounded-full border-3 shadow-lg transition-transform hover:scale-105 flex items-center justify-center" style="background: linear-gradient(135deg, #4E8EA2, #6EA2B3); border-color: #7BBDE8;">
+          <i class="fas fa-user-graduate text-lg text-white"></i>
         </div>
-      <div class="text-xs mt-1" style="color: #8B9B8F;">Teacher Dashboard</div>
-    </div>
-    
-    <div class="user-profile flex flex-col items-center mb-8">
-      <div class="relative mb-4">
-        <img id="profilePic" src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="User" 
-             class="w-20 h-20 rounded-full border-4 object-cover shadow-lg" style="border-color: #F0EDE5;"/>
-        <div class="absolute bottom-0 right-0 w-6 h-6 bg-green-400 rounded-full border-2 border-white"></div>
+        <div class="absolute bottom-0 right-0 w-5 h-5 rounded-full border-2 border-white animate-pulse" style="background: #4CAF50;"></div>
       </div>
-      <span id="userName" class="font-semibold text-lg" style="color: #060D0C;"></span>
-      <span id="userEmail" class="text-sm mt-1" style="color: #8B9B8F;"></span>
+      <span id="userName" class="font-semibold text-base" style="color: #001D39;">Prof. Sarah Johnson</span>
+      <span id="userEmail" class="text-xs mt-1 font-medium" style="color: #49769F;">sarah.johnson@college.edu</span>
     </div>
     
-    <ul class="space-y-4 text-black">
+    <!-- Clean Navigation - No Icon Backgrounds -->
+    <ul class="space-y-2 flex-1">
       <li>
-        <a href="myclass.html" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl transition block" style="background-color: #F0EDE5; color: #060D0C;">
-          <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #E8E3D8; color: #060D0C;">
-            <i class="fas fa-chalkboard-teacher text-sm"></i>
-          </div>
-          <span>My Class</span>
+        <a href="myclass.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 shadow-md" style="background: linear-gradient(135deg, #0A4174, #49769F); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 4px 15px rgba(10, 65, 116, 0.2), 0 1px 0 rgba(255, 255, 255, 0.3) inset; color: white;">
+          <i class="fas fa-chalkboard-teacher text-sm w-5"></i>
+          <span class="font-medium text-sm">My Classes</span>
         </a>
       </li>
       <li>
-        <a href="promotion.html" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl transition block" style="color: #060D0C;" onmouseover="this.style.backgroundColor='#E8E3D8'" onmouseout="this.style.backgroundColor='transparent'">
-          <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #E8E3D8; color: #060D0C;">
-            <i class="fas fa-user-graduate text-sm"></i>
-          </div>
-          <span>Promote Students</span>
+        <a href="promotion.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 hover:shadow-md" style="color: #001D39;" onmouseover="this.style.backgroundColor='rgba(123, 189, 232, 0.1)'" onmouseout="this.style.backgroundColor='transparent'">
+          <i class="fas fa-user-graduate text-sm w-5" style="color: #0A4174;"></i>
+          <span class="font-medium text-sm">Promote Students</span>
         </a>
       </li>
       <li>
-        <a href="msg.html" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl transition block" style="color: #060D0C;" onmouseover="this.style.backgroundColor='#E8E3D8'" onmouseout="this.style.backgroundColor='transparent'">
-          <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #E8E3D8; color: #060D0C;">
-            <i class="fas fa-comments text-sm"></i>
-          </div>
-          <span>WhatsApp</span>
+        <a href="msg.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 hover:shadow-md" style="color: #001D39;" onmouseover="this.style.backgroundColor='rgba(123, 189, 232, 0.1)'" onmouseout="this.style.backgroundColor='transparent'">
+          <i class="fas fa-comments text-sm w-5" style="color: #4CAF50;"></i>
+          <span class="font-medium text-sm">WhatsApp</span>
         </a>
       </li>
       <li>
-        <a href="report.html" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl transition block" style="color: #060D0C;" onmouseover="this.style.backgroundColor='#E8E3D8'" onmouseout="this.style.backgroundColor='transparent'">
-          <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #E8E3D8; color: #060D0C;">
-            <i class="fas fa-chart-bar text-sm"></i>
-          </div>
-          <span>Reports</span>
+        <a href="report.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 hover:shadow-md" style="color: #001D39;" onmouseover="this.style.backgroundColor='rgba(123, 189, 232, 0.1)'" onmouseout="this.style.backgroundColor='transparent'">
+          <i class="fas fa-chart-bar text-sm w-5" style="color: #FFD54F;"></i>
+          <span class="font-medium text-sm">Reports</span>
         </a>
       </li>
       <li>
-        <button onclick="viewAttendance()" class="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl transition block" style="color: #060D0C;" onmouseover="this.style.backgroundColor='#E8E3D8'" onmouseout="this.style.backgroundColor='transparent'">
-          <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #E8E3D8; color: #060D0C;">
-            <i class="fas fa-eye text-sm"></i>
-          </div>
-          <span>View Attendance</span>
-        </button>
+        <button onclick="viewAttendance()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 hover:shadow-md" style="color: #001D39;" onmouseover="this.style.backgroundColor='rgba(123, 189, 232, 0.1)'" onmouseout="this.style.backgroundColor='transparent'">
+          <i class="fas fa-eye text-sm w-5" style="color: #0A4174;"></i>
+          <span class="font-medium text-sm">View Attendance</span>
+        </a>
+      </li>
+      <li>
+        <a href="settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 hover:shadow-md" style="color: #001D39;" onmouseover="this.style.backgroundColor='rgba(123, 189, 232, 0.1)'" onmouseout="this.style.backgroundColor='transparent'">
+          <i class="fas fa-cog text-sm w-5" style="color: #0A4174;"></i>
+          <span class="font-medium text-sm">Settings</span>
+        </a>
       </li>
     </ul>
     
-    <!-- Logout Button -->
-    <div class="mt-auto pt-4">
-      <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition" style="color: #060D0C;" onmouseover="this.style.backgroundColor='#E8E3D8'" onmouseout="this.style.backgroundColor='transparent'">
-        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #E8E3D8; color: #060D0C;">
-          <i class="fas fa-sign-out-alt text-sm"></i>
-        </div>
-        <span>Logout</span>
+    <!-- Clean Logout Button -->
+    <div class="mt-4 pt-3 border-t" style="border-color: rgba(123, 189, 232, 0.2);">
+      <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group hover:shadow-md" style="color: #EF5350;" onmouseover="this.style.backgroundColor='rgba(239, 83, 80, 0.1)'" onmouseout="this.style.backgroundColor='transparent'">
+        <i class="fas fa-sign-out-alt text-sm w-5" style="color: #EF5350;"></i>
+        <span class="font-medium text-sm">Logout</span>
       </button>
     </div>
-    </div> <!-- Close flex container -->
+
+    <!-- Version Info -->
+    <div class="text-center mt-3">
+      <p class="text-xs font-medium" style="color: rgba(1, 29, 57, 0.4);">Smart Classes v2.1</p>
+    </div>
   </div>
+</div>
 
-  <!-- Enhanced Main Content with Three Sections -->
-  <main class="px-3 pb-6 max-w-md mx-auto">
-    <!-- Home Page -->
-    <div id="homePage" class="slide-in">
-      
-      <!-- Tab Navigation -->
-      <div class="glass-card rounded-2xl p-1 mb-4 mt-4">
-        <div class="flex rounded-xl" style="background-color: #F0EDE5;">
-          <button onclick="showSection('todaySection')" id="todayTab" class="flex-1 px-3 py-2 text-xs font-medium rounded-lg transition-all duration-300" style="background-color: #060D0C; color: #F0EDE5;">
-            Today's Subjects
-          </button>
-          <button onclick="showSection('subjectsSection')" id="subjectsTab" class="flex-1 px-3 py-2 text-xs font-medium rounded-lg transition-all duration-300" style="color: #8B9B8F;">
-            Your Subjects
-          </button>
-          <button onclick="showSection('completedSection')" id="completedTab" class="flex-1 px-3 py-2 text-xs font-medium rounded-lg transition-all duration-300" style="color: #8B9B8F;">
-            Completed
-          </button>
-        </div>
+<!-- Enhanced Main Content with Blue Gradient Theme -->
+<main class="px-3 pb-6 max-w-md mx-auto">
+  <!-- Home Page -->
+  <div id="homePage" class="slide-in">
+    
+    <!-- Tab Navigation with Blue Gradient -->
+    <div class="rounded-2xl p-1 mb-4 mt-4 shadow-lg" style="background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(189, 216, 233, 0.4);">
+      <div class="flex rounded-xl" style="background: rgba(189, 216, 233, 0.2);">
+        <button onclick="showSection('todaySection')" id="todayTab" class="flex-1 px-3 py-2.5 text-xs font-semibold rounded-lg transition-all duration-300" style="background: linear-gradient(135deg, #0A4174, #49769F); color: white; box-shadow: 0 2px 8px rgba(10, 65, 116, 0.3);">
+          Today's Classes
+        </button>
+        <button onclick="showSection('subjectsSection')" id="subjectsTab" class="flex-1 px-3 py-2.5 text-xs font-medium rounded-lg transition-all duration-300" style="color: #49769F;">
+          Your Subjects
+        </button>
+        <button onclick="showSection('completedSection')" id="completedTab" class="flex-1 px-3 py-2.5 text-xs font-medium rounded-lg transition-all duration-300" style="color: #49769F;">
+          Completed
+        </button>
       </div>
+    </div>
 
-      <!-- Today's Subjects Section (Current Queue) -->
-      <div id="todaySection" class="section-content">
-        <div class="glass-card rounded-2xl p-4 mb-4">
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <h2 class="text-lg font-bold" style="color: #060D0C;">Today's Queue</h2>
-              <p class="text-sm" style="color: #8B9B8F;">Ready for attendance</p>
-            </div>
-            <div class="text-center">
-              <div class="w-10 h-10 rounded-lg flex items-center justify-center floating-badge" style="background: linear-gradient(135deg, #060D0C 0%, #2A3B36 100%);">
-                <span class="text-sm font-bold" style="color: #F0EDE5;" id="queueCount">0</span>
-              </div>
-            </div>
+    <!-- Today's Subjects Section -->
+    <div id="todaySection" class="section-content">
+      <div class="rounded-2xl p-4 mb-4 shadow-lg" style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(189, 216, 233, 0.4);">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-lg font-bold" style="color: #001D39;">Today's Queue</h2>
+            <p class="text-sm font-medium" style="color: #49769F;">Ready for attendance</p>
           </div>
-          
-          <div id="emptyQueuePrompt" class="text-center py-6">
-            <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3" style="background-color: #F0EDE5;">
-              <i class="fas fa-calendar-day text-lg" style="color: #060D0C;"></i>
+          <div class="text-center">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center floating-badge shadow-md" style="background: linear-gradient(135deg, #0A4174, #49769F);">
+              <span class="text-sm font-bold text-white" id="queueCount">0</span>
             </div>
-            <h3 class="text-base font-bold mb-2" style="color: #060D0C;">No Classes Today</h3>
-            <p class="text-sm mb-4" style="color: #8B9B8F;">Add subjects from "Your Subjects" to get started</p>
-          </div>
-          
-          <div id="queueList" class="space-y-3">
-            <!-- Queue items populated by JavaScript -->
           </div>
         </div>
+        
+        <div id="emptyQueuePrompt" class="text-center py-6">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-sm" style="background: linear-gradient(135deg, rgba(189, 216, 233, 0.3), rgba(255, 255, 255, 0.5));">
+            <i class="fas fa-calendar-day text-lg" style="color: #0A4174;"></i>
+          </div>
+          <h3 class="text-base font-bold mb-2" style="color: #001D39;">No Classes Today</h3>
+          <p class="text-sm mb-4" style="color: #49769F;">Add subjects from "Your Subjects" to get started</p>
+        </div>
+        
+        <div id="queueList" class="space-y-3">
+          <!-- Queue items populated by JavaScript -->
+        </div>
       </div>
+    </div>
 
-      <!-- Your Subjects Section -->
-      <div id="subjectsSection" class="section-content hidden">
-        <div class="glass-card rounded-2xl p-4 mb-4">
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <h2 class="text-lg font-bold" style="color: #060D0C;">Your Subjects</h2>
-              <p class="text-sm" style="color: #8B9B8F;">Manage your subjects</p>
+    <!-- Your Subjects Section -->
+    <div id="subjectsSection" class="section-content hidden">
+      <div class="rounded-2xl p-4 mb-4 shadow-lg" style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(189, 216, 233, 0.4);">
+        
+        <!-- Header with Bulk Actions -->
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-lg font-bold" style="color: #001D39;">Your Subjects</h2>
+            <p class="text-sm font-medium" style="color: #49769F;">Manage your subjects</p>
+          </div>
+          
+          <div class="flex items-center space-x-3">
+            <!-- Queue Counter -->
+            <div id="queueCounter" class="hidden px-3 py-2 rounded-lg shadow-sm" style="background: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.2);">
+              <span class="text-xs font-bold" style="color: #4CAF50;">
+                <i class="fas fa-check-circle mr-1"></i>
+                <span id="addedCount">0</span> added to queue
+              </span>
             </div>
-            <button onclick="showCreateSubjectForm()" class="px-3 py-2 rounded-lg font-medium text-sm transition-all duration-300" style="background-color: #060D0C; color: #F0EDE5;">
+            
+            <!-- Create Button -->
+            <button onclick="showCreateSubjectForm()" class="px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 shadow-md hover:scale-105" style="background: linear-gradient(135deg, #0A4174, #49769F); color: white;">
               <i class="fas fa-plus mr-1"></i>Create
             </button>
           </div>
-          
-          <div id="emptySubjectsPrompt" class="text-center py-6">
-            <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3" style="background-color: #F0EDE5;">
-              <i class="fas fa-book text-lg" style="color: #060D0C;"></i>
+        </div>
+    
+        <!-- Bulk Actions Bar (appears when subjects exist) -->
+        <div id="bulkActionsBar" class="hidden mb-4 p-3 rounded-lg" style="background: rgba(123, 189, 232, 0.1); border: 1px solid rgba(123, 189, 232, 0.2);">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+              <button onclick="selectAllSubjects()" class="text-xs font-medium transition-all duration-300 hover:scale-105" style="color: #0A4174;">
+                <i class="fas fa-check-square mr-1"></i>Select All
+              </button>
+              <button onclick="clearAllSelections()" class="text-xs font-medium transition-all duration-300 hover:scale-105" style="color: #49769F;">
+                <i class="fas fa-square mr-1"></i>Clear All
+              </button>
             </div>
-            <h3 class="text-base font-bold mb-2" style="color: #060D0C;">No Subjects Created</h3>
-            <p class="text-sm mb-4" style="color: #8B9B8F;">Create your first subject to get started</p>
-            <button onclick="showCreateSubjectForm()" class="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300" style="background-color: #060D0C; color: #F0EDE5;">
-              <i class="fas fa-plus mr-2"></i>Create Subject
+            
+            <button onclick="addSelectedToQueue()" id="addSelectedBtn" class="px-4 py-2 rounded-lg font-semibold text-xs transition-all duration-300 shadow-md hover:scale-105 disabled:opacity-50" style="background: linear-gradient(135deg, #4CAF50, #66BB6A); color: white;" disabled>
+              <i class="fas fa-plus mr-1"></i>Add Selected (<span id="selectedCount">0</span>)
             </button>
           </div>
-          
-          <div id="subjectsList" class="space-y-3">
-            <!-- Created subjects populated by JavaScript -->
-          </div>
         </div>
-      </div>
-
-      <!-- Completed Section -->
-      <div id="completedSection" class="section-content hidden">
-        <div class="glass-card rounded-2xl p-4 mb-4">
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <h2 class="text-lg font-bold" style="color: #060D0C;">Completed Classes</h2>
-              <p class="text-sm" style="color: #8B9B8F;">Successfully processed</p>
-            </div>
-            <div class="text-center">
-              <div class="w-10 h-10 rounded-lg flex items-center justify-center floating-badge" style="background-color: #F0EDE5;">
-                <span class="text-sm font-bold" style="color: #060D0C;" id="completedCount">0</span>
-              </div>
-            </div>
+        
+        <!-- Empty State -->
+        <div id="emptySubjectsPrompt" class="text-center py-6">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-sm" style="background: linear-gradient(135deg, rgba(189, 216, 233, 0.3), rgba(255, 255, 255, 0.5));">
+            <i class="fas fa-book text-lg" style="color: #0A4174;"></i>
           </div>
-          
-          <div id="emptyCompletedPrompt" class="text-center py-6">
-            <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3" style="background-color: #F0EDE5;">
-              <i class="fas fa-check-circle text-lg" style="color: #060D0C;"></i>
-            </div>
-            <h3 class="text-base font-bold mb-2" style="color: #060D0C;">No Completed Classes</h3>
-            <p class="text-sm" style="color: #8B9B8F;">Completed classes will appear here</p>
-          </div>
-          
-          <div id="completedList" class="space-y-3">
-            <!-- Completed items populated by JavaScript -->
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Create Subject Form -->
-    <div id="createSubjectPage" class="hidden slide-in">
-      <div class="glass-card rounded-2xl p-4 mt-4">
-        <div class="text-center mb-6">
-          <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3" style="background: linear-gradient(135deg, #F0EDE5 0%, #E8E3D8 100%);">
-            <i class="fas fa-book-plus text-lg" style="color: #060D0C;"></i>
-          </div>
-          <h2 class="text-lg font-bold mb-1" style="color: #060D0C;">Create New Subject</h2>
-          <p class="text-sm" style="color: #8B9B8F;">Add a subject to your collection</p>
-        </div>
-
-        <form id="createSubjectForm" class="space-y-4">
-          <!-- Stream Selection -->
-          <div>
-            <label class="block text-sm font-bold mb-3" style="color: #060D0C;">
-              <i class="fas fa-graduation-cap mr-2" style="color: #060D0C;"></i>
-              Academic Stream
-            </label>
-            <div id="createStreamContainer" class="space-y-2">
-              <!-- Stream cards will be populated by JavaScript -->
-            </div>
-            <input type="hidden" id="createSelectedStream" required>
-          </div>
-
-          <!-- Semester Selection -->
-          <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">
-              <i class="fas fa-calendar-alt mr-2" style="color: #060D0C;"></i>
-              Semester
-            </label>
-            <select id="createSemester" required class="w-full px-3 py-3 form-input rounded-xl font-medium" style="color: #060D0C; border-color: #8B9B8F;">
-              <option value="">Select semester</option>
-              <option value="1">Semester 1</option>
-              <option value="2">Semester 2</option>
-              <option value="3">Semester 3</option>
-              <option value="4">Semester 4</option>
-              <option value="5">Semester 5</option>
-              <option value="6">Semester 6</option>
-            </select>
-          </div>
-
-          <!-- Subject Selection -->
-          <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">
-              <i class="fas fa-book-open mr-2" style="color: #060D0C;"></i>
-              Subject
-            </label>
-            <div class="relative">
-              <select id="createSubject" required class="w-full px-3 py-3 form-input rounded-xl text-gray-800 font-medium" disabled>
-                <option value="">Select stream & semester first</option>
-              </select>
-              <div id="createSubjectLoader" class="hidden absolute right-3 top-1/2 transform -translate-y-1/2">
-                <div class="loading-spinner"></div>
-              </div>
-            </div>
-            <p id="createSubjectHelp" class="text-xs text-gray-500 mt-1 ml-1">Choose stream and semester to load subjects</p>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="flex space-x-3 pt-2">
-            <button type="button" onclick="cancelCreateSubject()" class="flex-1 px-4 py-3 rounded-xl font-medium transition-all duration-300" style="color: #8B9B8F; border: 1px solid #8B9B8F;">
-              Cancel
-            </button>
-            <button type="submit" id="createSubjectBtn" class="flex-1 px-4 py-3 rounded-xl font-bold text-white transition-all duration-300" style="background: linear-gradient(135deg, #060D0C 0%, #2A3B36 100%);">
-              <i class="fas fa-plus mr-2"></i>
-              Add to Library
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <!-- Compact Info Card -->
-      <div class="glass-card rounded-2xl p-4 mt-4 border-l-4" style="border-left-color: #060D0C;">
-        <div class="flex items-start">
-          <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 mt-1" style="background-color: #F0EDE5;">
-            <i class="fas fa-lightbulb" style="color: #060D0C;"></i>
-          </div>
-          <div>
-            <h4 class="font-bold text-gray-800 mb-2">Subject Library</h4>
-            <ul class="space-y-2 text-gray-600 text-sm">
-              <li class="flex items-center">
-                <div class="w-1.5 h-1.5 rounded-full mr-2" style="background-color: #060D0C;"></div>
-                <span>Select from available subjects in database</span>
-              </li>
-              <li class="flex items-center">
-                <div class="w-1.5 h-1.5 rounded-full mr-2" style="background-color: #060D0C;"></div>
-                <span>Build your personal subject library</span>
-              </li>
-              <li class="flex items-center">
-                <div class="w-1.5 h-1.5 rounded-full mr-2" style="background-color: #060D0C;"></div>
-                <span>Add to queue whenever needed</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Enhanced Add Class Form with Stream Containers -->
-    <div id="addClassPage" class="hidden slide-in">
-      <div class="glass-card rounded-2xl p-4 mt-4">
-        <div class="text-center mb-6">
-          <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3" style="background: linear-gradient(135deg, #F0EDE5 0%, #E8E3D8 100%);">
-            <i class="fas fa-plus text-lg" style="color: #060D0C;"></i>
-          </div>
-          <h2 class="text-lg font-bold mb-1" style="color: #060D0C;">Add New Class</h2>
-          <p class="text-sm" style="color: #8B9B8F;">Select class details for your queue</p>
-        </div>
-
-        <form id="addClassForm" class="space-y-4">
-          <!-- Enhanced Stream Selection with Visual Cards -->
-          <div>
-            <label class="block text-sm font-bold mb-3" style="color: #060D0C;">
-              <i class="fas fa-graduation-cap mr-2" style="color: #060D0C;"></i>
-              Academic Stream
-            </label>
-            <div id="streamContainer" class="space-y-2">
-              <!-- Stream cards will be populated by JavaScript -->
-            </div>
-            <input type="hidden" id="selectedStream" required>
-          </div>
-
-          <!-- Semester Selection -->
-          <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">
-              <i class="fas fa-calendar-alt mr-2" style="color: #060D0C;"></i>
-              Semester
-            </label>
-            <select id="semester" required class="w-full px-3 py-3 form-input rounded-xl font-medium" style="color: #060D0C; border-color: #8B9B8F;">
-              <option value="">Select semester</option>
-              <option value="1">Semester 1</option>
-              <option value="2">Semester 2</option>
-              <option value="3">Semester 3</option>
-              <option value="4">Semester 4</option>
-              <option value="5">Semester 5</option>
-              <option value="6">Semester 6</option>
-            </select>
-          </div>
-
-          <!-- Subject Selection -->
-          <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">
-              <i class="fas fa-book-open mr-2" style="color: #060D0C;"></i>
-              Subject
-            </label>
-            <div class="relative">
-              <select id="subject" required class="w-full px-3 py-3 form-input rounded-xl text-gray-800 font-medium" disabled>
-                <option value="">Select stream & semester first</option>
-              </select>
-              <div id="subjectLoader" class="hidden absolute right-3 top-1/2 transform -translate-y-1/2">
-                <div class="loading-spinner"></div>
-              </div>
-            </div>
-            <p id="subjectHelp" class="text-xs text-gray-500 mt-1 ml-1">Choose stream and semester to load subjects</p>
-          </div>
-
-          <!-- Submit Button -->
-          <button type="submit" id="addBtn" class="w-full btn-primary text-white px-6 py-3 rounded-xl font-bold shadow-xl disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-            <i class="fas fa-plus mr-2"></i>
-            Add to Queue
+          <h3 class="text-base font-bold mb-2" style="color: #001D39;">No Subjects Created</h3>
+          <p class="text-sm mb-4" style="color: #49769F;">Create your subjects and add multiple to queue at once</p>
+          <button onclick="showCreateSubjectForm()" class="px-4 py-2.5 rounded-lg font-semibold text-sm transition-all duration-300 shadow-md hover:scale-105" style="background: linear-gradient(135deg, #0A4174, #49769F); color: white;">
+            <i class="fas fa-plus mr-2"></i>Create Subject
           </button>
-        </form>
+        </div>
+        
+        <!-- Subjects List with Enhanced Cards -->
+        <div id="subjectsList" class="space-y-3">
+          <!-- Enhanced subject cards with selection checkboxes will be populated here -->
+        </div>
+    
+        <!-- Success Notifications -->
+        <div id="addToQueueNotifications" class="fixed top-4 right-4 z-50 space-y-2">
+          <!-- Success notifications will appear here -->
+        </div>
+        
       </div>
+    </div>
+    
 
-      <!-- Compact Info Card -->
-      <div class="glass-card rounded-2xl p-4 mt-4 border-l-4" style="border-left-color: #060D0C;">
-        <div class="flex items-start">
-          <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 mt-1" style="background-color: #F0EDE5;">
-            <i class="fas fa-lightbulb" style="color: #060D0C;"></i>
-          </div>
+    <!-- Completed Section -->
+    <div id="completedSection" class="section-content hidden">
+      <div class="rounded-2xl p-4 mb-4 shadow-lg" style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(189, 216, 233, 0.4);">
+        <div class="flex items-center justify-between mb-4">
           <div>
-            <h4 class="font-bold text-gray-800 mb-2">How it works</h4>
-            <ul class="space-y-2 text-gray-600 text-sm">
-              <li class="flex items-center">
-                <div class="w-1.5 h-1.5 rounded-full mr-2" style="background-color: #060D0C;"></div>
-                <span>Classes are added to your queue</span>
-              </li>
-              <li class="flex items-center">
-                <div class="w-1.5 h-1.5 rounded-full mr-2" style="background-color: #060D0C;"></div>
-                <span>Take attendance to complete them</span>
-              </li>
-              <li class="flex items-center">
-                <div class="w-1.5 h-1.5 rounded-full mr-2" style="background-color: #060D0C;"></div>
-                <span>Queue resets daily</span>
-              </li>
-            </ul>
+            <h2 class="text-lg font-bold" style="color: #001D39;">Completed Classes</h2>
+            <p class="text-sm font-medium" style="color: #49769F;">Successfully processed</p>
           </div>
+          <div class="text-center">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center floating-badge shadow-sm" style="background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(129, 199, 132, 0.3));">
+              <span class="text-sm font-bold" style="color: #4CAF50;" id="completedCount">0</span>
+            </div>
+          </div>
+        </div>
+        
+        <div id="emptyCompletedPrompt" class="text-center py-6">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-sm" style="background: linear-gradient(135deg, rgba(76, 175, 80, 0.15), rgba(129, 199, 132, 0.2));">
+            <i class="fas fa-check-circle text-lg" style="color: #4CAF50;"></i>
+          </div>
+          <h3 class="text-base font-bold mb-2" style="color: #001D39;">No Completed Classes</h3>
+          <p class="text-sm" style="color: #49769F;">Completed classes will appear here</p>
+        </div>
+        
+        <div id="completedList" class="space-y-3">
+          <!-- Completed items populated by JavaScript -->
         </div>
       </div>
     </div>
-  </main>
+
+  </div>
+
+  <!-- Create Subject Form -->
+  <div id="createSubjectPage" class="hidden slide-in">
+    <div class="rounded-2xl p-4 mt-4 shadow-lg" style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(189, 216, 233, 0.4);">
+      <div class="text-center mb-6">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-md" style="background: linear-gradient(135deg, #6EA2B3, #7BBDE8);">
+          <i class="fas fa-book-plus text-lg text-white"></i>
+        </div>
+        <h2 class="text-lg font-bold mb-1" style="color: #001D39;">Create New Subject</h2>
+        <p class="text-sm font-medium" style="color: #49769F;">Add a subject to your collection</p>
+      </div>
+
+      <form id="createSubjectForm" class="space-y-4">
+        <!-- Stream Selection -->
+        <div>
+          <label class="block text-sm font-bold mb-3" style="color: #001D39;">
+            <i class="fas fa-graduation-cap mr-2" style="color: #0A4174;"></i>
+            Academic Stream
+          </label>
+          <div id="createStreamContainer" class="space-y-2">
+            <!-- Stream cards will be populated by JavaScript -->
+          </div>
+          <input type="hidden" id="createSelectedStream" required>
+        </div>
+
+        <!-- Semester Selection -->
+        <div>
+          <label class="block text-sm font-bold mb-2" style="color: #001D39;">
+            <i class="fas fa-calendar-alt mr-2" style="color: #0A4174;"></i>
+            Semester
+          </label>
+          <select id="createSemester" required class="w-full px-3 py-3 rounded-xl font-medium transition-all focus:scale-[1.02]" style="color: #001D39; border: 1px solid rgba(123, 189, 232, 0.3); background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);">
+            <option value="">Select semester</option>
+            <option value="1">Semester 1</option>
+            <option value="2">Semester 2</option>
+            <option value="3">Semester 3</option>
+            <option value="4">Semester 4</option>
+            <option value="5">Semester 5</option>
+            <option value="6">Semester 6</option>
+          </select>
+        </div>
+
+        <!-- Subject Selection -->
+        <div>
+          <label class="block text-sm font-bold mb-2" style="color: #001D39;">
+            <i class="fas fa-book-open mr-2" style="color: #0A4174;"></i>
+            Subject
+          </label>
+          <div class="relative">
+            <select id="createSubject" required class="w-full px-3 py-3 rounded-xl font-medium transition-all focus:scale-[1.02]" style="color: #001D39; border: 1px solid rgba(123, 189, 232, 0.3); background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);" disabled>
+              <option value="">Select stream & semester first</option>
+            </select>
+            <div id="createSubjectLoader" class="hidden absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div class="loading-spinner" style="border-top-color: #49769F;"></div>
+            </div>
+          </div>
+          <p id="createSubjectHelp" class="text-xs mt-1 ml-1" style="color: #49769F;">Choose stream and semester to load subjects</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex space-x-3 pt-2">
+          <button type="button" onclick="cancelCreateSubject()" class="flex-1 px-4 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105" style="color: #49769F; border: 1px solid rgba(123, 189, 232, 0.3); background: rgba(255, 255, 255, 0.7);">
+            Cancel
+          </button>
+          <button type="submit" id="createSubjectBtn" class="flex-1 px-4 py-3 rounded-xl font-bold text-white transition-all duration-300 hover:scale-105 shadow-md" style="background: linear-gradient(135deg, #0A4174, #49769F);">
+            <i class="fas fa-plus mr-2"></i>
+            Add to Library
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Info Card -->
+    <div class="rounded-2xl p-4 mt-4 shadow-sm border-l-4" style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(15px); border-left-color: #7BBDE8;">
+      <div class="flex items-start">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 mt-1 shadow-sm" style="background: linear-gradient(135deg, rgba(123, 189, 232, 0.2), rgba(189, 216, 233, 0.3));">
+          <i class="fas fa-lightbulb" style="color: #0A4174;"></i>
+        </div>
+        <div>
+          <h4 class="font-bold mb-2" style="color: #001D39;">Subject Library</h4>
+          <ul class="space-y-2 text-sm" style="color: #49769F;">
+            <li class="flex items-center">
+              <div class="w-1.5 h-1.5 rounded-full mr-2" style="background: #7BBDE8;"></div>
+              <span>Select from available subjects in database</span>
+            </li>
+            <li class="flex items-center">
+              <div class="w-1.5 h-1.5 rounded-full mr-2" style="background: #7BBDE8;"></div>
+              <span>Build your personal subject library</span>
+            </li>
+            <li class="flex items-center">
+              <div class="w-1.5 h-1.5 rounded-full mr-2" style="background: #7BBDE8;"></div>
+              <span>Add to queue whenever needed</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Class Form -->
+  <div id="addClassPage" class="hidden slide-in">
+    <div class="rounded-2xl p-4 mt-4 shadow-lg" style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(189, 216, 233, 0.4);">
+      <div class="text-center mb-6">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-md" style="background: linear-gradient(135deg, #4E8EA2, #6EA2B3);">
+          <i class="fas fa-plus text-lg text-white"></i>
+        </div>
+        <h2 class="text-lg font-bold mb-1" style="color: #001D39;">Add New Class</h2>
+        <p class="text-sm font-medium" style="color: #49769F;">Select class details for your queue</p>
+      </div>
+
+      <form id="addClassForm" class="space-y-4">
+        <!-- Stream Selection -->
+        <div>
+          <label class="block text-sm font-bold mb-3" style="color: #001D39;">
+            <i class="fas fa-graduation-cap mr-2" style="color: #0A4174;"></i>
+            Academic Stream
+          </label>
+          <div id="streamContainer" class="space-y-2">
+            <!-- Stream cards will be populated by JavaScript -->
+          </div>
+          <input type="hidden" id="selectedStream" required>
+        </div>
+
+        <!-- Semester Selection -->
+        <div>
+          <label class="block text-sm font-bold mb-2" style="color: #001D39;">
+            <i class="fas fa-calendar-alt mr-2" style="color: #0A4174;"></i>
+            Semester
+          </label>
+          <select id="semester" required class="w-full px-3 py-3 rounded-xl font-medium transition-all focus:scale-[1.02]" style="color: #001D39; border: 1px solid rgba(123, 189, 232, 0.3); background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);">
+            <option value="">Select semester</option>
+            <option value="1">Semester 1</option>
+            <option value="2">Semester 2</option>
+            <option value="3">Semester 3</option>
+            <option value="4">Semester 4</option>
+            <option value="5">Semester 5</option>
+            <option value="6">Semester 6</option>
+          </select>
+        </div>
+
+        <!-- Subject Selection -->
+        <div>
+          <label class="block text-sm font-bold mb-2" style="color: #001D39;">
+            <i class="fas fa-book-open mr-2" style="color: #0A4174;"></i>
+            Subject
+          </label>
+          <div class="relative">
+            <select id="subject" required class="w-full px-3 py-3 rounded-xl font-medium transition-all focus:scale-[1.02]" style="color: #001D39; border: 1px solid rgba(123, 189, 232, 0.3); background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);" disabled>
+              <option value="">Select stream & semester first</option>
+            </select>
+            <div id="subjectLoader" class="hidden absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div class="loading-spinner" style="border-top-color: #49769F;"></div>
+            </div>
+          </div>
+          <p id="subjectHelp" class="text-xs mt-1 ml-1" style="color: #49769F;">Choose stream and semester to load subjects</p>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="addBtn" class="w-full text-white px-6 py-3 rounded-xl font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:scale-105" style="background: linear-gradient(135deg, #0A4174, #49769F);" disabled>
+          <i class="fas fa-plus mr-2"></i>
+          Add to Queue
+        </button>
+      </form>
+    </div>
+
+    <!-- Info Card -->
+    <div class="rounded-2xl p-4 mt-4 shadow-sm border-l-4" style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(15px); border-left-color: #7BBDE8;">
+      <div class="flex items-start">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 mt-1 shadow-sm" style="background: linear-gradient(135deg, rgba(123, 189, 232, 0.2), rgba(189, 216, 233, 0.3));">
+          <i class="fas fa-lightbulb" style="color: #0A4174;"></i>
+        </div>
+        <div>
+          <h4 class="font-bold mb-2" style="color: #001D39;">How it works</h4>
+          <ul class="space-y-2 text-sm" style="color: #49769F;">
+            <li class="flex items-center">
+              <div class="w-1.5 h-1.5 rounded-full mr-2" style="background: #7BBDE8;"></div>
+              <span>Classes are added to your queue</span>
+            </li>
+            <li class="flex items-center">
+              <div class="w-1.5 h-1.5 rounded-full mr-2" style="background: #7BBDE8;"></div>
+              <span>Take attendance to complete them</span>
+            </li>
+            <li class="flex items-center">
+              <div class="w-1.5 h-1.5 rounded-full mr-2" style="background: #7BBDE8;"></div>
+              <span>Queue resets daily</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
 
   <script>
     // Test if JavaScript is working
     console.log('🚀 JavaScript loaded successfully');
     
     // Enhanced Toggle Menu Function - Handle menu, backdrop, and hamburger animation
-    function toggleMenu() {
-      console.log('🔄 toggleMenu called');
-      const menu = document.getElementById("mobileMenu");
-      const backdrop = document.getElementById("menuBackdrop");
-      const menuIcon = document.querySelector('.menu-icon');
-      
-      console.log('📱 Menu element:', menu);
-      console.log('📱 Backdrop element:', backdrop);
-      console.log('📱 Menu icon element:', menuIcon);
-      
-      if (!menu || !backdrop) {
-        console.error('❌ Menu or backdrop element not found');
-        return;
-      }
-      
-      const isHidden = menu.classList.contains('hidden');
-      console.log('📱 Current state - menu hidden:', isHidden);
-      
-      if (isHidden) {
-        // Show menu
-        console.log('📱 Opening menu');
-        menu.classList.remove('hidden');
-        // Force reflow to ensure hidden class is removed before transform
-        menu.offsetHeight;
-        menu.classList.remove('-translate-x-full');
-        backdrop.classList.remove('hidden');
-        if (menuIcon) menuIcon.classList.add('active');
-        console.log('📱 Menu opened');
-      } else {
-        // Hide menu
-        console.log('📱 Closing menu');
-        menu.classList.add('-translate-x-full');
-        backdrop.classList.add('hidden');
-        if (menuIcon) menuIcon.classList.remove('active');
+
+      // 🔧 Fixed Menu Toggle Function
+      function toggleMenu() {
+        console.log('🔄 toggleMenu called');
         
-        // Wait for animation to complete before hiding
-        setTimeout(() => {
-          if (menu.classList.contains('-translate-x-full')) {
-            menu.classList.add('hidden');
-            console.log('📱 Menu hidden after animation');
+        // Get elements with fallback
+        const menu = document.getElementById("mobileMenu");
+        const backdrop = document.getElementById("menuBackdrop");
+        const menuIcon = document.querySelector('.menu-icon');
+        
+        console.log('📱 Elements found:', {
+          menu: !!menu,
+          backdrop: !!backdrop,
+          menuIcon: !!menuIcon
+        });
+        
+        // Error handling
+        if (!menu) {
+          console.error('❌ mobileMenu element not found!');
+          return;
+        }
+        
+        if (!backdrop) {
+          console.error('❌ menuBackdrop element not found!');
+          return;
+        }
+        
+        // Check current state more reliably
+        const isHidden = menu.classList.contains('hidden') || 
+                        getComputedStyle(menu).transform.includes('-264px') || 
+                        getComputedStyle(menu).transform === 'translateX(-100%)';
+        
+        console.log('📱 Current state:', {
+          hasHiddenClass: menu.classList.contains('hidden'),
+          hasTranslateClass: menu.classList.contains('-translate-x-full'),
+          computedTransform: getComputedStyle(menu).transform,
+          isHidden: isHidden
+        });
+        
+        if (isHidden) {
+          // 🟢 SHOW MENU
+          console.log('📱 Opening menu...');
+          
+          // Step 1: Remove hidden class first
+          menu.classList.remove('hidden');
+          backdrop.classList.remove('hidden');
+          
+          // Step 2: Force reflow to ensure DOM is updated
+          menu.offsetHeight;
+          
+          // Step 3: Remove transform class with slight delay
+          requestAnimationFrame(() => {
+            menu.classList.remove('-translate-x-full');
+            if (menuIcon) {
+              menuIcon.classList.add('active');
+            }
+            
+            // Prevent body scroll
+            document.body.style.overflow = 'hidden';
+            console.log('✅ Menu opened successfully');
+          });
+          
+        } else {
+          // 🔴 HIDE MENU
+          console.log('📱 Closing menu...');
+          
+          // Step 1: Add transform class
+          menu.classList.add('-translate-x-full');
+          backdrop.classList.add('hidden');
+          
+          if (menuIcon) {
+            menuIcon.classList.remove('active');
           }
-        }, 300);
-        console.log('📱 Menu closing');
+          
+          // Allow body scroll
+          document.body.style.overflow = '';
+          
+          // Step 2: Add hidden class after animation
+          setTimeout(() => {
+            if (menu.classList.contains('-translate-x-full')) {
+              menu.classList.add('hidden');
+              console.log('✅ Menu closed successfully');
+            }
+          }, 350); // Slightly longer than CSS transition
+        }
       }
-    }
-    
-    // Make it globally available
-    window.toggleMenu = toggleMenu;
-    console.log('✅ toggleMenu function assigned to window');
+      
+      // 🔧 Enhanced Event Listeners
+      function initializeMenu() {
+        console.log('🚀 Initializing menu system...');
+        
+        // Menu Icon Click
+        const menuIcon = document.querySelector('.menu-icon');
+        if (menuIcon) {
+          // Remove existing listeners to prevent duplicates
+          menuIcon.onclick = null;
+          menuIcon.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🖱️ Menu icon clicked');
+            toggleMenu();
+          });
+          console.log('✅ Menu icon listener added');
+        } else {
+          console.warn('⚠️ Menu icon not found');
+        }
+        
+        // Close Button Click
+        const closeBtn = document.getElementById('menuCloseBtn');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('❌ Close button clicked');
+            toggleMenu();
+          });
+          console.log('✅ Close button listener added');
+        } else {
+          console.warn('⚠️ Close button not found');
+        }
+        
+        // Backdrop Click
+        const backdrop = document.getElementById('menuBackdrop');
+        if (backdrop) {
+          backdrop.addEventListener('click', function(e) {
+            console.log('🌫️ Backdrop clicked');
+            toggleMenu();
+          });
+          console.log('✅ Backdrop listener added');
+        } else {
+          console.warn('⚠️ Backdrop not found');
+        }
+        
+        // Escape Key
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape') {
+            const menu = document.getElementById('mobileMenu');
+            if (menu && !menu.classList.contains('hidden')) {
+              console.log('⌨️ Escape key pressed');
+              toggleMenu();
+            }
+          }
+        });
+        
+        console.log('✅ Menu system initialized successfully');
+      }
+      
+      // 🚀 Initialize when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeMenu);
+      } else {
+        initializeMenu();
+      }
+      
+      // 🌐 Make functions globally available
+      window.toggleMenu = toggleMenu;
+      window.initializeMenu = initializeMenu;
+      
+      console.log('✅ Menu script loaded successfully');
+  
+      
 
     // Enhanced streams configuration based on your structure - LUXE NOIR Theme
     const streams = [
@@ -1163,19 +1570,20 @@
       if (!elements.streamContainer) return;
       
       elements.streamContainer.innerHTML = streams.map(stream => `
-        <div class="stream-container glass-card rounded-xl p-3 cursor-pointer border-2 border-transparent hover:${stream.borderColor}" 
+        <div class="stream-container rounded-xl p-3 cursor-pointer border-2 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg" 
+             style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-color: rgba(123, 189, 232, 0.3);"
              onclick="selectStream('${stream.name}')" 
              data-stream="${stream.name}">
           <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 ${stream.color} rounded-lg flex items-center justify-center">
-              ${stream.icon}
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm" style="background: linear-gradient(135deg, ${stream.gradientStart || '#4E8EA2'}, ${stream.gradientEnd || '#6EA2B3'});">
+              <i class="${stream.icon} text-sm text-white"></i>
             </div>
             <div class="flex-1">
-              <h4 class="font-bold ${stream.textColor}">${stream.displayName || stream.name}</h4>
-              <p class="text-xs text-gray-500">${stream.limitedSemesters ? 'Sem ' + stream.limitedSemesters.join(', ') + ' only' : 'All semesters'}</p>
+              <h4 class="font-semibold" style="color: #001D39;">${stream.displayName || stream.name}</h4>
+              <p class="text-xs font-medium" style="color: #49769F;">${stream.limitedSemesters ? 'Sem ' + stream.limitedSemesters.join(', ') + ' only' : 'All semesters'}</p>
             </div>
-            <div class="w-5 h-5 border-2 border-gray-300 rounded-full flex items-center justify-center">
-              <div class="w-3 h-3 ${stream.color} rounded-full opacity-0 transition-opacity" data-check="${stream.name}"></div>
+            <div class="w-5 h-5 border-2 rounded-full flex items-center justify-center transition-all duration-300" style="border-color: rgba(123, 189, 232, 0.4);">
+              <div class="w-2.5 h-2.5 rounded-full opacity-0 transition-all duration-300" style="background: linear-gradient(135deg, #0A4174, #49769F);" data-check="${stream.name}"></div>
             </div>
           </div>
         </div>
@@ -1268,13 +1676,14 @@
       document.getElementById(sectionId).classList.remove('hidden');
       currentSection = sectionId;
       
-      // Update tab buttons
+      // Reset all tab buttons to inactive state
       document.querySelectorAll('#todayTab, #subjectsTab, #completedTab').forEach(tab => {
-        tab.style.backgroundColor = 'transparent';
-        tab.style.color = '#8B9B8F';
+        tab.style.background = 'transparent';
+        tab.style.color = '#49769F';
+        tab.style.boxShadow = 'none';
       });
       
-      // Highlight active tab
+      // Highlight active tab with blue gradient
       const activeTabMap = {
         'todaySection': 'todayTab',
         'subjectsSection': 'subjectsTab', 
@@ -1283,8 +1692,9 @@
       
       const activeTab = document.getElementById(activeTabMap[sectionId]);
       if (activeTab) {
-        activeTab.style.backgroundColor = '#060D0C';
-        activeTab.style.color = '#F0EDE5';
+        activeTab.style.background = 'linear-gradient(135deg, #0A4174, #49769F)';
+        activeTab.style.color = 'white';
+        activeTab.style.boxShadow = '0 2px 8px rgba(10, 65, 116, 0.3)';
       }
       
       // Update displays based on section
@@ -1296,6 +1706,7 @@
         updateCompletedDisplay();
       }
     }
+    
 
     // Page navigation
     function showHomePage() {
@@ -1354,19 +1765,18 @@
     // ============================================================================
     // DISPLAY FUNCTIONS
     // ============================================================================
-    
     function updateQueueDisplay() {
       const emptyQueuePrompt = document.getElementById('emptyQueuePrompt');
       const queueList = document.getElementById('queueList');
-
+    
       if (!emptyQueuePrompt || !queueList) {
         console.warn('Queue DOM elements not found, retrying...');
         setTimeout(updateQueueDisplay, 100);
         return;
       }
-
+    
       document.getElementById('queueCount').textContent = attendanceQueue.length;
-
+    
       if (attendanceQueue.length === 0) {
         emptyQueuePrompt.classList.remove('hidden');
         queueList.innerHTML = '';
@@ -1376,31 +1786,37 @@
         queueList.innerHTML = attendanceQueue.map((item, index) => {
           const streamData = streams.find(s => s.name === item.stream) || streams[0];
           return `
-            <div class="queue-item glass-card rounded-2xl border-l-4 ${streamData.borderColor} p-4" data-id="${item.id}">
+            <div class="queue-item rounded-2xl border-l-4 p-4 shadow-lg transition-all duration-300 hover:shadow-xl" style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(189, 216, 233, 0.4); border-left-color: #7BBDE8;" data-id="${item.id}">
               <div class="flex items-start justify-between mb-3">
                 <div class="flex items-start">
-                  <div class="w-8 h-8 bg-white bg-opacity-80 rounded-lg flex items-center justify-center mr-3">
-                    <span class="font-bold text-sm" style="color: #060D0C;">${index + 1}</span>
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 shadow-sm" style="background: rgba(123, 189, 232, 0.15);">
+                    <span class="font-bold text-sm" style="color: #0A4174;">${index + 1}</span>
                   </div>
                   <div class="flex-1">
                     <div class="flex items-center mb-2">
-                      <div class="w-6 h-6 ${streamData.color} rounded mr-2 flex items-center justify-center">
-                        ${streamData.icon}
+                      <div class="w-6 h-6 rounded mr-2 flex items-center justify-center shadow-sm" style="background: linear-gradient(135deg, #4E8EA2, #6EA2B3);">
+                        <i class="fas fa-book text-xs text-white"></i>
                       </div>
-                      <h3 class="font-bold text-gray-800">${item.subject}</h3>
+                      <h3 class="font-bold" style="color: #001D39;">${item.subject}</h3>
                     </div>
                     <div class="flex flex-wrap gap-1 mb-2">
-                      <span class="${streamData.color} ${streamData.textColor} px-2 py-1 rounded-lg text-xs font-semibold">${streamData.displayName || item.stream}</span>
-                      <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-lg text-xs font-semibold">Sem ${item.semester}</span>
+                      <span class="px-2 py-1 rounded-lg text-xs font-semibold text-white shadow-sm" style="background: linear-gradient(135deg, #0A4174, #49769F);">${streamData.displayName || item.stream}</span>
+                      <span class="px-2 py-1 rounded-lg text-xs font-semibold" style="background: rgba(123, 189, 232, 0.15); color: #0A4174;">Sem ${item.semester}</span>
                     </div>
-                    <p class="text-gray-500 text-xs">Added: ${item.timeAdded}</p>
+                    <p class="text-xs font-medium" style="color: #66BB6A;">Added: ${item.timeAdded}</p>
                   </div>
                 </div>
+                
+                <!-- Remove button -->
+                <button onclick="removeFromQueue(${item.id})" class="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 hover:scale-110" style="color: #FF9800; background: rgba(255, 152, 0, 0.1); border: 1px solid rgba(255, 152, 0, 0.2);" title="Remove from queue">
+                  <i class="fas fa-times text-xs"></i>
+                </button>
               </div>
+              
               <div class="flex space-x-2">
-                <button onclick="takeAttendance(${item.id})" class="w-full text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 shadow-lg" style="background: linear-gradient(to right, #060D0C, #2A3B36);" onmouseover="this.style.background='linear-gradient(to right, #2A3B36, #060D0C)'" onmouseout="this.style.background='linear-gradient(to right, #060D0C, #2A3B36)'">
+                <button onclick="takeAttendance(${item.id})" class="w-full text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 shadow-lg hover:scale-[1.02]" style="background: linear-gradient(135deg, #0A4174, #49769F);">
                   <i class="fas fa-user-check mr-2"></i>
-                  Attend
+                  Take Attendance
                 </button>
               </div>
             </div>
@@ -1408,16 +1824,89 @@
         }).join('');
       }
     }
+    
+    // Simple remove from queue function - no confirmation
+    function removeFromQueue(itemId) {
+      const item = attendanceQueue.find(q => q.id === itemId);
+      if (!item) return;
+    
+      // Remove from queue
+      attendanceQueue = attendanceQueue.filter(q => q.id !== itemId);
+      
+      // Save to localStorage
+      localStorage.setItem('attendanceQueue', JSON.stringify(attendanceQueue));
+      
+      // Try to save to database
+      try {
+        saveQueueToDatabase(attendanceQueue);
+      } catch (error) {
+        console.log('Database save failed, using localStorage');
+      }
+    
+      // Show orange notification
+      showOrangeNotification('Removed from queue');
+      
+      // Update display
+      updateQueueDisplay();
+      updateSubjectsDisplay(); // Refresh subjects to show updated button states
+    }
+    
+    // Orange notification function
+    function showOrangeNotification(message) {
+      const existing = document.getElementById('blueNotify');
+      if (existing) existing.remove();
+    
+      const notification = document.createElement('div');
+      notification.id = 'blueNotify';
+      
+      notification.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 9999;
+        padding: 12px 16px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #FF9800, #FFB74D);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 152, 0, 0.4);
+        color: white;
+        font-weight: 500;
+        font-size: 14px;
+        white-space: nowrap;
+        box-shadow: 0 8px 25px rgba(255, 152, 0, 0.3);
+        animation: centerPop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      `;
+    
+      notification.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-minus-circle" style="color: white; font-size: 14px;"></i>
+          <span>${message}</span>
+        </div>
+      `;
+    
+      document.body.appendChild(notification);
+    
+      // Auto remove after 2.5 seconds
+      setTimeout(() => {
+        if (notification.parentElement) {
+          notification.style.animation = 'centerFade 0.3s ease-out forwards';
+          setTimeout(() => notification.remove(), 300);
+        }
+      }, 2500);
+    }
+    
 
     function updateSubjectsDisplay() {
       const emptySubjectsPrompt = document.getElementById('emptySubjectsPrompt');
       const subjectsList = document.getElementById('subjectsList');
-
+    
       if (!emptySubjectsPrompt || !subjectsList) {
         console.warn('Subjects DOM elements not found');
         return;
       }
-
+    
       if (createdSubjects.length === 0) {
         emptySubjectsPrompt.classList.remove('hidden');
         subjectsList.innerHTML = '';
@@ -1427,27 +1916,27 @@
         subjectsList.innerHTML = createdSubjects.map(subject => {
           const streamData = streams.find(s => s.name === subject.stream) || streams[0];
           return `
-            <div class="glass-card rounded-2xl border-l-4 ${streamData.borderColor} p-4" data-subject-id="${subject.id}">
+            <div class="rounded-2xl border-l-4 p-4 shadow-lg transition-all duration-300 hover:shadow-xl" style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(189, 216, 233, 0.4); border-left-color: #7BBDE8;" data-subject-id="${subject.id}">
               <div class="flex items-start justify-between mb-3">
                 <div class="flex items-start flex-1">
-                  <div class="w-8 h-8 ${streamData.color} rounded-lg flex items-center justify-center mr-3">
-                    ${streamData.icon}
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 shadow-sm" style="background: linear-gradient(135deg, #4E8EA2, #6EA2B3);">
+                    <i class="fas fa-book text-xs text-white"></i>
                   </div>
                   <div class="flex-1">
-                    <h3 class="font-bold text-gray-800 mb-1">${subject.subjectName}</h3>
-                    ${subject.subjectCode ? `<p class="text-xs text-gray-500 mb-2">${subject.subjectCode}</p>` : ''}
+                    <h3 class="font-bold mb-1" style="color: #001D39;">${subject.subjectName}</h3>
+                    ${subject.subjectCode ? `<p class="text-xs font-medium mb-2" style="color: #49769F;">${subject.subjectCode}</p>` : ''}
                     <div class="flex flex-wrap gap-1">
-                      <span class="${streamData.color} ${streamData.textColor} px-2 py-1 rounded-lg text-xs font-semibold">${streamData.displayName || subject.stream}</span>
-                      <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-lg text-xs font-semibold">Sem ${subject.semester}</span>
+                      <span class="px-2 py-1 rounded-lg text-xs font-semibold text-white shadow-sm" style="background: linear-gradient(135deg, #0A4174, #49769F);">${streamData.displayName || subject.stream}</span>
+                      <span class="px-2 py-1 rounded-lg text-xs font-semibold" style="background: rgba(123, 189, 232, 0.15); color: #0A4174;">Sem ${subject.semester}</span>
                     </div>
                   </div>
                 </div>
               </div>
               <div class="flex space-x-2">
-                <button onclick="addSubjectToQueue('${subject.id}')" class="flex-1 text-white px-3 py-2 rounded-lg font-medium text-sm transition-all duration-300" style="background: linear-gradient(to right, #060D0C, #2A3B36);">
+                <button onclick="addSubjectToQueue('${subject.id}')" class="flex-1 text-white px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 hover:scale-[1.02] shadow-md" style="background: linear-gradient(135deg, #0A4174, #49769F);">
                   <i class="fas fa-plus mr-2"></i>Add to Queue
                 </button>
-                <button onclick="deleteSubject('${subject.id}')" class="px-3 py-2 rounded-lg font-medium text-sm transition-all duration-300" style="color: #8B9B8F; border: 1px solid #8B9B8F;">
+                <button onclick="deleteSubject('${subject.id}')" class="px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 hover:scale-105" style="color: #EF5350; border: 1px solid rgba(239, 83, 80, 0.3); background: rgba(239, 83, 80, 0.1);">
                   <i class="fas fa-trash"></i>
                 </button>
               </div>
@@ -1456,41 +1945,165 @@
         }).join('');
       }
     }
-
     function updateCompletedDisplay() {
       const emptyCompletedPrompt = document.getElementById('emptyCompletedPrompt');
       const completedList = document.getElementById('completedList');
-
+    
       if (!emptyCompletedPrompt || !completedList) {
         console.warn('Completed DOM elements not found');
         return;
       }
-
+    
       document.getElementById('completedCount').textContent = completedClasses.length;
-
+    
       if (completedClasses.length === 0) {
         emptyCompletedPrompt.classList.remove('hidden');
         completedList.innerHTML = '';
       } else {
         emptyCompletedPrompt.classList.add('hidden');
         
-        completedList.innerHTML = completedClasses.map(item => {
+        // Sort by completion time - most recent first (stack order)
+        const sortedClasses = [...completedClasses].sort((a, b) => {
+          // Sort by timestamp if available, otherwise by id or array position
+          if (a.timestamp && b.timestamp) {
+            return b.timestamp - a.timestamp; // Most recent first
+          }
+          // Fallback to id comparison (higher id = more recent)
+          return (b.id || 0) - (a.id || 0);
+        });
+        
+        completedList.innerHTML = sortedClasses.map((item, index) => {
           const streamData = streams.find(s => s.name === item.stream) || streams[0];
+          
+          // Smart period calculation based on 30-minute threshold
+          const formatTimeAsPeriod = (timeString) => {
+            try {
+              let time = timeString;
+              if (time.includes('at ')) {
+                time = time.split('at ')[1]; // Extract time if it has "at" prefix
+              }
+              
+              const timeMatch = time.match(/(\d{1,2}):(\d{2})/);
+              if (timeMatch) {
+                const hour = parseInt(timeMatch[1]);
+                const minute = parseInt(timeMatch[2]);
+                
+                let startHour, startMinute;
+                
+                // If minutes <= 30, start from the hour, else start from 30 minutes
+                if (minute <= 30) {
+                  startHour = hour;
+                  startMinute = 0;
+                } else {
+                  startHour = hour;
+                  startMinute = 30;
+                }
+                
+                // Calculate end time (1 hour later)
+                let endHour = startHour;
+                let endMinute = startMinute + 60;
+                
+                if (endMinute >= 60) {
+                  endMinute -= 60;
+                  endHour += 1;
+                }
+                
+                // Format with AM/PM
+                const formatTime = (h, m) => {
+                  const period = h >= 12 ? 'PM' : 'AM';
+                  const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+                  const displayMinute = m.toString().padStart(2, '0');
+                  return `${displayHour}:${displayMinute} ${period}`;
+                };
+                
+                return `${formatTime(startHour, startMinute)} - ${formatTime(endHour, endMinute)}`;
+              }
+            } catch (error) {
+              console.warn('Error formatting time:', error);
+            }
+            
+            return timeString; // Fallback to original time
+          };
+    
+          // 📅 FORMAT DATE DISPLAY
+          const formatCompletedDate = (item) => {
+            try {
+              // Try to extract date from timestamp or completedTime
+              let dateToFormat = null;
+              
+              if (item.timestamp) {
+                dateToFormat = new Date(item.timestamp);
+              } else if (item.completedDate) {
+                dateToFormat = new Date(item.completedDate);
+              } else if (item.completedTime && item.completedTime.includes('at ')) {
+                // Extract date if completedTime has format "Sep 19, 2025 at 2:30 PM"
+                const datePart = item.completedTime.split(' at ')[0];
+                dateToFormat = new Date(datePart);
+              } else {
+                // Default to today if no date info available
+                dateToFormat = new Date();
+              }
+              
+              // Check if date is valid
+              if (isNaN(dateToFormat.getTime())) {
+                dateToFormat = new Date();
+              }
+              
+              const today = new Date();
+              const yesterday = new Date(today);
+              yesterday.setDate(yesterday.getDate() - 1);
+              
+              // Format based on relative time
+              if (dateToFormat.toDateString() === today.toDateString()) {
+                return 'Today';
+              } else if (dateToFormat.toDateString() === yesterday.toDateString()) {
+                return 'Yesterday';
+              } else {
+                // Format as "Sep 19" or "Sep 19, 2024" if different year
+                const options = { month: 'short', day: 'numeric' };
+                if (dateToFormat.getFullYear() !== today.getFullYear()) {
+                  options.year = 'numeric';
+                }
+                return dateToFormat.toLocaleDateString('en-US', options);
+              }
+            } catch (error) {
+              console.warn('Error formatting date:', error);
+              return 'Today';
+            }
+          };
+    
+          // Add "recent" indicator for the first item
+          const recentBadge = index === 0 ? `
+            <div class="absolute top-2 right-2">
+             
+            </div>
+          ` : '';
+    
           return `
-            <div class="rounded-lg p-3" style="background: linear-gradient(to right, #F0EDE5, #E8E3D8); border-left: 4px solid #060D0C;">
+            <div class="relative rounded-xl p-4 shadow-md transition-all duration-300 hover:shadow-lg" style="background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(129, 199, 132, 0.05)); border-left: 4px solid #4CAF50; border: 1px solid rgba(76, 175, 80, 0.2);">
+              ${recentBadge}
               <div class="flex items-center">
-                <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3" style="background-color: #E8E3D8;">
-                  <i class="fas fa-check text-sm" style="color: #060D0C;"></i>
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 shadow-sm" style="background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(129, 199, 132, 0.3));">
+                  <i class="fas fa-check text-sm" style="color: #4CAF50;"></i>
                 </div>
                 <div class="flex-1">
-                  <div class="flex items-center mb-1">
-                    <div class="w-4 h-4 ${streamData.color} rounded mr-1 flex items-center justify-center">
-                      ${streamData.icon}
+                  <div class="flex items-center justify-between mb-1">
+                    <div class="flex items-center">
+                      <div class="w-4 h-4 rounded mr-2 flex items-center justify-center shadow-sm" style="background: linear-gradient(135deg, #4E8EA2, #6EA2B3);">
+                        <i class="fas fa-book text-xs text-white"></i>
+                      </div>
+                      <h4 class="font-bold text-sm" style="color: #001D39;">${item.subject}</h4>
                     </div>
-                    <h4 class="font-bold text-gray-800 text-sm">${item.subject}</h4>
+                    <span class="text-xs font-medium" style="color: #7BBDE8;">
+                      <i class="fas fa-calendar-alt mr-1"></i>
+                      ${formatCompletedDate(item)}
+                    </span>
                   </div>
-                  <p class="text-xs text-gray-600 mb-1">${streamData.displayName || item.stream} • Sem ${item.semester}</p>
-                  <p class="text-xs font-semibold" style="color: #060D0C;">Completed: ${item.completedTime}</p>
+                  <p class="text-xs font-medium mb-1" style="color: #49769F;">${streamData.displayName || item.stream} • Sem ${item.semester}</p>
+                  <p class="text-xs font-semibold" style="color: #4CAF50;">
+                    <i class="fas fa-clock mr-1"></i>
+                    Period: ${formatTimeAsPeriod(item.completedTime)}
+                  </p>
                 </div>
               </div>
             </div>
@@ -1498,7 +2111,8 @@
         }).join('');
       }
     }
-
+    
+    
     async function onSemesterChange() {
       const semester = elements.semesterSelect?.value;
       
@@ -1511,19 +2125,21 @@
       if (!semester) {
         elements.subjectSelect.innerHTML = '<option value="">Select semester first</option>';
         elements.subjectHelp.textContent = 'Choose semester to load subjects';
-        elements.subjectHelp.className = 'text-xs text-gray-500 mt-1 ml-1';
+        elements.subjectHelp.className = 'text-xs mt-1 ml-1 font-medium';
+        elements.subjectHelp.style.color = '#49769F';
         return;
       }
-
+    
       await loadSubjects(selectedStreamData.name, semester);
     }
-
+    
     async function loadSubjects(stream, semester) {
       try {
         elements.subjectLoader.classList.remove('hidden');
         elements.subjectSelect.innerHTML = '<option value="">Loading...</option>';
         elements.subjectHelp.textContent = 'Loading subjects...';
-        elements.subjectHelp.className = 'text-xs text-blue-600 mt-1 ml-1 font-medium';
+        elements.subjectHelp.className = 'text-xs mt-1 ml-1 font-semibold';
+        elements.subjectHelp.style.color = '#0A4174';
         
         const response = await fetch(`/api/subjects/${stream}/sem${semester}`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -1535,8 +2151,9 @@
         
         if (!Array.isArray(subjects) || subjects.length === 0) {
           elements.subjectSelect.innerHTML = '<option value="">No subjects found</option>';
-          elements.subjectHelp.textContent = 'No subjects available';
-          elements.subjectHelp.className = 'text-xs text-yellow-600 mt-1 ml-1 font-medium';
+          elements.subjectHelp.textContent = 'No subjects available for this semester';
+          elements.subjectHelp.className = 'text-xs mt-1 ml-1 font-medium';
+          elements.subjectHelp.style.color = '#FFB74D';
           return;
         }
         
@@ -1554,17 +2171,19 @@
         
         elements.subjectSelect.disabled = false;
         elements.addBtn.disabled = false;
-        elements.subjectHelp.textContent = `${subjects.length} subjects available`;
-        elements.subjectHelp.className = 'text-xs text-green-600 mt-1 ml-1 font-medium';
+        elements.subjectHelp.textContent = `✓ ${subjects.length} subjects loaded successfully`;
+        elements.subjectHelp.className = 'text-xs mt-1 ml-1 font-semibold';
+        elements.subjectHelp.style.color = '#4CAF50';
         
       } catch (error) {
         elements.subjectLoader.classList.add('hidden');
-        elements.subjectSelect.innerHTML = '<option value="">Error loading</option>';
-        elements.subjectHelp.textContent = 'Failed to load subjects';
-        elements.subjectHelp.className = 'text-xs text-red-500 mt-1 ml-1 font-medium';
+        elements.subjectSelect.innerHTML = '<option value="">Error loading subjects</option>';
+        elements.subjectHelp.textContent = '⚠ Failed to load subjects. Please try again';
+        elements.subjectHelp.className = 'text-xs mt-1 ml-1 font-medium';
+        elements.subjectHelp.style.color = '#EF5350';
       }
     }
-
+    
     async function handleAddToQueue(e) {
       e.preventDefault();
       
@@ -1672,25 +2291,26 @@
       if (!container) return;
       
       container.innerHTML = streams.map(stream => `
-        <div class="stream-container glass-card rounded-xl p-3 cursor-pointer border-2 border-transparent hover:${stream.borderColor}" 
+        <div class="stream-container rounded-xl p-3 cursor-pointer border-2 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg" 
+             style="background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-color: rgba(123, 189, 232, 0.3); box-shadow: 0 4px 15px rgba(1, 29, 57, 0.08);"
              onclick="selectCreateStream('${stream.name}')" 
              data-stream="${stream.name}">
           <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 ${stream.color} rounded-lg flex items-center justify-center">
-              ${stream.icon}
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm" style="background: linear-gradient(135deg, #4E8EA2, #6EA2B3);">
+              <i class="fas fa-book text-xs text-white"></i>
             </div>
             <div class="flex-1">
-              <h4 class="font-bold ${stream.textColor}">${stream.displayName || stream.name}</h4>
-              <p class="text-xs text-gray-500">${stream.limitedSemesters ? 'Sem ' + stream.limitedSemesters.join(', ') + ' only' : 'All semesters'}</p>
+              <h4 class="font-bold" style="color: #001D39;">${stream.displayName || stream.name}</h4>
+              <p class="text-xs font-medium" style="color: #49769F;">${stream.limitedSemesters ? 'Sem ' + stream.limitedSemesters.join(', ') + ' only' : 'All semesters'}</p>
             </div>
-            <div class="w-5 h-5 border-2 border-gray-300 rounded-full flex items-center justify-center">
-              <div class="w-3 h-3 ${stream.color} rounded-full opacity-0 transition-opacity" data-check="${stream.name}"></div>
+            <div class="w-5 h-5 border-2 rounded-full flex items-center justify-center transition-all duration-300" style="border-color: rgba(123, 189, 232, 0.4);">
+              <div class="w-3 h-3 rounded-full opacity-0 transition-opacity" style="background: linear-gradient(135deg, #0A4174, #49769F);" data-check="${stream.name}"></div>
             </div>
           </div>
         </div>
       `).join('');
     }
-
+    
     function selectCreateStream(streamName) {
       // Remove previous selection
       document.querySelectorAll('#createStreamContainer .stream-container').forEach(card => {
@@ -1892,79 +2512,352 @@
       showSection('subjectsSection');
     }
 
-    async function addSubjectToQueue(subjectId) {
-      const subject = createdSubjects.find(s => s.id === subjectId);
-      if (!subject) return;
+    // Updated addSubjectToQueue function - allows duplicates, stays in current tab
+async function addSubjectToQueue(subjectId) {
+  const subject = createdSubjects.find(s => s.id === subjectId);
+  if (!subject) return;
 
-      // Check if already in queue
-      const duplicate = attendanceQueue.find(item => 
-        item.stream === subject.stream && 
-        item.semester === subject.semester && 
-        item.subject === subject.subjectName
-      );
+  const queueItem = {
+    id: Date.now() + Math.random(), // Allow duplicates with unique IDs
+    stream: subject.stream,
+    semester: subject.semester,
+    subject: subject.subjectName,
+    timeAdded: new Date().toLocaleTimeString(),
+    dateAdded: new Date().toDateString(),
+    teacherId: userData.userName,
+    fromCreatedSubject: true
+  };
 
-      if (duplicate) {
-        showNotification('Subject already in today\'s queue', 'warning');
-        return;
-      }
+  // Add to queue
+  attendanceQueue.push(queueItem);
+  
+  // Save to localStorage
+  localStorage.setItem('attendanceQueue', JSON.stringify(attendanceQueue));
+  
+  // Try to save to database
+  try {
+    await saveQueueToDatabase(attendanceQueue);
+  } catch (error) {
+    console.log('Database save failed, using localStorage');
+  }
 
-      const queueItem = {
-        id: Date.now(),
-        stream: subject.stream,
-        semester: subject.semester,
-        subject: subject.subjectName,
-        timeAdded: new Date().toLocaleTimeString(),
-        dateAdded: new Date().toDateString(),
-        teacherId: userData.userName,
-        fromCreatedSubject: true
-      };
+  showBlueNotification('Added to queue');
+  
+  // Update display but stay in current tab (subjects section)
+  updateQueueDisplay();
+  updateSubjectsDisplay();
+}
 
-      // Add to queue
-      attendanceQueue.push(queueItem);
-      
-      // Save to localStorage
-      localStorage.setItem('attendanceQueue', JSON.stringify(attendanceQueue));
-      
-      // Try to save to database
-      try {
-        await saveQueueToDatabase(attendanceQueue);
-      } catch (error) {
-        console.log('Database save failed, using localStorage');
-      }
+// Updated deleteSubject function with blue confirmation
+async function deleteSubject(subjectId) {
+  const subject = createdSubjects.find(s => s.id === subjectId);
+  if (!subject) return;
 
-      showNotification('✅ Added to today\'s queue!', 'success');
-      
-      // Update display and switch to today's section
-      updateQueueDisplay();
-      showSection('todaySection');
+  const confirmed = await showBlueConfirm(`Delete "${subject.subjectName}"?`);
+  if (!confirmed) return;
+
+  // Remove from local array
+  createdSubjects = createdSubjects.filter(s => s.id !== subjectId);
+  
+  // Update localStorage
+  localStorage.setItem('createdSubjects', JSON.stringify(createdSubjects));
+  
+  // Try to delete from database
+  try {
+    await deleteSubjectFromDatabase(subjectId);
+    showBlueNotificationWithIcon('Subject deleted', 'delete');
+  } catch (error) {
+    console.log('Database deletion failed');
+    showBlueNotificationWithIcon('Deleted locally', 'warning');
+  }
+  
+  // Update display
+  updateSubjectsDisplay();
+}
+
+// Main notification function - perfectly centered with light blue colors
+function showBlueNotification(message) {
+  const existing = document.getElementById('blueNotify');
+  if (existing) existing.remove();
+
+  const notification = document.createElement('div');
+  notification.id = 'blueNotify';
+  
+  notification.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #2196F3, #4E8EA2);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(33, 150, 243, 0.4);
+    color: white;
+    font-weight: 500;
+    font-size: 14px;
+    white-space: nowrap;
+    box-shadow: 0 8px 25px rgba(33, 150, 243, 0.3);
+    animation: centerPop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  `;
+
+  // Add verified icon for "Added to queue" message
+  if (message === 'Added to queue') {
+    notification.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-check-circle" style="color: white; font-size: 14px;"></i>
+        <span>${message}</span>
+      </div>
+    `;
+  } else {
+    notification.textContent = message;
+  }
+
+  document.body.appendChild(notification);
+
+  // Auto remove after 2.5 seconds
+  setTimeout(() => {
+    if (notification.parentElement) {
+      notification.style.animation = 'centerFade 0.3s ease-out forwards';
+      setTimeout(() => notification.remove(), 300);
     }
+  }, 2500);
+}
 
-    async function deleteSubject(subjectId) {
-      const subject = createdSubjects.find(s => s.id === subjectId);
-      if (!subject) return;
+// Enhanced notification with different types and colors
+function showBlueNotificationWithIcon(message, iconType = 'check') {
+  const existing = document.getElementById('blueNotify');
+  if (existing) existing.remove();
 
-      if (!confirm(`Delete "${subject.subjectName}"?\n\nThis action cannot be undone.`)) {
-        return;
-      }
-
-      // Remove from local array
-      createdSubjects = createdSubjects.filter(s => s.id !== subjectId);
-      
-      // Update localStorage
-      localStorage.setItem('createdSubjects', JSON.stringify(createdSubjects));
-      
-      // Try to delete from database
-      try {
-        await deleteSubjectFromDatabase(subjectId);
-        showNotification('✅ Subject deleted successfully', 'success');
-      } catch (error) {
-        console.log('Database deletion failed');
-        showNotification('Subject deleted locally', 'warning');
-      }
-      
-      // Update display
-      updateSubjectsDisplay();
+  const notification = document.createElement('div');
+  notification.id = 'blueNotify';
+  
+  // Different colors for different notification types
+  const notificationStyles = {
+    success: {
+      background: 'linear-gradient(135deg, #2196F3, #4E8EA2)',
+      border: 'rgba(33, 150, 243, 0.4)',
+      shadow: 'rgba(33, 150, 243, 0.3)'
+    },
+    delete: {
+      background: 'linear-gradient(135deg, #F44336, #E57373)',
+      border: 'rgba(244, 67, 54, 0.4)',
+      shadow: 'rgba(244, 67, 54, 0.3)'
+    },
+    warning: {
+      background: 'linear-gradient(135deg, #FF9800, #FFB74D)',
+      border: 'rgba(255, 152, 0, 0.4)',
+      shadow: 'rgba(255, 152, 0, 0.3)'
     }
+  };
+
+  const style = notificationStyles[iconType] || notificationStyles.success;
+  
+  notification.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: ${style.background};
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid ${style.border};
+    color: white;
+    font-weight: 500;
+    font-size: 14px;
+    white-space: nowrap;
+    box-shadow: 0 8px 25px ${style.shadow};
+    animation: centerPop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  `;
+
+  // Different icons for different message types
+  const icons = {
+    check: 'fas fa-check-circle',
+    verified: 'fas fa-check-circle',
+    success: 'fas fa-check',
+    delete: 'fas fa-trash-alt',
+    warning: 'fas fa-exclamation-triangle',
+    info: 'fas fa-info-circle'
+  };
+
+  const iconClass = icons[iconType] || icons.check;
+
+  notification.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <i class="${iconClass}" style="color: white; font-size: 14px;"></i>
+      <span>${message}</span>
+    </div>
+  `;
+
+  document.body.appendChild(notification);
+
+  // Auto remove after 2.5 seconds
+  setTimeout(() => {
+    if (notification.parentElement) {
+      notification.style.animation = 'centerFade 0.3s ease-out forwards';
+      setTimeout(() => notification.remove(), 300);
+    }
+  }, 2500);
+}
+
+// Blue confirmation dialog
+function showBlueConfirm(message) {
+  return new Promise((resolve) => {
+    const existing = document.getElementById('blueConfirm');
+    if (existing) existing.remove();
+
+    const dialog = document.createElement('div');
+    dialog.id = 'blueConfirm';
+    dialog.style.cssText = `
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(1, 29, 57, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    `;
+
+    dialog.innerHTML = `
+      <div style="
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        max-width: 400px;
+        width: 100%;
+        padding: 24px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.9));
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(123, 189, 232, 0.4);
+        animation: scaleIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      ">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <div style="
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            box-shadow: 0 4px 12px rgba(239, 83, 80, 0.3);
+            background: linear-gradient(135deg, #EF5350, #F44336);
+          ">
+            <i class="fas fa-trash" style="color: white; font-size: 16px;"></i>
+          </div>
+          <p style="font-weight: 600; color: #001D39; margin: 0;">${message}</p>
+        </div>
+        <div style="display: flex; gap: 12px;">
+          <button onclick="resolveConfirm(false)" style="
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s;
+            color: #49769F;
+            border: 1px solid rgba(123, 189, 232, 0.3);
+            background: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+          " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+            Cancel
+          </button>
+          <button onclick="resolveConfirm(true)" style="
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            color: white;
+            font-size: 14px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(239, 83, 80, 0.3);
+            background: linear-gradient(135deg, #EF5350, #F44336);
+            border: none;
+            cursor: pointer;
+          " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+            Delete
+          </button>
+        </div>
+      </div>
+    `;
+
+    window.resolveConfirm = (result) => {
+      dialog.style.animation = 'fadeOut 0.2s ease-in-out forwards';
+      setTimeout(() => {
+        dialog.remove();
+        delete window.resolveConfirm;
+        resolve(result);
+      }, 200);
+    };
+
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) {
+        window.resolveConfirm(false);
+      }
+    });
+
+    document.body.appendChild(dialog);
+  });
+}
+
+// CSS animations
+const styles = `
+<style>
+@keyframes centerPop {
+  0% {
+    transform: translate(-50%, -50%) scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes centerFade {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0;
+  }
+}
+
+@keyframes scaleIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+</style>
+`;
+
+// Add styles to document
+if (!document.querySelector('#blueNotifyStyles')) {
+  const styleSheet = document.createElement('style');
+  styleSheet.id = 'blueNotifyStyles';
+  styleSheet.innerHTML = styles;
+  document.head.appendChild(styleSheet);
+}
 
     // ============================================================================
     // DATABASE FUNCTIONS FOR SUBJECTS
@@ -2152,187 +3045,242 @@
       }
     }
 
-    async function takeAttendance(itemId) {
-      const item = attendanceQueue.find(q => q.id == itemId);
-      if (!item) return;
+   // Updated takeAttendance function
+async function takeAttendance(itemId) {
+  const item = attendanceQueue.find(q => q.id == itemId);
+  if (!item) return;
 
-      // Show loading state
-      const queueElement = document.querySelector(`[data-id="${itemId}"]`);
-      const attendButton = queueElement?.querySelector('button');
-      if (attendButton) {
-        attendButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
-        attendButton.disabled = true;
-      }
+  // Show loading state
+  const queueElement = document.querySelector(`[data-id="${itemId}"]`);
+  const attendButton = queueElement?.querySelector('button');
+  if (attendButton) {
+    attendButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
+    attendButton.disabled = true;
+  }
 
-      try {
-        // Remove from queue immediately (optimistic update)
-        attendanceQueue = attendanceQueue.filter(q => q.id != itemId);
-        
-        // Add to completed classes
-        const completedItem = { 
-          ...item, 
-          completedTime: new Date().toLocaleTimeString(),
-          completedDate: new Date().toDateString()
-        };
-        completedClasses.push(completedItem);
-        
-        // Update localStorage immediately
-        localStorage.setItem('attendanceQueue', JSON.stringify(attendanceQueue));
-        localStorage.setItem('completedClasses', JSON.stringify(completedClasses));
-        
-        // Try to save completed class to database
-        try {
-          await saveCompletedToDatabase(completedItem);
-        } catch (error) {
-          console.log('Database save failed for completed class:', error);
-        }
-        
-        // Update display immediately
-        updateQueueDisplay();
-        
-        // Try to update database (but don't wait for it)
-        deleteQueueItemFromDatabase(itemId).catch(error => {
-          console.log('Database deletion failed:', error);
-        });
-        
-        saveQueueToDatabase(attendanceQueue).catch(error => {
-          console.log('Database save failed:', error);
-        });
-        
-        // Create class info object for attendance page
-        const classInfo = {
-          stream: item.stream,
-          semester: parseInt(item.semester),
-          subject: item.subject,
-          autoSelect: true,
-          teacherId: userData.userName,
-          teacherEmail: userData.userEmail
-        };
-        
-        // Store class info in sessionStorage for index.html to pick up
-        sessionStorage.setItem('selectedClass', JSON.stringify(classInfo));
-        showNotification('✅ Class removed from queue! Redirecting...', 'success');
-        
-        // Short delay for user feedback, then redirect
-        setTimeout(() => {
-          window.location.href = 'index.html';
-        }, 800);
-        
-      } catch (error) {
-        console.error('Error in takeAttendance:', error);
-        showNotification('❌ Error processing request', 'error');
-        
-        // Restore button state
-        if (attendButton) {
-          attendButton.innerHTML = '<i class="fas fa-user-check mr-2"></i>Attend';
-          attendButton.disabled = false;
-        }
-      }
+  try {
+    // Remove from queue immediately (optimistic update)
+    attendanceQueue = attendanceQueue.filter(q => q.id != itemId);
+    
+    // Add to completed classes
+    const completedItem = { 
+      ...item, 
+      completedTime: new Date().toLocaleTimeString(),
+      completedDate: new Date().toDateString()
+    };
+    completedClasses.push(completedItem);
+    
+    // Update localStorage immediately
+    localStorage.setItem('attendanceQueue', JSON.stringify(attendanceQueue));
+    localStorage.setItem('completedClasses', JSON.stringify(completedClasses));
+    
+    // Try to save completed class to database
+    try {
+      await saveCompletedToDatabase(completedItem);
+    } catch (error) {
+      console.log('Database save failed for completed class:', error);
     }
-
-    async function removeFromQueue(itemId) {
-      const item = attendanceQueue.find(q => q.id == itemId);
-      if (!item) return;
-      
-      if (confirm(`Remove "${item.subject}"?`)) {
-        const queueElement = document.querySelector(`[data-id="${itemId}"]`);
-        if (queueElement) {
-          queueElement.classList.add('removing');
-          setTimeout(async () => {
-            attendanceQueue = attendanceQueue.filter(q => q.id != itemId);
-            
-            // Update localStorage immediately
-            localStorage.setItem('attendanceQueue', JSON.stringify(attendanceQueue));
-            
-            // Try to delete from database first
-            try {
-              const deleteResult = await deleteQueueItemFromDatabase(itemId);
-              if (deleteResult && deleteResult.success) {
-                // If database deletion was successful, use the updated queue data from server
-                attendanceQueue = deleteResult.queueData || attendanceQueue;
-                localStorage.setItem('attendanceQueue', JSON.stringify(attendanceQueue));
-                showNotification('Class removed from database', 'success');
-              } else {
-                // Fallback: save the updated queue to database
-                await saveQueueToDatabase(attendanceQueue);
-                showNotification('Class removed (saved to database)', 'success');
-              }
-            } catch (error) {
-              console.log('Database update failed, using localStorage only');
-              showNotification('Class removed locally', 'warning');
-            }
-            
-            updateQueueDisplay();
-          }, 400);
-        }
-      }
+    
+    // Update display immediately
+    updateQueueDisplay();
+    
+    // Try to update database (but don't wait for it)
+    deleteQueueItemFromDatabase(itemId).catch(error => {
+      console.log('Database deletion failed:', error);
+    });
+    
+    saveQueueToDatabase(attendanceQueue).catch(error => {
+      console.log('Database save failed:', error);
+    });
+    
+    // Create class info object for attendance page
+    const classInfo = {
+      stream: item.stream,
+      semester: parseInt(item.semester),
+      subject: item.subject,
+      autoSelect: true,
+      teacherId: userData.userName,
+      teacherEmail: userData.userEmail
+    };
+    
+    // Store class info in sessionStorage for index.html to pick up
+    sessionStorage.setItem('selectedClass', JSON.stringify(classInfo));
+    
+    // Use center blue notification
+    showNotification('Redirecting...', 'success');
+    
+    // Short delay for user feedback, then redirect
+    setTimeout(() => {
+      window.location.href = 'index.html';
+    }, 800);
+    
+  } catch (error) {
+    console.error('Error in takeAttendance:', error);
+    
+    // Use center orange notification
+    showNotification('Error processing request', 'error');
+    
+    // Restore button state
+    if (attendButton) {
+      attendButton.innerHTML = '<i class="fas fa-user-check mr-2"></i>Take Attendance';
+      attendButton.disabled = false;
     }
+  }
+}
 
-    function resetForm() {
-      // Reset stream selection
-      selectedStreamData = null;
-      elements.selectedStream.value = '';
-      
-      // Remove visual selection
-      document.querySelectorAll('.stream-container').forEach(card => {
-        card.classList.remove('ring-2', 'ring-offset-2');
-        const streamData = streams.find(s => s.name === card.dataset.stream);
-        if (streamData) {
-          card.classList.remove(`ring-${streamData.borderColor.split('-')[1]}-500`);
-        }
-      });
-      
-      document.querySelectorAll('[data-check]').forEach(check => {
-        check.classList.add('opacity-0');
-      });
+// Simplified removeFromQueue function
+function removeFromQueue(itemId) {
+  const item = attendanceQueue.find(q => q.id == itemId);
+  if (!item) return;
 
-      // Reset selects
-      if (elements.semesterSelect) elements.semesterSelect.value = '';
-      if (elements.subjectSelect) {
-        elements.subjectSelect.innerHTML = '<option value="">Select stream & semester first</option>';
-        elements.subjectSelect.disabled = true;
-      }
-      if (elements.addBtn) elements.addBtn.disabled = true;
-      if (elements.subjectHelp) {
-        elements.subjectHelp.textContent = 'Choose stream and semester first';
-        elements.subjectHelp.className = 'text-xs text-gray-500 mt-1 ml-1';
-      }
+  // Remove from queue immediately
+  attendanceQueue = attendanceQueue.filter(q => q.id != itemId);
+  
+  // Update localStorage immediately
+  localStorage.setItem('attendanceQueue', JSON.stringify(attendanceQueue));
+  
+  // Try to delete from database
+  try {
+    deleteQueueItemFromDatabase(itemId).catch(error => {
+      console.log('Database deletion failed:', error);
+    });
+    
+    saveQueueToDatabase(attendanceQueue).catch(error => {
+      console.log('Database save failed:', error);
+    });
+  } catch (error) {
+    console.log('Database update failed, using localStorage only');
+  }
+  
+  // Use center orange notification
+  showNotification('Removed from queue', 'warning');
+  
+  // Update displays
+  updateQueueDisplay();
+  updateSubjectsDisplay();
+}
+
+// Fixed showNotification function - CENTER positioned with blue/orange theme
+// Fixed showNotification function - positioned above bottom with blue/orange theme
+function showNotification(message, type) {
+  // Remove any existing notification
+  const existing = document.getElementById('bottomNotification');
+  if (existing) existing.remove();
+
+  // Clean message (remove emojis)
+  const cleanMessage = message.replace(/[✅❌⚠️]/g, '').trim();
+
+  // Create notification element
+  const notification = document.createElement('div');
+  notification.id = 'bottomNotification';
+  
+  // Theme colors and icons
+  const themes = {
+    success: {
+      background: 'linear-gradient(135deg, #2196F3, #4E8EA2)',
+      border: 'rgba(33, 150, 243, 0.4)',
+      shadow: 'rgba(33, 150, 243, 0.3)',
+      icon: 'fas fa-check-circle'
+    },
+    error: {
+      background: 'linear-gradient(135deg, #FF9800, #FFB74D)',
+      border: 'rgba(255, 152, 0, 0.4)',
+      shadow: 'rgba(255, 152, 0, 0.3)',
+      icon: 'fas fa-exclamation-triangle'
+    },
+    warning: {
+      background: 'linear-gradient(135deg, #FF9800, #FFB74D)',
+      border: 'rgba(255, 152, 0, 0.4)',
+      shadow: 'rgba(255, 152, 0, 0.3)',
+      icon: 'fas fa-minus-circle'
     }
+  };
 
-    function showNotification(message, type) {
-      const colors = {
-        success: 'from-green-500 to-green-600',
-        error: 'from-red-500 to-red-600',
-        warning: 'from-yellow-500 to-yellow-600'
-      };
+  const theme = themes[type] || themes.success;
+  
+  // Apply positioning above bottom
+  notification.style.cssText = `
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    z-index: 9999;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: ${theme.background};
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid ${theme.border};
+    color: white;
+    font-weight: 500;
+    font-size: 14px;
+    white-space: nowrap;
+    box-shadow: 0 8px 25px ${theme.shadow};
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  `;
 
-      const icons = {
-        success: 'check-circle',
-        error: 'exclamation-circle',
-        warning: 'exclamation-triangle'
-      };
-      
-      const notification = document.createElement('div');
-      notification.className = `fixed top-4 right-3 left-3 bg-gradient-to-r ${colors[type]} text-white p-3 rounded-xl shadow-xl z-50 transform transition-all duration-500 translate-y-full backdrop-blur-sm border border-white border-opacity-20`;
-      notification.innerHTML = `
-        <div class="flex items-center">
-          <i class="fas fa-${icons[type]} mr-2"></i>
-          <span class="font-semibold text-sm flex-1">${message}</span>
-        </div>
-      `;
-      
-      document.body.appendChild(notification);
-      
-      setTimeout(() => notification.classList.remove('translate-y-full'), 100);
-      setTimeout(() => {
-        notification.classList.add('translate-y-full');
-        setTimeout(() => {
-          if (document.body.contains(notification)) {
-            document.body.removeChild(notification);
-          }
-        }, 500);
-      }, 3000);
-    }
+  // Add content with icon
+  notification.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <i class="${theme.icon}" style="color: white; font-size: 14px;"></i>
+      <span>${cleanMessage}</span>
+    </div>
+  `;
+
+  document.body.appendChild(notification);
+
+  // Slide up animation
+  setTimeout(() => {
+    notification.style.transform = 'translateX(-50%) translateY(0)';
+  }, 10);
+
+  // Auto remove after 2.5 seconds
+  setTimeout(() => {
+    notification.style.transform = 'translateX(-50%) translateY(100px)';
+    setTimeout(() => {
+      if (notification.parentElement) {
+        notification.remove();
+      }
+    }, 300);
+  }, 2500);
+}
+
+
+// CSS animations for center notifications
+const centerNotificationStyles = `
+<style>
+@keyframes centerPop {
+  0% {
+    transform: translate(-50%, -50%) scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes centerFade {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0;
+  }
+}
+</style>
+`;
+
+// Add styles if not present
+if (!document.querySelector('#centerNotificationStyles')) {
+  const styleSheet = document.createElement('style');
+  styleSheet.id = 'centerNotificationStyles';
+  styleSheet.innerHTML = centerNotificationStyles;
+  document.head.appendChild(styleSheet);
+}
+
 
     // Toggle Menu Function moved to top of script for immediate availability
 
