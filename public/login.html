@@ -584,23 +584,7 @@
   overflow: hidden !important;
 }
 
-/* Security overlay */
-.security-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(239, 83, 80, 0.95);
-  backdrop-filter: blur(10px);
-  z-index: 99999;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  text-align: center;
-  padding: 20px;
-}
+
 
 /* Disable text selection on sensitive elements */
 .no-select {
@@ -1023,25 +1007,6 @@
 </head>
 
 <body class="no-select">
-  <!-- Security Overlay (shown when tampering detected) -->
-  <div id="securityOverlay" class="security-overlay">
-    <div>
-      <i class="fas fa-shield-alt" style="font-size: 3rem; margin-bottom: 20px;"></i>
-      <h2>Security Alert</h2>
-      <p style="margin: 20px 0;">Unauthorized access attempt detected.<br>This incident has been logged.</p>
-      <button onclick="location.reload()" style="
-        background: white; 
-        color: var(--absent); 
-        border: none; 
-        padding: 12px 24px; 
-        border-radius: 8px; 
-        font-weight: 600;
-        cursor: pointer;
-      ">Reload Page</button>
-    </div>
-  </div>
-
-  <!-- Enhanced Loading Screen with College Logo -->
 <!-- Enhanced Loading Screen with Perfect Logo -->
 <div id="initialLoadingScreen" class="auth-loading-screen">
   <div class="loading-brand">
@@ -1098,15 +1063,6 @@
     <div class="welcome-section">
       <h2 class="welcome-title">Teacher Login</h2>
       <p class="welcome-subtitle">Access your dashboard</p>
-    </div>
-
-    <!-- Security Alert -->
-    <div id="securityAlert" class="alert alert-warning" style="display: none;">
-      <i class="fas fa-exclamation-triangle"></i>
-      <div>
-        <strong>Security:</strong><br>
-        <span id="securityMessage"></span>
-      </div>
     </div>
 
     <!-- Login Form -->
