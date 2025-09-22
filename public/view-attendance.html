@@ -4,1294 +4,3698 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>View Attendance - Smart Attendance</title>
-  
-  <!-- Tailwind CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-
-  <!-- Font Awesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+ 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-
-  <!-- Custom CSS -->
-  <link rel="stylesheet" href="demo.css">
-
-  <!-- Inline Styles -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
   <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(125deg, #F0EDE5 0%, #E8E3D8 95%);
-      background-size: cover;
-      margin: 0;
-      padding: 0;
-      overflow-x: hidden;
-    }
-    
-    .glass {
-      background: rgba(255,255,255,0.14);
-      box-shadow: 0 8px 32px 0 rgba(31,38,135,0.18);
-      backdrop-filter: blur(13px);
-      -webkit-backdrop-filter: blur(13px);
-      border-radius: 1.4rem;
-      border: 1.8px solid rgba(255,255,255,0.18);
-    }
-    
-    /* Checkbox styling for edit mode - matching index.html and overriding Tailwind */
-    .checkbox {
-      width: 16px !important;
-      height: 16px !important;
-      accent-color: #2A3B36 !important;
-      cursor: pointer !important;
-      transition: all 0.3s ease !important;
-      appearance: auto !important;
-      -webkit-appearance: auto !important;
-      -moz-appearance: auto !important;
-      display: inline-block !important;
-      visibility: visible !important;
-      opacity: 1 !important;
-      position: relative !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      border: 1px solid #d1d5db !important;
-      border-radius: 0.25rem !important;
-      background-color: white !important;
-    }
-
-    .checkbox:hover {
-      transform: scale(1.1) !important;
-    }
-
-    .checkbox:checked {
-      background-color: #2A3B36 !important;
-      border-color: #2A3B36 !important;
-    }
-    
-    /* Enhanced checkbox styling (alternative) */
-    .attendance-checkbox {
-      width: 20px;
-      height: 20px;
-      border: 2px solid #8B9B8F;
-      border-radius: 6px;
-      background-color: white;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      position: relative;
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      margin: 0;
-      padding: 0;
-      display: inline-block;
-      vertical-align: middle;
-    }
-    
-    .attendance-checkbox:checked {
-      background-color: #2A3B36;
-      border-color: #2A3B36;
-      color: white;
-    }
-    
-    .attendance-checkbox:checked::after {
-      content: '✓';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
-      font-weight: bold;
-      font-size: 14px;
-      line-height: 1;
-    }
-    
-    .attendance-checkbox:hover {
-      border-color: #2A3B36;
-      box-shadow: 0 0 0 3px rgba(42, 59, 54, 0.1);
-      transform: scale(1.05);
-    }
-    
-    .attendance-checkbox:focus {
-      outline: none;
-      border-color: #2A3B36;
-      box-shadow: 0 0 0 3px rgba(42, 59, 54, 0.2);
-    }
-  </style>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            customDark: '#060D0C',
-            customLight: '#F0EDE5',
-            customAccent: '#2A3B36',
-            customMuted: '#8B9B8F',
-          }
-        }
+      :root {
+          /* Your Exact Color Scheme */
+          --primary-blue: #3b6c87;      /* Main dark blue from your design */
+          --secondary-blue: #5a8ca3;    /* Lighter blue for accents */
+          --light-blue: #7ba3b8;        /* Even lighter blue */
+          --success-green: #10b981;     /* Present status */
+          --danger-red: #ef4444;        /* Absent status */
+          --background-gray: #c5d3dd;   /* Your background gray-blue */
+          --card-white: #ffffff;        /* Clean white for cards */
       }
-    }
-  </script>
+
+      body {
+          font-family: 'Inter', sans-serif;
+          background: linear-gradient(135deg, #c5d3dd 0%, #b8cad6 50%, #adc1ce 100%);
+          min-height: 100vh;
+      }
+
+      .card {
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(10px);
+          border-radius: 16px;
+          box-shadow: 0 4px 20px rgba(59, 108, 135, 0.15);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          transition: all 0.3s ease;
+      }
+
+      .card:hover {
+          box-shadow: 0 8px 30px rgba(59, 108, 135, 0.2);
+          transform: translateY(-2px);
+      }
+
+      .btn {
+          border-radius: 12px;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          border: none;
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+      }
+
+      .btn::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+          transition: left 0.5s;
+      }
+
+      .btn:hover::before {
+          left: 100%;
+      }
+
+      .btn-primary {
+          background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+          color: white;
+          box-shadow: 0 4px 15px rgba(59, 108, 135, 0.3);
+      }
+
+      .btn-primary:hover {
+          background: linear-gradient(135deg, #2d5a73, var(--primary-blue));
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(59, 108, 135, 0.4);
+      }
+
+      .btn-secondary {
+          background: rgba(255, 255, 255, 0.9);
+          color: var(--primary-blue);
+          border: 2px solid var(--light-blue);
+          backdrop-filter: blur(10px);
+      }
+
+      .btn-secondary:hover {
+          background: rgba(255, 255, 255, 1);
+          border-color: var(--secondary-blue);
+          transform: translateY(-1px);
+      }
+
+      .btn-success {
+          background: linear-gradient(135deg, var(--success-green), #14b8a6);
+          color: white;
+          box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+      }
+
+      .btn-success:hover {
+          background: linear-gradient(135deg, #0d7553, var(--success-green));
+          transform: translateY(-2px);
+      }
+
+      .btn-danger {
+          background: linear-gradient(135deg, var(--danger-red), #f87171);
+          color: white;
+          box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+      }
+
+      .btn-danger:hover {
+          background: linear-gradient(135deg, #dc2626, var(--danger-red));
+          transform: translateY(-2px);
+      }
+
+      .form-input {
+          border: 2px solid rgba(90, 140, 163, 0.3);
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(5px);
+          transition: all 0.3s ease;
+          font-weight: 500;
+      }
+
+      .form-input:focus {
+          outline: none;
+          border-color: var(--secondary-blue);
+          box-shadow: 0 0 0 4px rgba(90, 140, 163, 0.1);
+          background: rgba(255, 255, 255, 1);
+      }
+
+      .table-container {
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(15px);
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 8px 25px rgba(59, 108, 135, 0.15);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .table-header {
+          background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+          color: white;
+          position: relative;
+      }
+
+      .table-header::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      }
+
+      .table-row:nth-child(even) {
+          background: rgba(197, 211, 221, 0.1);
+      }
+
+      .table-row:hover {
+          background: rgba(90, 140, 163, 0.1);
+          backdrop-filter: blur(5px);
+      }
+
+      .status-badge {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          font-weight: 700;
+          font-size: 12px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          transition: all 0.2s ease;
+      }
+
+      .status-badge:hover {
+          transform: scale(1.1);
+      }
+
+      .status-present {
+          background: linear-gradient(135deg, var(--success-green), #14b8a6);
+          color: white;
+      }
+
+      .status-absent {
+          background: linear-gradient(135deg, var(--danger-red), #f87171);
+          color: white;
+      }
+
+      .time-slot {
+          background: rgba(90, 140, 163, 0.1);
+          border: 1px solid rgba(90, 140, 163, 0.2);
+          border-radius: 8px;
+          padding: 4px 8px;
+          font-family: 'Monaco', 'Menlo', monospace;
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--primary-blue);
+          backdrop-filter: blur(5px);
+      }
+
+      .stats-card {
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(10px);
+          border-radius: 16px;
+          padding: 24px;
+          text-align: center;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
+      }
+
+      .stats-card::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 4px;
+          background: linear-gradient(90deg, var(--success-green), var(--secondary-blue), var(--primary-blue));
+      }
+
+      .stats-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 35px rgba(59, 108, 135, 0.2);
+          background: rgba(255, 255, 255, 1);
+      }
+
+      .stats-number {
+          font-size: 2rem;
+          font-weight: 800;
+          background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+      }
+
+      .header-gradient {
+          background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 50%, var(--light-blue) 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+      }
+
+      .floating-action {
+          position: fixed;
+          bottom: 24px;
+          right: 24px;
+          width: 56px;
+          height: 56px;
+          background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+          border-radius: 50%;
+          box-shadow: 0 8px 25px rgba(59, 108, 135, 0.4);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          z-index: 1000;
+      }
+
+      .floating-action:hover {
+          transform: scale(1.1);
+          box-shadow: 0 12px 35px rgba(59, 108, 135, 0.5);
+      }
+
+      /* Header Navigation */
+      .nav-tabs {
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(15px);
+          border-radius: 16px;
+          padding: 6px;
+          box-shadow: 0 4px 20px rgba(59, 108, 135, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .nav-tab {
+          padding: 12px 24px;
+          border-radius: 12px;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          background: transparent;
+          color: var(--primary-blue);
+          border: none;
+          cursor: pointer;
+      }
+
+      .nav-tab.active {
+          background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+          color: white;
+          box-shadow: 0 4px 15px rgba(59, 108, 135, 0.3);
+      }
+
+      .nav-tab:hover:not(.active) {
+          background: rgba(90, 140, 163, 0.1);
+      }
+
+      /* Mobile responsive */
+      @media (max-width: 768px) {
+          .card {
+              margin: 12px;
+              padding: 20px !important;
+              border-radius: 12px;
+          }
+          
+          .btn {
+              padding: 12px 16px;
+              font-size: 14px;
+          }
+
+          .table-container {
+              margin: 0 12px;
+          }
+
+          .time-slot {
+              font-size: 10px;
+              padding: 2px 6px;
+          }
+
+          .status-badge {
+              width: 28px;
+              height: 28px;
+              font-size: 11px;
+          }
+
+          .stats-card {
+              padding: 16px;
+          }
+
+          .stats-number {
+              font-size: 1.5rem;
+          }
+
+          .floating-action {
+              bottom: 16px;
+              right: 16px;
+              width: 48px;
+              height: 48px;
+          }
+      }
+
+      /* Loading Animation */
+      .loading-spinner {
+          border: 3px solid rgba(90, 140, 163, 0.3);
+          border-radius: 50%;
+          border-top: 3px solid var(--secondary-blue);
+          width: 24px;
+          height: 24px;
+          animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+      }
+  </style>
 </head>
-<body class="min-h-screen">
-  
-  <div class="p-2 sm:p-4">
-    <div id="viewTab" class="tabcontent p-2 sm:p-4">
-      <!-- Mobile-optimized header -->
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="text-base font-semibold flex items-center" style="color: #060D0C;">
-          <i class="fas fa-table mr-2 text-sm" style="color: #060D0C;"></i>
-          Register
-        </h3>
-        <!-- Back to My Class button -->
-        <button onclick="window.location.href='myclass.html'" class="px-3 py-1 text-xs rounded-lg transition-all" style="background-color: #F0EDE5; color: #060D0C; border: 1px solid #8B9B8F;" onmouseover="this.style.backgroundColor='#E8E3D8'" onmouseout="this.style.backgroundColor='#F0EDE5'">
-          <i class="fas fa-arrow-left mr-1"></i>My Class
+<body>
+  <div class="p-4 max-w-7xl mx-auto">
+    
+    <!-- Simple Header -->
+    <div class="card p-6 mb-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900 mb-2">Attendance Register</h1>
+          <p class="text-gray-600">View and manage student attendance records</p>
+        </div>
+        <button onclick="window.location.href='myclass.html'" 
+                class="btn btn-secondary px-4 py-2">
+          <i class="fas fa-arrow-left mr-2"></i>Back
         </button>
       </div>
-    
-      <!-- Stream/Semester/Subject selection -->
-      <div class="space-y-3 mb-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label for="streamSelect" class="block text-xs font-medium mb-1" style="color: #8B9B8F;">Select Stream</label>
-            <select id="streamSelect" class="w-full p-2 text-sm border rounded-lg focus:ring-2 bg-white" style="border-color: #8B9B8F; color: #060D0C;" onfocus="this.style.borderColor='#2A3B36'" onblur="this.style.borderColor='#8B9B8F'">
-              <option value="">-- Select Stream --</option>
-            </select>
-          </div>
-          <div>
-            <label for="semesterSelect" class="block text-xs font-medium mb-1" style="color: #8B9B8F;">Select Semester</label>
-            <select id="semesterSelect" class="w-full p-2 text-sm border rounded-lg focus:ring-2 bg-white" style="border-color: #8B9B8F; color: #060D0C;" onfocus="this.style.borderColor='#2A3B36'" onblur="this.style.borderColor='#8B9B8F'">
-              <option value="">-- Select Semester --</option>
-            </select>
-          </div>
-        </div>
+    </div>
+
+    <!-- Simple Selection -->
+    <div class="card p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-4 text-gray-900">Select Register</h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div>
-          <label for="subjectSelect" class="block text-xs font-medium mb-1" style="color: #8B9B8F;">Select Subject</label>
-          <select id="subjectSelect" class="w-full p-2 text-sm border rounded-lg focus:ring-2 bg-white" style="border-color: #8B9B8F; color: #060D0C;" onfocus="this.style.borderColor='#2A3B36'" onblur="this.style.borderColor='#8B9B8F'">
+          <label class="block text-sm font-medium mb-2 text-gray-700">Stream</label>
+          <select id="streamSelect" class="form-input w-full p-3">
+            <option value="">-- Select Stream --</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-2 text-gray-700">Semester</label>
+          <select id="semesterSelect" class="form-input w-full p-3">
+            <option value="">-- Select Semester --</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-2 text-gray-700">Subject</label>
+          <select id="subjectSelect" class="form-input w-full p-3">
             <option value="">-- Select Subject --</option>
           </select>
         </div>
-        <button id="loadRegisterBtn" class="w-full sm:w-auto px-4 py-2 text-white rounded-lg text-sm font-medium transition-all" style="background: linear-gradient(to right, #060D0C, #2A3B36);" onmouseover="this.style.background='linear-gradient(to right, #2A3B36, #060D0C)'" onmouseout="this.style.background='linear-gradient(to right, #060D0C, #2A3B36)'">
-          <i class="fas fa-search mr-2"></i>Load Attendance Register
-        </button>
+      </div>
+      
+      <button id="loadRegisterBtn" class="btn btn-primary px-6 py-3">
+        <i class="fas fa-search mr-2"></i>Load Register
+      </button>
+    </div>
+
+    <!-- Register Display -->
+    <div id="registerTable" class="hidden">
+      
+      <!-- View Mode -->
+      <div class="card p-6 mb-6">
+        <div class="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
+          <div>
+            <label class="block text-sm font-medium mb-3 text-gray-700">View Mode</label>
+            <div class="flex gap-3">
+              <button id="fullRegisterBtn" class="btn btn-primary px-4 py-2">
+                <i class="fas fa-table mr-2"></i>Full Register
+              </button>
+              <button id="singleDateBtn" class="btn btn-secondary px-4 py-2">
+                <i class="fas fa-calendar-day mr-2"></i>Single Date
+              </button>
+            </div>
+          </div>
+          
+          <div id="dateSelector" class="hidden">
+            <label class="block text-sm font-medium mb-3 text-gray-700">Select Date</label>
+            <input type="date" id="specificDateInput" class="form-input p-3" />
+            <div id="dateValidationMessage" class="text-sm mt-2 hidden">
+              <span id="attendanceStatus" class="flex items-center gap-2 text-blue-600">
+                <i class="fas fa-info-circle"></i>
+                <span id="statusText">Select a date to check attendance</span>
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- Register display -->
-      <div id="registerTable" class="hidden">
-        <!-- View mode selector -->
-        <div class="bg-white rounded-lg p-4 mb-4 border" style="border-color: #F0EDE5;">
-          <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-            <div class="flex-1">
-              <label class="block text-xs font-medium mb-2" style="color: #8B9B8F;">View Mode</label>
-              <div class="flex gap-2">
-                <button id="fullRegisterBtn" class="px-3 py-2 text-xs font-medium rounded-lg transition-all" style="background-color: #2A3B36; color: white;">
-                  <i class="fas fa-table mr-1"></i>Full Register
-                </button>
-                <button id="singleDateBtn" class="px-3 py-2 text-xs font-medium rounded-lg transition-all" style="background-color: #F0EDE5; color: #060D0C;">
-                  <i class="fas fa-calendar-day mr-1"></i>Single Date
-                </button>
-              </div>
-            </div>
-            <div id="dateSelector" class="flex-1 hidden">
-              <label for="specificDateInput" class="block text-xs font-medium mb-2" style="color: #8B9B8F;">Select Date</label>
-              <input 
-                type="date" 
-                id="specificDateInput" 
-                class="w-full p-2 text-sm border rounded-lg focus:ring-2 bg-white" 
-                style="border-color: #8B9B8F; color: #060D0C;" 
-                onfocus="this.style.borderColor='#2A3B36'" 
-                onblur="this.style.borderColor='#8B9B8F'"
-              />
-              <div id="dateValidationMessage" class="text-xs mt-1 hidden">
-                <span id="attendanceStatus" class="flex items-center gap-1">
-                  <i class="fas fa-info-circle"></i>
-                  <span id="statusText">Select a date to check attendance</span>
-                </span>
-              </div>
-            </div>
-          </div>
+      <!-- Action Buttons -->
+      <div class="flex flex-wrap gap-3 mb-6">
+        <button id="editAttendanceBtn" class="btn btn-primary px-4 py-2 hidden">
+          <i class="fas fa-edit mr-2"></i>Edit
+        </button>
+        
+        <button id="saveAttendanceBtn" class="btn btn-success px-4 py-2 hidden">
+          <i class="fas fa-save mr-2"></i>Save
+        </button>
+        
+        <button id="cancelEditBtn" class="btn btn-danger px-4 py-2 hidden">
+          <i class="fas fa-times mr-2"></i>Cancel
+        </button>
+        
+        <button id="exportExcelBtn" onclick="exportToExcel()" class="btn btn-primary px-4 py-2 hidden">
+          <i class="fas fa-file-excel mr-2"></i>Export
+        </button>
+      </div>
+      
+      <!-- Simple Table -->
+      <div class="table-container mb-6">
+        <div class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead class="table-header" id="view-thead">
+              <!-- Headers populated by JavaScript -->
+            </thead>
+            <tbody id="view-tbody">
+              <!-- Rows populated by JavaScript -->
+            </tbody>
+          </table>
         </div>
+      </div>
 
-        <!-- Action buttons -->
-        <div class="flex justify-end gap-2 mb-3">
-          <button id="editAttendanceBtn" class="flex-1 sm:flex-none px-2 sm:px-3 py-2 text-white rounded-lg text-xs sm:text-sm font-medium hidden transition-all" style="background-color: #2A3B36;" onmouseover="this.style.backgroundColor='#060D0C'" onmouseout="this.style.backgroundColor='#2A3B36'">
-            <i class="fas fa-edit text-sm mr-1"></i>
-            <span class="hidden sm:inline">Edit Attendance</span>
-            <span class="sm:hidden text-xs">Edit</span>
-          </button>
-          <button id="saveAttendanceBtn" class="flex-1 sm:flex-none px-2 sm:px-3 py-2 text-white rounded-lg text-xs sm:text-sm font-medium hidden transition-all" style="background-color: #2A3B36;" onmouseover="this.style.backgroundColor='#060D0C'" onmouseout="this.style.backgroundColor='#2A3B36'">
-            <i class="fas fa-save text-sm mr-1"></i>
-            <span class="hidden sm:inline">Save Changes</span>
-            <span class="sm:hidden text-xs">Save</span>
-          </button>
-          <button id="cancelEditBtn" class="flex-1 sm:flex-none px-2 sm:px-3 py-2 text-white rounded-lg text-xs sm:text-sm font-medium hidden transition-all" style="background-color: #8B9B8F;" onmouseover="this.style.backgroundColor='#060D0C'" onmouseout="this.style.backgroundColor='#8B9B8F'">
-            <i class="fas fa-times text-sm mr-1"></i>
-            <span class="hidden sm:inline">Cancel</span>
-            <span class="sm:hidden text-xs">Cancel</span>
-          </button>
-          <button id="exportExcelBtn" onclick="exportToExcel()" class="flex-1 sm:flex-none px-2 sm:px-3 py-2 text-white rounded-lg text-xs sm:text-sm font-medium hidden transition-all" style="background-color: #060D0C;" onmouseover="this.style.backgroundColor='#2A3B36'" onmouseout="this.style.backgroundColor='#060D0C'">
-            <i class="fas fa-file-excel text-sm mr-1"></i>
-            <span class="hidden sm:inline">Export Excel</span>
-            <span class="sm:hidden text-xs">Export</span>
-          </button>
-        </div>
-        
-        <!-- Table with sticky student column -->
-        <div class="rounded-lg shadow border overflow-hidden bg-white" style="border-color: #8B9B8F;">
-          <div class="overflow-x-auto relative">
-            <table class="min-w-full text-xs sm:text-sm border-collapse">
-              <thead class="text-white sticky top-0 z-30" style="background-color: #060D0C;" id="view-thead">
-                <!-- Headers will be populated by JavaScript -->
-              </thead>
-              <tbody class="bg-white divide-y" style="color: #060D0C; border-color: #F0EDE5;" id="view-tbody">
-                <!-- Rows will be populated by JavaScript -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-    
-        <!-- Mobile scroll hint -->
-        <div class="mt-2 text-xs text-center flex items-center justify-center gap-2" style="color: #8B9B8F;">
-          <i class="fas fa-arrows-alt-h"></i>
-          <span>Student column stays fixed • Scroll horizontally to view all dates</span>
-        </div>
-        
-        <!-- Stats summary -->
-        <div class="mt-3 p-2 rounded-lg text-xs grid grid-cols-2 sm:grid-cols-4 gap-2" style="background-color: #F0EDE5; color: #060D0C;" id="attendanceStats">
-          <!-- Stats will be populated by JavaScript -->
-        </div>
+      <!-- Mobile Scroll Hint -->
+      <div class="text-center mb-4">
+        <p class="text-sm text-gray-600">
+          <i class="fas fa-arrows-alt-h mr-2"></i>
+          Scroll horizontally to view all sessions
+        </p>
+      </div>
+      
+      <!-- Simple Stats -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4" id="attendanceStats">
+        <!-- Stats populated by JavaScript -->
       </div>
     </div>
   </div>
 
-  <!-- Include XLSX library for Excel export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   
   <script>
-    // Global variables
-    const streams = [
-      { name: 'BCA', semesters: [1,2,3,4,5,6] },
-      { name: 'BBA', semesters: [1,2,3,4,5,6] },
-      { name: 'BCOM', semesters: [1,2,3,4,5,6] },
-      { name: 'BCOM SECTION B', semesters: [1,2,3,4,5,6] },
-      { name: 'BCOM-BDA', semesters: [1,2,3,4,5,6] },
-      { name: 'BCOM A AND F', semesters: [1,2,3,4,5,6] },
-    ];
+  // Global variables
+ // ✅ GLOBAL CONFIGURATION
+// ✅ GLOBAL CONFIGURATION
+const streams = [
+  { name: 'BCA', semesters: [1,2,3,4,5,6] },
+  { name: 'BBA', semesters: [1,2,3,4,5,6] },
+  { name: 'BCOM', semesters: [1,2,3,4,5,6] },
+  { name: 'BCOM SECTION B', semesters: [1,2,3,4,5,6] },
+  { name: 'BCOM-BDA', semesters: [1,2,3,4,5,6] },
+  { name: 'BCOM A AND F', semesters: [1,2,3,4,5,6] },
+];
 
-    // DOM element references
-    const streamSelect = document.getElementById('streamSelect');
-    const semesterSelect = document.getElementById('semesterSelect');
-    const subjectSelect = document.getElementById('subjectSelect');
-    const loadRegisterBtn = document.getElementById('loadRegisterBtn');
-    const registerTable = document.getElementById('registerTable');
-    const viewThead = document.getElementById('view-thead');
-    const viewTbody = document.getElementById('view-tbody');
-    const attendanceStats = document.getElementById('attendanceStats');
-    const exportExcelBtn = document.getElementById('exportExcelBtn');
-    const editAttendanceBtn = document.getElementById('editAttendanceBtn');
-    const saveAttendanceBtn = document.getElementById('saveAttendanceBtn');
-    const cancelEditBtn = document.getElementById('cancelEditBtn');
-    
-    // Date selector elements
-    const fullRegisterBtn = document.getElementById('fullRegisterBtn');
-    const singleDateBtn = document.getElementById('singleDateBtn');
-    const dateSelector = document.getElementById('dateSelector');
-    const specificDateInput = document.getElementById('specificDateInput');
-    const dateValidationMessage = document.getElementById('dateValidationMessage');
-    const attendanceStatus = document.getElementById('attendanceStatus');
-    const statusText = document.getElementById('statusText');
+// ✅ DOM element references
+const streamSelect = document.getElementById('streamSelect');
+const semesterSelect = document.getElementById('semesterSelect');
+const subjectSelect = document.getElementById('subjectSelect');
+const loadRegisterBtn = document.getElementById('loadRegisterBtn');
+const registerTable = document.getElementById('registerTable');
+const viewThead = document.getElementById('view-thead');
+const viewTbody = document.getElementById('view-tbody');
+const attendanceStats = document.getElementById('attendanceStats');
+const exportExcelBtn = document.getElementById('exportExcelBtn');
+const editAttendanceBtn = document.getElementById('editAttendanceBtn');
+const saveAttendanceBtn = document.getElementById('saveAttendanceBtn');
+const cancelEditBtn = document.getElementById('cancelEditBtn');
 
-    // Current register data
-    let currentStudents = [];
-    let currentDates = [];
-    let currentAttendanceMap = {};
-    let currentSubject = '';
-    let currentStream = '';
-    let currentSemester = '';
-    let isEditMode = false;
-    let originalAttendanceMap = {};
-    
-    // Date selector state
-    let isFullRegisterView = true;
-    let selectedDate = '';
+// Date selector elements
+const fullRegisterBtn = document.getElementById('fullRegisterBtn') || document.querySelector('[data-view="full"]');
+const singleDateBtn = document.getElementById('singleDateBtn') || document.querySelector('[data-view="single"]');
+const dateSelector = document.getElementById('dateSelector');
+const specificDateInput = document.getElementById('specificDateInput');
+const dateValidationMessage = document.getElementById('dateValidationMessage');
+const attendanceStatus = document.getElementById('attendanceStatus');
+const statusText = document.getElementById('statusText');
 
-    // Toggle between full register and single date view
-    function toggleViewMode(isFullRegister) {
-      isFullRegisterView = isFullRegister;
-      
-      if (isFullRegister) {
-        // Full register view
-        fullRegisterBtn.style.backgroundColor = '#2A3B36';
-        fullRegisterBtn.style.color = 'white';
-        singleDateBtn.style.backgroundColor = '#F0EDE5';
-        singleDateBtn.style.color = '#060D0C';
-        dateSelector.classList.add('hidden');
-        selectedDate = '';
-        
-        console.log('📊 Switched to full register view');
-        
-        // Re-render table in full register mode if data is available
-        if (currentStudents.length > 0 && currentDates.length > 0) {
-          console.log('🔄 Re-rendering table for full register view');
-          renderAttendanceTable(currentStudents, currentDates, currentAttendanceMap);
+// Global state
+let currentStudents = [];
+let currentDates = [];
+let currentAttendanceMap = {};
+let currentSessionsMap = {};
+let currentSubject = '';
+let currentStream = '';
+let currentSemester = '';
+let isEditMode = false;
+let originalAttendanceMap = {};
+let originalSessionsMap = {};
+let isFullRegisterView = true;
+let selectedDate = '';
+
+// ✅ INITIALIZE on page load
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 Initializing attendance system...');
+    populateStreams();
+    setupEventListeners();
+    initializeViewMode();
+    injectStyles();
+    console.log('✅ Attendance system initialized');
+});
+
+// ✅ SETUP EVENT LISTENERS
+function setupEventListeners() {
+    if (streamSelect) streamSelect.addEventListener('change', (e) => populateSemesters(e.target.value));
+    if (semesterSelect) semesterSelect.addEventListener('change', (e) => {
+        const selectedStream = streamSelect.value;
+        if (selectedStream && e.target.value) {
+            loadSubjects(selectedStream, e.target.value);
         }
-      } else {
-        // Single date view
-        fullRegisterBtn.style.backgroundColor = '#F0EDE5';
-        fullRegisterBtn.style.color = '#060D0C';
-        singleDateBtn.style.backgroundColor = '#2A3B36';
-        singleDateBtn.style.color = 'white';
-        dateSelector.classList.remove('hidden');
-        
-        // Set date input limits and default value
-        setDateInputLimits();
-        
-        console.log('📅 Switched to single date view');
-        
-        // Trigger date selection if a date is already selected or use default
-        if (selectedDate) {
-          console.log('🔄 Re-rendering table for selected date:', selectedDate);
-          onDateSelect();
+    });
+    if (loadRegisterBtn) loadRegisterBtn.addEventListener('click', loadAttendanceRegister);
+    if (editAttendanceBtn) editAttendanceBtn.addEventListener('click', toggleEditMode);
+    if (saveAttendanceBtn) saveAttendanceBtn.addEventListener('click', saveAttendanceChanges);
+    if (cancelEditBtn) cancelEditBtn.addEventListener('click', cancelEditMode);
+    if (fullRegisterBtn) fullRegisterBtn.addEventListener('click', () => toggleViewMode(true));
+    if (singleDateBtn) singleDateBtn.addEventListener('click', () => toggleViewMode(false));
+    if (specificDateInput) specificDateInput.addEventListener('change', onDateSelect);
+    if (exportExcelBtn) exportExcelBtn.addEventListener('click', exportToExcel);
+}
+
+// ✅ INITIALIZE VIEW MODE
+function initializeViewMode() {
+    if (fullRegisterBtn && singleDateBtn) {
+        toggleViewMode(true);
+    }
+}
+
+// ✅ INJECT OCEAN THEME STYLES
+function injectStyles() {
+    const oceanThemeStyles = `
+        :root {
+            --navy-deep: #1e3a8a;
+            --ocean-blue: #3b82f6;
+            --steel-blue: #64748b;
+            --teal-blue: #0891b2;
+            --light-blue: #bfdbfe;
+            --sky-blue: #7dd3fc;
+            --pale-blue: #f0f9ff;
         }
-      }
-    }
+    `;
     
-    // Set date input limits and default value
-    function setDateInputLimits() {
-      if (currentDates.length > 0) {
-        // Set min and max based on available attendance dates for guidance
-        const sortedDates = [...currentDates].sort();
-        const minDate = sortedDates[0];
-        const maxDate = sortedDates[sortedDates.length - 1];
-        
-        // Don't restrict the calendar, but show guidance
-        dateValidationMessage.classList.remove('hidden');
-        statusText.textContent = `Select any date to check attendance`;
-        attendanceStatus.style.color = '#8B9B8F';
-        
-        // Set a reasonable default to the latest attendance date
-        specificDateInput.value = maxDate;
-        selectedDate = maxDate;
-        
-        console.log(`📅 Date input ready. Attendance available from ${minDate} to ${maxDate}`);
-      } else {
-        dateValidationMessage.classList.remove('hidden');
-        statusText.textContent = `No attendance data available`;
-        attendanceStatus.style.color = '#ef4444';
-      }
+    if (!document.querySelector('#ocean-theme-styles')) {
+        const styleSheet = document.createElement('style');
+        styleSheet.id = 'ocean-theme-styles';
+        styleSheet.textContent = oceanThemeStyles;
+        document.head.appendChild(styleSheet);
     }
-    
-    // Handle specific date selection
-    function onDateSelect() {
-      selectedDate = specificDateInput.value;
-      console.log('📅 Selected date:', selectedDate);
-      
-      if (!selectedDate) {
-        dateValidationMessage.classList.add('hidden');
-        return;
+}
+// ✅ GLASSMORPHISM ALERT MATCHING YOUR CONFIRM DIALOG DESIGN
+function showAlert(title, message, type = 'info') {
+  // Remove existing alerts
+  const existingAlerts = document.querySelectorAll('[id^="alert-modal-"]');
+  existingAlerts.forEach(alert => alert.remove());
+
+  const alertId = 'alert-modal-' + Date.now();
+  
+  // ✅ Define your exact color scheme
+  const typeConfig = {
+      success: {
+          iconColor: '#22c55e', // Green
+          iconClass: 'fa-check-circle',
+          buttonGradient: 'linear-gradient(135deg, #22c55e, #16a34a)',
+          noteColor: '#22c55e',
+          textColor: '#1e3a8a' // Navy deep like your design
+      },
+      error: {
+          iconColor: '#ef4444', // Red
+          iconClass: 'fa-exclamation-triangle', 
+          buttonGradient: 'linear-gradient(135deg, #ef4444, #dc2626)',
+          noteColor: '#ef4444',
+          textColor: '#1e3a8a'
+      },
+      warning: {
+          iconColor: '#f59e0b', // Orange
+          iconClass: 'fa-exclamation-circle',
+          buttonGradient: 'linear-gradient(135deg, #f59e0b, #d97706)',
+          noteColor: '#f59e0b',
+          textColor: '#1e3a8a'
+      },
+      info: {
+          iconColor: '#0f766e', // Steel blue like your design
+          iconClass: 'fa-info-circle',
+          buttonGradient: 'linear-gradient(135deg, #1e3a8a, #0f766e)', // Navy to steel blue
+          noteColor: '#7bbde8', // Light blue
+          textColor: '#1e3a8a'
       }
-      
-      // Check if attendance exists for this date
-      const hasAttendance = currentAttendanceMap[selectedDate];
-      const attendanceExists = hasAttendance !== undefined;
-      
-      dateValidationMessage.classList.remove('hidden');
-      
-      if (attendanceExists) {
-        // Attendance was marked on this date
-        const presentCount = hasAttendance.length;
-        const totalStudents = currentStudents.length;
-        statusText.textContent = `Attendance marked: ${presentCount}/${totalStudents} students present`;
-        attendanceStatus.style.color = '#22c55e';
-        attendanceStatus.querySelector('i').className = 'fas fa-check-circle';
-        
-        // Render table with attendance data
-        if (currentStudents.length > 0) {
-          renderAttendanceTable(currentStudents, currentDates, currentAttendanceMap);
-        }
-      } else {
-        // No attendance marked on this date
-        statusText.textContent = `Attendance not marked on this day`;
-        attendanceStatus.style.color = '#ef4444';
-        attendanceStatus.querySelector('i').className = 'fas fa-exclamation-circle';
-        
-        // Render table showing "no attendance marked"
-        renderNoAttendanceTable();
-      }
-    }
-    
-    // Render table when no attendance is marked for selected date
-    function renderNoAttendanceTable() {
-      if (!viewThead || !viewTbody) return;
-      
-      const selectedDateObj = new Date(selectedDate);
-      const formattedDate = selectedDateObj.toLocaleDateString('en-IN', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-      
-      // Create header
-      viewThead.innerHTML = `
-        <tr>
-          <th class="p-3 text-center font-bold text-sm">#</th>
-          <th class="p-3 text-left font-bold text-sm">Student ID</th>
-          <th class="p-3 text-left font-bold text-sm">Name</th>
-          <th class="p-3 text-center font-bold text-sm">Status (${formattedDate})</th>
-        </tr>
+  };
+
+  const config = typeConfig[type] || typeConfig.info;
+
+  // ✅ Process message for bullet points with your styling
+  const processMessage = (msg) => {
+      return msg.split('\n').map(line => {
+          line = line.trim();
+          
+          if (line.startsWith('• ')) {
+              const bulletContent = line.substring(2);
+              return `
+                  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                      <i class="fas fa-circle" style="color: ${config.iconColor}; font-size: 0.4rem; width: 12px;"></i>
+                      <span style="color: ${config.textColor}; font-weight: 500; font-size: 0.85rem;">${bulletContent}</span>
+                  </div>
+              `;
+          }
+          
+          if (line.includes('📊') || line.includes('💡')) {
+              return `<div style="color: ${config.textColor}; font-weight: 600; font-size: 0.9rem; margin: 12px 0 8px 0;">${line}</div>`;
+          }
+          
+          if (line.length > 0) {
+              return `<div style="color: ${config.textColor}; font-weight: 500; font-size: 0.85rem; margin-bottom: 4px;">${line}</div>`;
+          }
+          
+          return '<div style="margin-bottom: 8px;"></div>';
+      }).join('');
+  };
+
+  const processedMessage = processMessage(message);
+
+  // Create the exact same overlay style as your confirm dialog
+  const overlay = document.createElement('div');
+  overlay.id = alertId;
+  overlay.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 29, 57, 0.7); z-index: 10000;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      backdrop-filter: blur(5px);
+      animation: fadeIn 0.3s ease;
+  `;
+
+  overlay.innerHTML = `
+      <div style="
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(25px);
+          -webkit-backdrop-filter: blur(25px);
+          border-radius: 16px; 
+          padding: 24px; 
+          max-width: 380px; 
+          width: 100%;
+          box-shadow: 0 15px 35px rgba(10, 65, 116, 0.3); 
+          text-align: left;
+          border: 1px solid rgba(189, 216, 233, 0.4);
+          animation: slideUp 0.3s ease;
+      ">
+          <!-- Header -->
+          <div style="text-align: center; margin-bottom: 20px;">
+              <i class="fas ${config.iconClass}" style="color: ${config.iconColor}; font-size: 2.5rem; margin-bottom: 12px;"></i>
+              <h3 style="color: ${config.textColor}; margin: 0; font-size: 1.1rem; font-weight: 700;">${title}</h3>
+          </div>
+          
+          <!-- Content Area -->
+          <div style="
+              background: linear-gradient(135deg, rgba(123, 189, 232, 0.08) 0%, rgba(189, 216, 233, 0.04) 100%);
+              padding: 16px; 
+              border-radius: 12px; 
+              margin-bottom: 20px;
+              border-left: 3px solid ${config.noteColor};
+              backdrop-filter: blur(10px);
+              -webkit-backdrop-filter: blur(10px);
+              max-height: 300px;
+              overflow-y: auto;
+              border: 1px solid rgba(189, 216, 233, 0.2);
+          ">
+              ${processedMessage}
+          </div>
+          
+          <!-- Info Note (for non-error types) -->
+          ${type !== 'error' ? `
+              <div style="
+                  background: linear-gradient(135deg, rgba(123, 189, 232, 0.1) 0%, rgba(189, 216, 233, 0.05) 100%);
+                  padding: 10px 12px; 
+                  border-radius: 8px; 
+                  margin-bottom: 20px;
+                  border-left: 3px solid ${config.noteColor};
+                  backdrop-filter: blur(10px);
+                  -webkit-backdrop-filter: blur(10px);
+              ">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                      <i class="fas fa-info-circle" style="color: ${config.noteColor}; font-size: 0.9rem;"></i>
+                      <span style="color: ${config.textColor}; font-size: 0.8rem; font-weight: 500;">
+                          ${type === 'success' ? 'Auto-close in 6 seconds' : 'Click OK to continue'}
+                      </span>
+                  </div>
+              </div>
+          ` : ''}
+          
+          <!-- Button -->
+          <div style="display: flex; justify-content: center;">
+              <button onclick="closeAlert('${alertId}')" style="
+                  padding: 12px 24px; 
+                  border: none; 
+                  background: ${config.buttonGradient}; 
+                  color: white; 
+                  border-radius: 8px; 
+                  font-weight: 600; 
+                  cursor: pointer; 
+                  font-size: 0.9rem;
+                  transition: all 0.2s ease;
+                  box-shadow: 0 4px 12px rgba(10, 65, 116, 0.3);
+                  backdrop-filter: blur(10px);
+                  -webkit-backdrop-filter: blur(10px);
+                  min-width: 120px;
+              ">
+                  <i class="fas fa-check" style="margin-right: 6px;"></i>OK
+              </button>
+          </div>
+      </div>
+  `;
+
+  // ✅ Add exact same animations as your confirm dialog
+  if (!document.getElementById('glassmorphism-alert-styles')) {
+      const styles = document.createElement('style');
+      styles.id = 'glassmorphism-alert-styles';
+      styles.textContent = `
+          @keyframes fadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+          }
+          @keyframes slideUp {
+              from { transform: translateY(20px); opacity: 0; }
+              to { transform: translateY(0); opacity: 1; }
+          }
+          @keyframes fadeOut {
+              from { opacity: 1; }
+              to { opacity: 0; }
+          }
+          @keyframes slideDown {
+              from { transform: translateY(0); opacity: 1; }
+              to { transform: translateY(20px); opacity: 0; }
+          }
+          
+          /* Custom scrollbar for content area */
+          [id^="alert-modal-"] div[style*="overflow-y: auto"]::-webkit-scrollbar {
+              width: 6px;
+          }
+          [id^="alert-modal-"] div[style*="overflow-y: auto"]::-webkit-scrollbar-track {
+              background: rgba(189, 216, 233, 0.2);
+              border-radius: 3px;
+          }
+          [id^="alert-modal-"] div[style*="overflow-y: auto"]::-webkit-scrollbar-thumb {
+              background: rgba(123, 189, 232, 0.4);
+              border-radius: 3px;
+          }
+          [id^="alert-modal-"] div[style*="overflow-y: auto"]::-webkit-scrollbar-thumb:hover {
+              background: rgba(123, 189, 232, 0.6);
+          }
       `;
-      
-      // Sort students by ID
-      const sortedStudents = currentStudents.sort((a, b) => {
-        const aNum = parseInt(a.studentID);
-        const bNum = parseInt(b.studentID);
-        
-        if (!isNaN(aNum) && !isNaN(bNum) && 
-            a.studentID === aNum.toString() && 
-            b.studentID === bNum.toString()) {
-          return aNum - bNum;
-        }
-        
-        return a.studentID.localeCompare(b.studentID, undefined, {
-          numeric: true,
-          sensitivity: 'base'
-        });
+      document.head.appendChild(styles);
+  }
+
+  document.body.appendChild(overlay);
+
+  // ✅ Add button hover effects like your confirm dialog
+  const button = overlay.querySelector('button');
+  if (button) {
+      button.addEventListener('mouseenter', () => {
+          button.style.transform = 'translateY(-2px)';
+          button.style.boxShadow = '0 6px 20px rgba(10, 65, 116, 0.4)';
       });
       
-      // Create body with "no attendance" message
-      viewTbody.innerHTML = sortedStudents.map((stu, index) => `
-        <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">
-          <td class="p-3 text-center font-medium">${index + 1}</td>
-          <td class="p-3 font-medium">
-            <span class="text-xs font-bold px-2 py-1 rounded-md whitespace-nowrap" style="color: #060D0C; background-color: #F0EDE5;">${stu.studentID}</span>
-          </td>
-          <td class="p-3 font-medium">
-            <span class="text-sm" style="color: #060D0C;">${stu.name}</span>
-          </td>
-          <td class="p-3 text-center">
-            <div class="flex items-center justify-center gap-2">
-              <i class="fas fa-calendar-times text-gray-400"></i>
-              <span class="text-sm text-gray-500">Attendance not marked</span>
-            </div>
-          </td>
-        </tr>
-      `).join('');
-      
-      console.log(`📅 Rendered no-attendance table for ${selectedDate}`);
-    }
-    function showAlert(title, message, type) {
-      const prefixes = {
-        success: "✅ ",
-        error: "❌ ",
-        warning: "⚠️ ",
-        info: "ℹ️ "
-      };
-      alert(`${prefixes[type]}${title}\n\n${message}`);
-    }
+      button.addEventListener('mouseleave', () => {
+          button.style.transform = 'translateY(0)';
+          button.style.boxShadow = '0 4px 12px rgba(10, 65, 116, 0.3)';
+      });
+  }
 
-    // Populate streams
-    function populateStreams() {
-      streamSelect.innerHTML = '<option value="">-- Select Stream --</option>' + 
+  // ✅ Close on background click
+  overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+          closeAlert(alertId);
+      }
+  });
+
+  // ✅ Close on Escape key
+  const escapeHandler = (e) => {
+      if (e.key === 'Escape') {
+          closeAlert(alertId);
+          document.removeEventListener('keydown', escapeHandler);
+      }
+  };
+  document.addEventListener('keydown', escapeHandler);
+
+  // ✅ Auto-close success alerts
+  if (type === 'success') {
+      setTimeout(() => {
+          closeAlert(alertId);
+      }, 6000);
+  }
+}
+
+// ✅ SMOOTH CLOSE ANIMATION (matches your design)
+function closeAlert(alertId) {
+  const alertElement = document.getElementById(alertId);
+  if (alertElement) {
+      // Add closing animations
+      alertElement.style.animation = 'fadeOut 0.3s ease';
+      const modal = alertElement.querySelector('div');
+      if (modal) {
+          modal.style.animation = 'slideDown 0.3s ease';
+      }
+      
+      // Remove after animation
+      setTimeout(() => {
+          if (alertElement.parentNode) {
+              alertElement.remove();
+          }
+      }, 300);
+  }
+}
+
+// ✅ QUICK NOTIFICATION TOAST (simplified glassmorphism version)
+function showNotification(message, type = 'info', duration = 4000) {
+  const typeColors = {
+      success: '#22c55e',
+      error: '#ef4444',
+      warning: '#f59e0b',
+      info: '#0f766e'
+  };
+
+  const typeIcons = {
+      success: 'fa-check-circle',
+      error: 'fa-times-circle',
+      warning: 'fa-exclamation-triangle',
+      info: 'fa-info-circle'
+  };
+
+  const notificationId = 'notification-' + Date.now();
+  
+  const notification = document.createElement('div');
+  notification.id = notificationId;
+  notification.style.cssText = `
+      position: fixed; 
+      top: 20px; 
+      right: 20px; 
+      z-index: 10001;
+      max-width: 350px;
+      animation: slideInRight 0.3s ease-out;
+  `;
+
+  notification.innerHTML = `
+      <div style="
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(25px);
+          -webkit-backdrop-filter: blur(25px);
+          border-radius: 12px;
+          padding: 16px;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+          border: 1px solid rgba(189, 216, 233, 0.4);
+          border-left: 4px solid ${typeColors[type]};
+      ">
+          <div style="display: flex; items-center; gap: 12px;">
+              <div style="flex-shrink: 0;">
+                  <i class="fas ${typeIcons[type]}" style="color: ${typeColors[type]}; font-size: 1.1rem;"></i>
+              </div>
+              <div style="flex: 1; color: #1e3a8a; font-size: 0.9rem; font-weight: 500;">
+                  ${message}
+              </div>
+              <button onclick="document.getElementById('${notificationId}').remove()" style="
+                  background: none; border: none; color: #64748b; cursor: pointer; 
+                  padding: 4px; border-radius: 4px; transition: all 0.2s ease;
+                  font-size: 0.8rem;
+              ">
+                  <i class="fas fa-times"></i>
+              </button>
+          </div>
+      </div>
+  `;
+
+  // Add slide animation
+  if (!document.getElementById('notification-glassmorphism-styles')) {
+      const notificationStyles = document.createElement('style');
+      notificationStyles.id = 'notification-glassmorphism-styles';
+      notificationStyles.textContent = `
+          @keyframes slideInRight {
+              from { transform: translateX(100%); opacity: 0; }
+              to { transform: translateX(0); opacity: 1; }
+          }
+      `;
+      document.head.appendChild(notificationStyles);
+  }
+
+  document.body.appendChild(notification);
+  
+  // Auto-remove with slide out
+  setTimeout(() => {
+      if (notification.parentNode) {
+          notification.style.animation = 'slideInRight 0.3s ease-in reverse';
+          setTimeout(() => {
+              if (notification.parentNode) {
+                  notification.remove();
+              }
+          }, 300);
+      }
+  }, duration);
+}
+
+console.log('✅ Glassmorphism alert system loaded - matches confirm dialog design');
+
+
+// ✅ POPULATE STREAMS
+function populateStreams() {
+    if (!streamSelect) return;
+    streamSelect.innerHTML = '<option value="">-- Select Stream --</option>' + 
         streams.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
-    }
+}
 
-    // Populate semesters based on stream
-    function populateSemesters(streamName) {
-      const stream = streams.find(s => s.name === streamName);
-      semesterSelect.innerHTML = '<option value="">-- Select Semester --</option>' + 
-        (stream ? stream.semesters.map(n => `<option value="${n}">Sem ${n}</option>`).join('') : '');
-      subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
-      hideRegister();
-    }
-
-    // Load subjects from API
-    async function loadSubjects(stream, sem) {
-      subjectSelect.innerHTML = '<option value="">Loading...</option>';
-      try {
-        const res = await fetch(`/api/subjects/${encodeURIComponent(stream)}/sem${sem}`);
-        const data = await res.json();
-        if (!data.success) throw new Error('Failed to load subjects');
-        const subjects = data.subjects || [];
-        subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>' + 
-          subjects.map(s => `<option value="${s.subjectName}">${s.subjectName}</option>`).join('');
-      } catch (e) {
+// ✅ POPULATE SEMESTERS
+function populateSemesters(streamName) {
+    if (!semesterSelect) return;
+    
+    const stream = streams.find(s => s.name === streamName);
+    semesterSelect.innerHTML = '<option value="">-- Select Semester --</option>' + 
+        (stream ? stream.semesters.map(n => `<option value="${n}">Semester ${n}</option>`).join('') : '');
+    
+    if (subjectSelect) {
         subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
-        showAlert('Loading Error', 'Failed to load subjects', 'error');
-      }
     }
+    
+    hideRegister();
+}
 
-    // Hide register
-    function hideRegister() {
-      registerTable.classList.add('hidden');
-      exportExcelBtn.classList.add('hidden');
-      editAttendanceBtn.classList.add('hidden');
-      saveAttendanceBtn.classList.add('hidden');
-      cancelEditBtn.classList.add('hidden');
-      isEditMode = false;
+// ✅ LOAD SUBJECTS
+async function loadSubjects(stream, sem) {
+    if (!subjectSelect) return;
+    
+    subjectSelect.innerHTML = '<option value="">Loading subjects...</option>';
+    
+    try {
+        console.log(`📚 Loading subjects for ${stream} Semester ${sem}`);
+        
+        const res = await fetch(`/api/subjects/${encodeURIComponent(stream)}/sem${sem}`);
+        
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
+        const data = await res.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to load subjects');
+        }
+        
+        const subjects = data.subjects || [];
+        
+        if (subjects.length === 0) {
+            subjectSelect.innerHTML = '<option value="">No subjects found</option>';
+            showAlert('No Subjects', `No subjects found for ${stream} Semester ${sem}`, 'warning');
+            return;
+        }
+        
+        subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>' + 
+            subjects.map(s => `<option value="${s.subjectName}">${s.subjectName}</option>`).join('');
+            
+        console.log(`✅ Loaded ${subjects.length} subjects`);
+        
+    } catch (error) {
+        console.error('❌ Error loading subjects:', error);
+        subjectSelect.innerHTML = '<option value="">Error loading subjects</option>';
+        showAlert('Loading Error', `Failed to load subjects:\n\n${error.message}`, 'error');
     }
+}
 
-    // Load attendance register - main function matching index.html
-    async function loadAttendanceRegister() {
-      const stream = streamSelect.value;
-      const sem = semesterSelect.value;
-      const subject = subjectSelect.value;
-      
-      if (!stream || !sem || !subject) {
-        showAlert('Missing Information', 'Please select stream, semester and subject', 'error');
+// ✅ HIDE REGISTER
+function hideRegister() {
+    const elementsToHide = [registerTable, exportExcelBtn, editAttendanceBtn, saveAttendanceBtn, cancelEditBtn];
+    
+    elementsToHide.forEach(element => {
+        if (element) element.classList.add('hidden');
+    });
+    
+    isEditMode = false;
+}
+
+// ✅ LOAD ATTENDANCE REGISTER
+async function loadAttendanceRegister() {
+    const stream = streamSelect?.value;
+    const sem = semesterSelect?.value;
+    const subject = subjectSelect?.value;
+    
+    if (!stream || !sem || !subject) {
+        showAlert('Missing Information', 'Please select stream, semester and subject first.', 'warning');
         return;
-      }
+    }
 
-      try {
+    try {
         loadRegisterBtn.disabled = true;
         loadRegisterBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
 
-        console.log(`📊 Loading register for: ${subject}`);
-        
+        console.log(`📡 Loading register: ${stream} Sem ${sem} - ${subject}`);
+
         const res = await fetch(`/api/attendance-register/${encodeURIComponent(stream)}/sem${sem}/${encodeURIComponent(subject)}`);
         
         if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
+            const errorText = await res.text();
+            throw new Error(`HTTP ${res.status}: ${errorText}`);
         }
 
         const data = await res.json();
-        console.log('📊 Register response:', data);
-
-        let students, attendanceMap, subjectInfo;
         
-        if (data.success && data.data) {
-          ({ students, attendanceMap, subjectInfo } = data.data);
-        } else if (data.students && data.attendanceMap) {
-          ({ students, attendanceMap } = data);
-          subjectInfo = data.subjectInfo;
-        } else {
-          throw new Error(data.message || 'Failed to load register');
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to load register');
         }
 
+        console.log('✅ Register loaded:', {
+            students: data.students?.length || 0,
+            attendanceMapKeys: Object.keys(data.attendanceMap || {}).length,
+            hasSessionsMap: !!data.sessionsMap,
+            summary: data.summary
+        });
+
+        // Extract data with validation
+        const students = data.students || [];
+        const attendanceMap = data.attendanceMap || {};
+        const sessionsMap = data.sessionsMap || {};
         const dates = Object.keys(attendanceMap).sort();
 
-        console.log(`✅ Loaded: ${students.length} students, ${dates.length} dates`);
-
+        // Validate data
         if (students.length === 0) {
-          const message = subjectInfo?.isLanguageSubject ? 
-            `No students found who chose ${subjectInfo.languageType} language` :
-            'No students found for this subject';
-          showAlert("No Students", message, "warning");
-          return;
+            const message = data.subjectInfo?.isLanguageSubject ? 
+                `No students found who chose ${data.subjectInfo.languageType} language` :
+                'No students found for this subject';
+            showAlert('No Students', message, 'warning');
+            return;
         }
 
-        // Store current data for export
+        if (dates.length === 0) {
+            showAlert('No Data', 'No attendance records found for this subject', 'warning');
+            return;
+        }
+
+        // Update global state
         currentStudents = students;
         currentDates = dates;
         currentAttendanceMap = attendanceMap;
+        currentSessionsMap = sessionsMap;
         currentSubject = subject;
         currentStream = stream;
         currentSemester = sem;
-
-        await renderAttendanceTable(students, dates, attendanceMap);
-
-        registerTable.classList.remove("hidden");
-        exportExcelBtn.classList.remove("hidden");
-        editAttendanceBtn.classList.remove("hidden");
         
-        // Initialize date selector if in single date mode
-        if (!isFullRegisterView) {
-          setDateInputLimits();
-          // Trigger date selection if a date is already selected
-          if (selectedDate) {
-            onDateSelect();
-          }
+        // Store originals
+        originalAttendanceMap = JSON.parse(JSON.stringify(attendanceMap));
+        originalSessionsMap = JSON.parse(JSON.stringify(sessionsMap));
+
+        // Set full register view initially
+        isFullRegisterView = true;
+        toggleViewMode(true);
+
+        // Show register elements
+        registerTable?.classList.remove('hidden');
+        exportExcelBtn?.classList.remove('hidden');
+        editAttendanceBtn?.classList.remove('hidden');
+
+        // Render table and update stats
+        await renderAttendanceTable();
+        updateAttendanceStats();
+
+        
+        
+    } finally {
+        if (loadRegisterBtn) {
+            loadRegisterBtn.disabled = false;
+            loadRegisterBtn.innerHTML = '<i class="fas fa-search mr-2"></i>Load Register';
         }
-
-        // Calculate stats
-        updateAttendanceStats(students, dates, attendanceMap);
-
-        const avgAttendance = students.length > 0 ?
-          (students.reduce((sum, stu) => {
-            const attendedCount = dates.filter(date => attendanceMap[date]?.includes(stu.studentID)).length;
-            return sum + (dates.length > 0 ? (attendedCount / dates.length) * 100 : 0);
-          }, 0) / students.length).toFixed(1) : 0;
-
-        let successMessage = `Register loaded successfully!\n\n`;
-        successMessage += `Subject: ${subject}\n`;
-        if (subjectInfo?.isLanguageSubject) {
-          successMessage += `Language: ${subjectInfo.languageType} students only\n`;
-        }
-        successMessage += `Students: ${students.length}\n`;
-        successMessage += `Days: ${dates.length}\n`;
-        successMessage += `Average Attendance: ${avgAttendance}%`;
-
-        showAlert("Success", successMessage, "success");
-
-      } catch (err) {
-        console.error("Error loading attendance register:", err);
-        showAlert("Loading Error", `Failed to load register: ${err.message}`, "error");
-      } finally {
-        loadRegisterBtn.disabled = false;
-        loadRegisterBtn.innerHTML = '<i class="fas fa-search mr-2"></i>Load Attendance Register';
-      }
     }
+}
 
-    // Render attendance table matching index.html style
-    async function renderAttendanceTable(students, dates, attendanceMap) {
-      console.log('🏗️ Rendering attendance table. Edit mode:', isEditMode);
-      console.log('📊 Students:', students.length, 'Dates:', dates.length);
-      console.log('📅 View mode - Full Register:', isFullRegisterView, 'Selected Date:', selectedDate);
-      
-      // Determine which dates to show based on view mode
-      let displayDates = dates;
-      if (!isFullRegisterView && selectedDate) {
-        displayDates = [selectedDate];
-        console.log('📅 Showing single date:', selectedDate);
-      } else if (!isFullRegisterView && !selectedDate) {
-        console.log('📅 Single date mode but no date selected');
-        showAlert('Select Date', 'Please select a date to view attendance.', 'info');
-        return;
-      }
-      
-      // Critical check: If no dates, we can't render checkboxes
-      if (displayDates.length === 0) {
-        console.error('❌ CRITICAL: No dates available - this will result in no checkboxes!');
-        console.log('💡 This is likely why checkboxes are not appearing');
+// ✅ TOGGLE EDIT MODE
+function toggleEditMode() {
+    isEditMode = !isEditMode;
+    console.log('✏️ Edit mode:', isEditMode ? 'ON' : 'OFF');
+    
+    if (isEditMode) {
+        // Enable edit mode
+        editAttendanceBtn?.classList.add('hidden');
+        saveAttendanceBtn?.classList.remove('hidden');
+        cancelEditBtn?.classList.remove('hidden');
         
-        if (isEditMode) {
-          showAlert('No Attendance Data', 'No attendance records found for this subject. You need to mark attendance first using the "Mark Attendance" page before you can edit it here.', 'warning');
-          
-          // Create a sample table showing students but explaining no data
-          viewThead.innerHTML = `
-            <tr>
-              <th class="p-3 text-center font-bold text-sm">#</th>
-              <th class="p-3 text-left font-bold text-sm">Student ID</th>
-              <th class="p-3 text-left font-bold text-sm">Name</th>
-              <th class="p-3 text-center font-bold text-sm">Status</th>
-            </tr>
-          `;
-          
-          viewTbody.innerHTML = students.map((stu, index) => `
-            <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">
-              <td class="p-3 text-center font-medium">${index + 1}</td>
-              <td class="p-3 font-medium">
-                <span class="text-xs font-bold px-2 py-1 rounded-md whitespace-nowrap" style="color: #060D0C; background-color: #F0EDE5;">${stu.studentID}</span>
-              </td>
-              <td class="p-3 font-medium">
-                <span class="text-sm" style="color: #060D0C;">${stu.name}</span>
-              </td>
-              <td class="p-3 text-center text-gray-500">
-                <i class="fas fa-info-circle"></i> No attendance data
-              </td>
-            </tr>
-          `).join('');
-          
-          return; // Exit early
+        // Update button text to indicate edit mode
+        if (saveAttendanceBtn) {
+            saveAttendanceBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+            saveAttendanceBtn.innerHTML = '<i class="fas fa-save text-sm mr-1"></i><span class="hidden sm:inline">Save Changes</span><span class="sm:hidden text-xs">Save</span>';
         }
-      }
-      
-      if (!viewThead || !viewTbody) {
-        console.error('❌ Table elements not found');
-        return;
-      }
-
-      // Sort students by Student ID
-      const sortedStudents = students.sort((a, b) => {
-        const aNum = parseInt(a.studentID);
-        const bNum = parseInt(b.studentID);
         
-        if (!isNaN(aNum) && !isNaN(bNum) && 
-            a.studentID === aNum.toString() && 
-            b.studentID === bNum.toString()) {
+        showAlert('Edit Mode', 'Edit mode enabled. Click checkboxes to modify attendance, then save your changes.', 'info');
+        
+    } else {
+        // Disable edit mode
+        editAttendanceBtn?.classList.remove('hidden');
+        saveAttendanceBtn?.classList.add('hidden');
+        cancelEditBtn?.classList.add('hidden');
+    }
+    
+    // Re-render table to show/hide checkboxes
+    renderAttendanceTable();
+}
+
+// ✅ CANCEL EDIT MODE
+function cancelEditMode() {
+    console.log('🚫 Canceling edit mode...');
+    
+    isEditMode = false;
+    editAttendanceBtn?.classList.remove('hidden');
+    saveAttendanceBtn?.classList.add('hidden');
+    cancelEditBtn?.classList.add('hidden');
+    
+    // Restore original data
+    currentAttendanceMap = JSON.parse(JSON.stringify(originalAttendanceMap));
+    currentSessionsMap = JSON.parse(JSON.stringify(originalSessionsMap));
+    
+    // Re-render table to remove checkboxes
+    renderAttendanceTable();
+    
+    showAlert('Edit Cancelled', 'All changes have been discarded', 'info');
+}
+
+
+// ✅ TOGGLE VIEW MODE
+function toggleViewMode(isFullView) {
+    isFullRegisterView = isFullView;
+    
+    console.log('🔄 Toggling view mode:', isFullView ? 'Full Register' : 'Single Date');
+    
+    if (fullRegisterBtn && singleDateBtn) {
+        if (isFullView) {
+            fullRegisterBtn.classList.add('bg-slate-700', 'text-white');
+            fullRegisterBtn.classList.remove('bg-gray-200', 'text-gray-700');
+            singleDateBtn.classList.add('bg-gray-200', 'text-gray-700');
+            singleDateBtn.classList.remove('bg-slate-700', 'text-white');
+            
+            dateSelector?.classList.add('hidden');
+            
+        } else {
+            singleDateBtn.classList.add('bg-slate-700', 'text-white');
+            singleDateBtn.classList.remove('bg-gray-200', 'text-gray-700');
+            fullRegisterBtn.classList.add('bg-gray-200', 'text-gray-700');
+            fullRegisterBtn.classList.remove('bg-slate-700', 'text-white');
+            
+            dateSelector?.classList.remove('hidden');
+            
+            setDateInputLimits();
+        }
+        
+        // Re-render table if data is available
+        if (currentStudents.length > 0 && currentDates.length > 0) {
+            renderAttendanceTable();
+        }
+    }
+}
+
+// ✅ SET DATE INPUT LIMITS
+function setDateInputLimits() {
+    if (!specificDateInput || !currentDates || currentDates.length === 0) return;
+    
+    const sortedDates = [...currentDates].sort();
+    const minDate = sortedDates[0];
+    const maxDate = sortedDates[sortedDates.length - 1];
+    
+    specificDateInput.min = minDate;
+    specificDateInput.max = maxDate;
+    
+    if (!selectedDate || !currentDates.includes(selectedDate)) {
+        selectedDate = maxDate;
+    }
+    
+    specificDateInput.value = selectedDate;
+    
+    console.log('📅 Date limits set:', { min: minDate, max: maxDate, selected: selectedDate });
+    
+    onDateSelect();
+}
+
+// ✅ HANDLE DATE SELECTION
+function onDateSelect() {
+    if (!specificDateInput) return;
+    
+    const newDate = specificDateInput.value;
+    
+    if (!newDate) {
+        showAlert('Invalid Date', 'Please select a valid date', 'warning');
+        return;
+    }
+    
+    if (!currentDates.includes(newDate)) {
+        showAlert('No Data', 'No attendance data available for the selected date', 'warning');
+        return;
+    }
+    
+    selectedDate = newDate;
+    console.log('📅 Date selected:', selectedDate);
+    
+    if (!isFullRegisterView) {
+        updateDateStatus();
+        renderAttendanceTable();
+    }
+}
+
+// ✅ UPDATE DATE STATUS
+function updateDateStatus() {
+    if (!selectedDate || !dateValidationMessage || !statusText) return;
+    
+    const dateSessions = currentSessionsMap[selectedDate] || [];
+    const hasAttendance = currentAttendanceMap[selectedDate] !== undefined;
+    
+    dateValidationMessage.classList.remove('hidden');
+    
+    if (hasAttendance) {
+        let presentCount = 0;
+        const dateAttendance = currentAttendanceMap[selectedDate];
+        
+        if (dateAttendance) {
+            if (dateAttendance.studentsPresent) {
+                presentCount = dateAttendance.studentsPresent.length;
+            } else if (Array.isArray(dateAttendance)) {
+                if (Array.isArray(dateAttendance[0])) {
+                    const uniqueStudents = new Set();
+                    dateAttendance.forEach(session => {
+                        if (Array.isArray(session)) {
+                            session.forEach(studentId => uniqueStudents.add(studentId));
+                        }
+                    });
+                    presentCount = uniqueStudents.size;
+                } else {
+                    presentCount = dateAttendance.length;
+                }
+            }
+        }
+        
+        const sessionText = dateSessions.length > 1 ? ` (${dateSessions.length} sessions)` : '';
+        statusText.textContent = `Attendance marked: ${presentCount}/${currentStudents.length} students present${sessionText}`;
+        
+        if (attendanceStatus) {
+            attendanceStatus.style.color = '#22c55e';
+            const icon = attendanceStatus.querySelector('i');
+            if (icon) icon.className = 'fas fa-check-circle';
+        }
+        
+    } else {
+        statusText.textContent = 'Attendance not marked on this day';
+        
+        if (attendanceStatus) {
+            attendanceStatus.style.color = '#ef4444';
+            const icon = attendanceStatus.querySelector('i');
+            if (icon) icon.className = 'fas fa-exclamation-circle';
+        }
+        
+        renderNoAttendanceTable();
+    }
+}
+// ✅ RENDER NO ATTENDANCE TABLE (MOBILE & DESKTOP RESPONSIVE)
+function renderNoAttendanceTable() {
+  if (!viewThead || !viewTbody) return;
+  
+  const selectedDateObj = new Date(selectedDate);
+  const formattedDate = selectedDateObj.toLocaleDateString('en-IN', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+  });
+  
+  viewThead.innerHTML = `
+      <tr style="background: linear-gradient(135deg, #3b6c87, #5a8ca3);">
+          <th class="p-2 md:p-3 text-center font-bold text-xs md:text-sm text-white">#</th>
+          <th class="p-2 md:p-3 text-left font-bold text-xs md:text-sm text-white">Student ID</th>
+          <th class="p-2 md:p-3 text-left font-bold text-xs md:text-sm text-white hidden sm:table-cell">Name</th>
+          <th class="p-2 md:p-3 text-center font-bold text-xs md:text-sm text-white">Status</th>
+      </tr>
+  `;
+  
+  const sortedStudents = currentStudents.sort((a, b) => {
+      const aNum = parseInt(a.studentID);
+      const bNum = parseInt(b.studentID);
+      
+      if (!isNaN(aNum) && !isNaN(bNum) && 
+          a.studentID === aNum.toString() && 
+          b.studentID === bNum.toString()) {
           return aNum - bNum;
-        }
-        
-        return a.studentID.localeCompare(b.studentID, undefined, {
+      }
+      
+      return a.studentID.localeCompare(b.studentID, undefined, {
           numeric: true,
           sensitivity: 'base'
-        });
       });
+  });
+  
+  viewTbody.innerHTML = sortedStudents.map((stu, index) => `
+      <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}" 
+          style="${index % 2 !== 0 ? 'background: rgba(197,211,221,0.15);' : ''}">
+          <td class="p-2 md:p-3 text-center font-medium text-xs md:text-sm">${index + 1}</td>
+          <td class="p-2 md:p-3 font-medium">
+              <span class="text-xs font-bold px-2 py-1 rounded-md whitespace-nowrap" 
+                    style="color: #3b6c87; background: rgba(59,108,135,0.1);">${stu.studentID}</span>
+              <!-- Mobile: Show name below ID -->
+              <div class="sm:hidden text-xs mt-1" style="color: #3b6c87;">${stu.name}</div>
+          </td>
+          <td class="p-2 md:p-3 font-medium hidden sm:table-cell">
+              <span class="text-sm" style="color: #3b6c87;">${stu.name}</span>
+          </td>
+          <td class="p-2 md:p-3 text-center">
+              <div class="flex items-center justify-center gap-2">
+                  <i class="fas fa-calendar-times" style="color: var(--light-blue);"></i>
+                  <span class="text-xs md:text-sm" style="color: var(--light-blue);">Not marked</span>
+              </div>
+          </td>
+      </tr>
+  `).join('');
+}
 
-      // Create table header based on view mode
-      if (isFullRegisterView) {
-        // Full register view - show all dates
-        viewThead.innerHTML = `
-          <tr>
-            <th class="p-3 text-center font-bold text-sm">#</th>
-            <th class="p-3 text-left font-bold text-sm">Student ID</th>
-            <th class="p-3 text-left font-bold text-sm">Name</th>
-            ${displayDates.map(d => {
-              const dateObj = new Date(d);
-              const displayDate = dateObj.toLocaleDateString('en-GB', {day: '2-digit', month: '2-digit'});
-              const title = dateObj.toLocaleDateString('en-IN', { 
-                weekday: 'short', 
-                month: 'short', 
-                day: 'numeric' 
-              });
-              
-              return `<th class="p-2 text-center font-semibold text-xs min-w-12" data-date="${d}" title="${title}">${displayDate}</th>`;
-            }).join('')}
-            
-            <th class="p-3 text-center font-bold text-xs" style="background-color: #2A3B36;">Total</th>
-            <th class="p-3 text-center font-bold text-xs" style="background-color: #060D0C;">Present</th>
-            <th class="p-3 text-center font-bold text-xs" style="background-color: #2A3B36;">%</th>
-          </tr>
-        `;
-      } else {
-        // Single date view - show just attendance status
-        const dateObj = new Date(selectedDate);
-        const formattedDate = dateObj.toLocaleDateString('en-IN', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        });
-        
-        viewThead.innerHTML = `
-          <tr>
-            <th class="p-3 text-center font-bold text-sm">#</th>
-            <th class="p-3 text-left font-bold text-sm">Student ID</th>
-            <th class="p-3 text-left font-bold text-sm">Name</th>
-            <th class="p-3 text-center font-bold text-sm">Attendance (${formattedDate})</th>
-          </tr>
-        `;
+// ✅ EXPORT TO EXCEL (MOBILE RESPONSIVE)
+async function exportToExcel() {
+  console.log('📊 Export to Excel');
+  showAlert('Export', 'Excel export functionality will be implemented here', 'info');
+}
+
+// ✅ ENHANCED: renderAttendanceTable (MOBILE & DESKTOP RESPONSIVE)
+async function renderAttendanceTable() {
+  console.log('🎨 Rendering table with view mode:', isFullRegisterView ? 'Full' : 'Single Date');
+  
+  if (!viewThead || !viewTbody) {
+      throw new Error('Table elements (viewThead/viewTbody) not found');
+  }
+  
+  if (!currentStudents || !currentStudents.length) {
+      throw new Error('No student data available');
+  }
+  
+  if (!currentDates || !currentDates.length) {
+      throw new Error('No date data available');
+  }
+
+  try {
+      // Clear table
+      viewThead.innerHTML = '';
+      viewTbody.innerHTML = '';
+
+      // Determine display dates
+      let displayDates = currentDates;
+      
+      if (!isFullRegisterView) {
+          if (!selectedDate) {
+              if (currentDates.length > 0) {
+                  selectedDate = currentDates[currentDates.length - 1];
+                  if (specificDateInput) {
+                      specificDateInput.value = selectedDate;
+                  }
+              } else {
+                  showAlert('No Date', 'No attendance dates available', 'warning');
+                  return;
+              }
+          }
+          
+          if (!currentDates.includes(selectedDate)) {
+              showAlert('Invalid Date', 'Selected date not available in attendance records', 'warning');
+              selectedDate = currentDates[currentDates.length - 1];
+              if (specificDateInput) {
+                  specificDateInput.value = selectedDate;
+              }
+          }
+          
+          displayDates = [selectedDate];
+          console.log('📅 Single date view for:', selectedDate);
       }
 
-      // Create table body
-      viewTbody.innerHTML = "";
+      // Sort students
+      const sortedStudents = [...currentStudents].sort((a, b) => {
+          const aNum = parseInt(a.studentID);
+          const bNum = parseInt(b.studentID);
+          if (!isNaN(aNum) && !isNaN(bNum)) {
+              return aNum - bNum;
+          }
+          return a.studentID.localeCompare(b.studentID, undefined, { numeric: true });
+      });
+
+      // ✅ BUILD RESPONSIVE HEADER
+      let headerCells = `
+          <th class="p-2 md:p-3 text-center font-bold text-xs md:text-sm sticky left-0 z-20 border-r-2 border-white/20 text-white" 
+              style="background: #3b6c87;">#</th>
+          <th class="p-2 md:p-3 text-left font-bold text-xs md:text-sm sticky left-8 md:left-12 z-20 border-r-2 border-white/20 text-white" 
+              style="background: #3b6c87;">ID</th>
+          <th class="p-2 md:p-3 text-left font-bold text-xs md:text-sm sticky left-16 md:left-32 z-20 border-r-4 border-white/30 text-white hidden sm:table-cell" 
+              style="background: #3b6c87;">Name</th>
+      `;
+
+      displayDates.forEach(date => {
+          const dateObj = new Date(date);
+          const displayDate = dateObj.toLocaleDateString('en-GB', {day: '2-digit', month: '2-digit'});
+          const dateSessions = currentSessionsMap[date] || [];
+          
+          if (dateSessions.length > 1) {
+              dateSessions.forEach((session, sessionIndex) => {
+                  const timeSlot = formatTimeSlot(session.time);
+                  
+                  headerCells += `
+                      <th class="p-1 md:p-2 text-center font-semibold text-xs min-w-16 md:min-w-24 border-r border-white/20 text-white" 
+                          style="background: #3b6c87;"
+                          data-date="${date}" 
+                          data-session="${sessionIndex}"
+                          title="Session ${sessionIndex + 1} - ${timeSlot.slot}">
+                          <div class="flex flex-col items-center py-1">
+                              <div class="text-xs font-bold mb-1">${displayDate}</div>
+                              <div class="text-xs bg-white bg-opacity-30 px-1 md:px-2 py-1 rounded mb-1 font-mono">
+                                  ${timeSlot.shortSlot || timeSlot.slot}
+                              </div>
+                              <div class="text-xs font-medium">S${sessionIndex + 1}</div>
+                          </div>
+                      </th>`;
+              });
+          } else if (dateSessions.length === 1) {
+              const session = dateSessions[0];
+              const timeSlot = formatTimeSlot(session.time || 'No Time');
+              
+              headerCells += `
+                  <th class="p-1 md:p-2 text-center font-semibold text-xs min-w-16 md:min-w-24 border-r border-white/20 text-white" 
+                      style="background: #3b6c87;"
+                      data-date="${date}" 
+                      title="Single Session - ${timeSlot.slot}">
+                      <div class="flex flex-col items-center py-1">
+                          <div class="text-xs font-bold mb-1">${displayDate}</div>
+                          <div class="text-xs bg-white bg-opacity-30 px-1 md:px-2 py-1 rounded font-mono">
+                              ${timeSlot.shortSlot || timeSlot.slot}
+                          </div>
+                      </div>
+                  </th>`;
+          } else {
+              headerCells += `
+                  <th class="p-1 md:p-2 text-center font-semibold text-xs min-w-16 md:min-w-20 border-r border-white/20 text-white" 
+                      style="background: #3b6c87;"
+                      data-date="${date}">
+                      <div class="flex flex-col items-center py-1">
+                          <div class="text-xs font-bold mb-1">${displayDate}</div>
+                          <div class="text-xs text-white/70">No Data</div>
+                      </div>
+                  </th>`;
+          }
+      });
       
-      sortedStudents.forEach((stu, index) => {
-        let attended = 0;
-        const row = [];
+      // ✅ SUMMARY COLUMNS ONLY FOR FULL REGISTER VIEW (RESPONSIVE)
+      if (isFullRegisterView) {
+          headerCells += `
+              <th class="p-2 md:p-3 text-center font-bold text-xs border-l-4 hidden md:table-cell" style="border-left-color: #0d9488; background: #3b6c87; color: white;">Sessions</th>
+              <th class="p-2 md:p-3 text-center font-bold text-xs hidden md:table-cell" style="background: #3b6c87; color: white;">Present</th>
+              <th class="p-2 md:p-3 text-center font-bold text-xs" style="background: #3b6c87; color: white;">%</th>
+          `;
+      }
+      
+      viewThead.innerHTML = `<tr>${headerCells}</tr>`;
 
-        row.push(`<td class="p-3 text-center font-medium">${index + 1}</td>`);
-        row.push(`
-          <td class="p-3 font-medium">
-            <span class="text-xs font-bold px-2 py-1 rounded-md whitespace-nowrap" style="color: #060D0C; background-color: #F0EDE5;">${stu.studentID}</span>
-          </td>
-        `);
-        row.push(`
-          <td class="p-3 font-medium">
-            <span class="text-sm" style="color: #060D0C;">${stu.name}</span>
-          </td>
-        `);
+      // ✅ BUILD RESPONSIVE TABLE BODY
+      sortedStudents.forEach((student, index) => {
+          const row = [];
 
-        if (isFullRegisterView) {
-          // Full register view - show all dates
+          // Mobile: Smaller padding, responsive sticky columns
+          row.push(`<td class="p-2 md:p-3 text-center font-medium sticky left-0 z-10 border-r-2" style="background: rgba(255,255,255,0.95); border-right-color: rgba(90,140,163,0.2); font-size: 0.75rem; md:font-size: 0.875rem;">${index + 1}</td>`);
+          
+          row.push(`
+              <td class="p-2 md:p-3 font-medium sticky left-8 md:left-12 z-10 border-r-2" style="background: rgba(255,255,255,0.95); border-right-color: rgba(90,140,163,0.2);">
+                  <span class="text-xs font-bold px-1 md:px-2 py-1 rounded-md" style="color: #3b6c87; background: rgba(59,108,135,0.1);">${student.studentID}</span>
+                  <!-- Mobile: Show name below ID -->
+                  <div class="sm:hidden text-xs mt-1" style="color: #3b6c87;">${student.name}</div>
+              </td>
+          `);
+          
+          // Desktop: Full name column (hidden on mobile)
+          row.push(`
+              <td class="p-2 md:p-3 font-medium sticky left-16 md:left-32 z-10 border-r-4 hidden sm:table-cell" style="background: rgba(255,255,255,0.95); border-right-color: rgba(90,140,163,0.3);">
+                  <span class="text-sm font-medium" style="color: #3b6c87;">${student.name}</span>
+              </td>
+          `);
+
+          // ✅ RESPONSIVE ATTENDANCE LOGIC
+          let totalSessionsAttended = 0;
+          let totalSessionsPossible = 0;
+          
           displayDates.forEach(date => {
-            const present = attendanceMap[date]?.includes(stu.studentID);
-            if (present) attended++;
-            
-            console.log(`🔍 Processing date ${date} for student ${stu.studentID}, present: ${present}, isEditMode: ${isEditMode}`);
-            
-            if (isEditMode) {
-              // Edit mode: show checkboxes (matching index.html structure)
-              console.log(`📋 Creating checkbox for student ${stu.studentID} on date ${date}, present: ${present}`);
-              row.push(`
-                <td class="p-2 text-center">
-                  <input 
-                    type="checkbox" 
-                    class="checkbox" 
-                    data-date="${date}"
-                    data-student-id="${stu.studentID}"
-                    value="${stu.studentID}"
-                    ${present ? "checked" : ""}
-                  />
-                </td>
-              `);
-            } else {
-              // View mode: show icons
-              console.log(`👁️ Creating icon for student ${stu.studentID} on date ${date}, present: ${present}`);
-              row.push(`
-                <td class="p-2 text-center">
-                  <span class="text-lg">${present ? '✅' : '❌'}</span>
-                </td>
-              `);
-            }
+              const dateSessions = currentSessionsMap[date] || [];
+              const attendance = currentAttendanceMap[date] || [];
+              
+              if (dateSessions.length > 1) {
+                  dateSessions.forEach((sessionInfo, sessionIndex) => {
+                      totalSessionsPossible++;
+                      
+                      let sessionStudents = [];
+                      
+                      if (Array.isArray(attendance) && Array.isArray(attendance[sessionIndex])) {
+                          sessionStudents = attendance[sessionIndex];
+                      } else if (attendance.studentsPresent && Array.isArray(attendance.studentsPresent)) {
+                          sessionStudents = attendance.studentsPresent;
+                      } else if (Array.isArray(attendance) && !Array.isArray(attendance[0])) {
+                          sessionStudents = attendance;
+                      }
+                      
+                      const isPresent = sessionStudents.includes(student.studentID);
+                      
+                      if (isPresent) totalSessionsAttended++;
+                      
+                      const statusText = isPresent ? 'P' : 'A';
+                      const statusStyle = isPresent ? 
+                          'background: linear-gradient(135deg, #10b981, #14b8a6);' : 
+                          'background: linear-gradient(135deg, #ef4444, #f87171);';
+                      
+                      if (typeof isEditMode !== 'undefined' && isEditMode) {
+                          row.push(`
+                              <td class="p-1 md:p-2 text-center border-r" style="border-right-color: rgba(90,140,163,0.2);">
+                                  <input 
+                                      type="checkbox" 
+                                      class="w-3 h-3 md:w-4 md:h-4 rounded focus:ring-2" 
+                                      style="color: #3b6c87; border-color: rgba(90,140,163,0.3);"
+                                      data-date="${date}"
+                                      data-session="${sessionIndex}"
+                                      data-student-id="${student.studentID}"
+                                      ${isPresent ? "checked" : ""}
+                                  />
+                              </td>
+                          `);
+                      } else {
+                          row.push(`
+                              <td class="p-1 md:p-2 text-center border-r" style="border-right-color: rgba(90,140,163,0.2);">
+                                  <div class="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm font-bold text-white" style="${statusStyle}">
+                                      ${statusText}
+                                  </div>
+                              </td>
+                          `);
+                      }
+                  });
+              } else if (dateSessions.length === 1) {
+                  totalSessionsPossible++;
+                  
+                  let sessionStudents = [];
+                  
+                  if (Array.isArray(attendance) && !Array.isArray(attendance[0])) {
+                      sessionStudents = attendance;
+                  } else if (attendance.studentsPresent && Array.isArray(attendance.studentsPresent)) {
+                      sessionStudents = attendance.studentsPresent;
+                  } else if (Array.isArray(attendance) && Array.isArray(attendance[0])) {
+                      sessionStudents = attendance[0];
+                  }
+                  
+                  const isPresent = sessionStudents.includes(student.studentID);
+                  
+                  if (isPresent) totalSessionsAttended++;
+                  
+                  const statusText = isPresent ? 'P' : 'A';
+                  const statusStyle = isPresent ? 
+                      'background: linear-gradient(135deg, #10b981, #14b8a6);' : 
+                      'background: linear-gradient(135deg, #ef4444, #f87171);';
+                  
+                  if (typeof isEditMode !== 'undefined' && isEditMode) {
+                      row.push(`
+                          <td class="p-1 md:p-2 text-center border-r" style="border-right-color: rgba(90,140,163,0.2);">
+                              <input 
+                                  type="checkbox" 
+                                  class="w-3 h-3 md:w-4 md:h-4 rounded focus:ring-2" 
+                                  style="color: #3b6c87; border-color: rgba(90,140,163,0.3);"
+                                  data-date="${date}"
+                                  data-student-id="${student.studentID}"
+                                  ${isPresent ? "checked" : ""}
+                              />
+                          </td>
+                      `);
+                  } else {
+                      row.push(`
+                          <td class="p-1 md:p-2 text-center border-r" style="border-right-color: rgba(90,140,163,0.2);">
+                              <div class="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm font-bold text-white" style="${statusStyle}">
+                                  ${statusText}
+                              </div>
+                          </td>
+                      `);
+                  }
+              } else {
+                  row.push(`
+                      <td class="p-1 md:p-2 text-center border-r" style="border-right-color: rgba(90,140,163,0.2); background: rgba(197,211,221,0.1);">
+                          <div class="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm font-bold" style="color: #7ba3b8; background: rgba(123,163,184,0.2);">
+                              -
+                          </div>
+                      </td>
+                  `);
+              }
           });
 
-          // Add summary columns for full register view
-          const total = displayDates.length;
-          const percentage = total ? ((attended / total) * 100).toFixed(1) : "0.0";
-          const percentClass = percentage < 75 ? 'color: #ef4444; background-color: #fef2f2;' : 
-                              percentage >= 85 ? 'color: #22c55e; background-color: #f0fdf4;' : 
-                              'color: #eab308; background-color: #fefce8;';
+          // ✅ RESPONSIVE SUMMARY COLUMNS
+          if (isFullRegisterView) {
+              const percentage = totalSessionsPossible > 0 ? 
+                  ((totalSessionsAttended / totalSessionsPossible) * 100).toFixed(1) : "0.0";
 
-          row.push(`<td class="p-3 text-center font-semibold" style="color: #060D0C; background-color: #F0EDE5;">${total}</td>`);
-          row.push(`<td class="p-3 text-center font-semibold" style="color: #060D0C; background-color: #F0EDE5;">${attended}</td>`);
-          row.push(`<td class="p-3 text-center font-bold rounded-md" style="${percentClass}">${percentage}%</td>`);
-        } else {
-          // Single date view - show just attendance status for selected date
-          const present = attendanceMap[selectedDate]?.includes(stu.studentID);
-          
-          if (isEditMode) {
-            // Edit mode: show checkbox for single date
-            row.push(`
-              <td class="p-3 text-center">
-                <div class="flex items-center justify-center gap-2">
-                  <input 
-                    type="checkbox" 
-                    class="checkbox" 
-                    data-date="${selectedDate}"
-                    data-student-id="${stu.studentID}"
-                    value="${stu.studentID}"
-                    ${present ? "checked" : ""}
-                  />
-                  <span class="text-sm">${present ? 'Present' : 'Absent'}</span>
-                </div>
-              </td>
-            `);
-          } else {
-            // View mode: show status for single date
-            row.push(`
-              <td class="p-3 text-center">
-                <div class="flex items-center justify-center gap-2">
-                  <span class="text-2xl">${present ? '✅' : '❌'}</span>
-                  <span class="text-sm font-medium ${present ? 'text-green-600' : 'text-red-600'}">${present ? 'Present' : 'Absent'}</span>
-                </div>
-              </td>
-            `);
+              const percentValue = parseFloat(percentage);
+              let percentStyle = '';
+
+              if (percentValue >= 75) {
+                  percentStyle = 'background: linear-gradient(135deg, #10b981, #16a34a); color: white; font-weight: bold;';
+              } else {
+                  percentStyle = 'background: rgba(90,140,163,0.1); color: #ef4444; font-weight: bold; border: 2px solid #ef4444;';
+              }
+
+              // Desktop: Show all summary columns
+              row.push(`<td class="p-2 md:p-3 text-center font-semibold border-l-4 text-xs md:text-sm hidden md:table-cell" style="border-left-color: #3b6c87; background: rgba(255,255,255,0.95); color: #3b6c87;">${totalSessionsPossible}</td>`);
+              row.push(`<td class="p-2 md:p-3 text-center font-semibold text-xs md:text-sm hidden md:table-cell" style="background: rgba(255,255,255,0.95); color: #3b6c87;">${totalSessionsAttended}</td>`);
+              
+              // Mobile & Desktop: Always show percentage
+              row.push(`<td class="p-2 md:p-3 text-center font-bold rounded-md shadow-sm text-xs md:text-sm" style="${percentStyle}" title="${percentValue >= 75 ? 'Good Attendance' : 'Poor Attendance - Below 75%'}">${percentage}%</td>`);
           }
+
+          // Create responsive row
+          const tr = document.createElement('tr');
+          tr.className = `table-row transition duration-200`;
+          tr.style.cssText = `
+              ${index % 2 === 0 ? 'background: white;' : 'background: rgba(197,211,221,0.15);'}
+              transition: background-color 0.2s ease;
+          `;
+
+          // Touch-friendly hover effects
+          tr.addEventListener('mouseenter', () => tr.style.background = 'rgba(90,140,163,0.1)');
+          tr.addEventListener('mouseleave', () => tr.style.background = index % 2 === 0 ? 'white' : 'rgba(197,211,221,0.15)');
+
+          tr.dataset.studentId = student.studentID;
+          tr.innerHTML = row.join("");
+
+          viewTbody.appendChild(tr);
+      });
+
+      console.log(`✅ Table rendered: ${sortedStudents.length} students, ${displayDates.length} dates`);
+
+  } catch (error) {
+      console.error('❌ Render error:', error);
+      throw error;
+  }
+}
+
+
+function formatTimeSlot(timeString) {
+    try {
+        if (!timeString || timeString === 'No Time') {
+            return {
+                slot: 'No Time',
+                shortSlot: 'N/A',
+                original: timeString
+            };
         }
 
-        const tr = document.createElement('tr');
-        tr.className = `transition duration-200 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`;
-        tr.style.borderColor = '#F0EDE5';
-        tr.dataset.studentId = stu.studentID;
-        tr.innerHTML = row.join("");
+        const timeParts = timeString.split(':');
+        const hours = parseInt(timeParts[0]);
+        const minutes = parseInt(timeParts[1]);
         
-        // Add hover effect
-        tr.onmouseover = () => tr.style.backgroundColor = '#F0EDE5';
-        tr.onmouseout = () => tr.style.backgroundColor = index % 2 === 0 ? 'white' : '#f9fafb';
+        let startHour, startMin, endHour, endMin;
         
-        viewTbody.appendChild(tr);
-      });
+        if (minutes < 30) {
+            startHour = hours;
+            startMin = 0;
+            endHour = hours + 1;
+            endMin = 0;
+        } else {
+            startHour = hours;
+            startMin = 30;
+            endHour = hours + 1;
+            endMin = 30;
+        }
+        
+        if (endHour >= 24) endHour = 0;
+        
+        const formatTo12Hour = (hour, min) => {
+            const isPM = hour >= 12;
+            const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+            const period = isPM ? 'PM' : 'AM';
+            return `${displayHour}:${min.toString().padStart(2, '0')} ${period}`;
+        };
+        
+        const startTime12 = formatTo12Hour(startHour, startMin);
+        const endTime12 = formatTo12Hour(endHour, endMin);
+        
+        return {
+            slot: `${startTime12}-${endTime12}`,
+            shortSlot: `${startTime12.split(' ')[0]}-${endTime12.split(' ')[0]}`,
+            original: timeString
+        };
+        
+    } catch (error) {
+        console.warn('Error parsing time:', timeString, error);
+        return {
+            slot: timeString,
+            shortSlot: timeString,
+            original: timeString
+        };
+    }
+}
 
-      console.log(`✅ Table rendered with ${sortedStudents.length} students (sorted by Student ID)`);
+
+
+// ✅ COMPLETE: Save changes to server function with debugging
+async function saveChangesToServer(changes) {
+  console.log('🌐 Starting saveChangesToServer with changes:', changes);
+  
+  try {
+      // ✅ STEP 1: Create a complete copy of current attendance data
+      const attendanceMap = {};
       
-      // Add event delegation for checkboxes
-      if (isEditMode) {
-        // Remove existing event listeners to avoid duplicates
-        viewTbody.removeEventListener('change', handleCheckboxChange);
-        viewTbody.addEventListener('change', handleCheckboxChange);
-      }
-      
-      // Debug: Count checkboxes after rendering
-      if (isEditMode) {
-        setTimeout(() => {
-          const checkboxes = viewTbody.querySelectorAll('.checkbox');
-          const allInputs = viewTbody.querySelectorAll('input');
-          console.log(`🔍 Debug after render - Found ${checkboxes.length} .checkbox elements`);
-          console.log(`🔍 Debug after render - Found ${allInputs.length} input elements total`);
-          if (checkboxes.length === 0 && allInputs.length === 0) {
-            console.error('❌ NO CHECKBOXES FOUND! This indicates a rendering issue.');
-            console.log('📊 isEditMode:', isEditMode);
-            console.log('🏗️ Table HTML sample:', viewTbody.innerHTML.substring(0, 500));
-            
-            // Emergency fallback: Force re-render
-            console.log('🚨 Attempting emergency fallback...');
-            forceCheckboxRender();
-          } else {
-            console.log('✅ Checkboxes successfully rendered!');
-          }
-        }, 100);
-      }
-    }
-    
-    // Event handler for checkbox changes
-    function handleCheckboxChange(event) {
-      if (event.target.classList.contains('checkbox')) {
-        markUnsavedChanges();
-      }
-    }
-    
-    // Emergency fallback function
-    function forceCheckboxRender() {
-      if (!isEditMode || !currentStudents || !currentDates) return;
-      
-      console.log('🔧 Force rendering checkboxes...');
-      const rows = viewTbody.querySelectorAll('tr');
-      
-      rows.forEach((row, studentIndex) => {
-        const student = currentStudents[studentIndex];
-        if (!student) return;
-        
-        const cells = row.querySelectorAll('td');
-        const dateCells = Array.from(cells).slice(3, 3 + currentDates.length); // Skip first 3 columns
-        
-        dateCells.forEach((cell, dateIndex) => {
-          const date = currentDates[dateIndex];
-          const present = currentAttendanceMap[date]?.includes(student.studentID);
+      // First, copy ALL existing data (not just changed dates)
+      Object.keys(currentAttendanceMap).forEach(date => {
+          const existingData = currentAttendanceMap[date];
           
-          cell.innerHTML = `
-            <input 
-              type="checkbox" 
-              class="checkbox" 
-              data-date="${date}"
-              data-student-id="${student.studentID}"
-              value="${student.studentID}"
-              ${present ? "checked" : ""}
-            />
-          `;
-        });
+          if (Array.isArray(existingData) && existingData.length > 0) {
+              if (Array.isArray(existingData[0])) {
+                  // Multi-session format: [[session1], [session2], ...]
+                  attendanceMap[date] = existingData.map(session => [...session]);
+                  console.log(`📅 Copied multi-session data for ${date}:`, attendanceMap[date]);
+              } else {
+                  // Single session array format: [student1, student2, ...]
+                  attendanceMap[date] = [...existingData];
+                  console.log(`📅 Copied single session array for ${date}:`, attendanceMap[date]);
+              }
+          } else if (existingData && existingData.studentsPresent) {
+              // Old format: { studentsPresent: [...] }
+              attendanceMap[date] = [...existingData.studentsPresent];
+              console.log(`📅 Copied old format data for ${date}:`, attendanceMap[date]);
+          } else {
+              // Initialize empty based on session count
+              const dateSessions = currentSessionsMap[date] || [];
+              if (dateSessions.length > 1) {
+                  attendanceMap[date] = Array(dateSessions.length).fill().map(() => []);
+                  console.log(`📅 Initialized empty multi-session for ${date}:`, attendanceMap[date]);
+              } else {
+                  attendanceMap[date] = [];
+                  console.log(`📅 Initialized empty single session for ${date}:`, attendanceMap[date]);
+              }
+          }
       });
       
-      setTimeout(() => {
-        const checkboxes = viewTbody.querySelectorAll('.checkbox');
-        console.log(`🔧 After fallback: Found ${checkboxes.length} checkboxes`);
-      }, 50);
-    }
-
-    // Toggle edit mode
-    function toggleEditMode() {
-      isEditMode = !isEditMode;
-      console.log('🔄 Toggling edit mode. New state:', isEditMode);
+      console.log('📋 Initial attendanceMap after copying existing data:', attendanceMap);
       
-      // Debug: Check data availability
-      console.log('📊 Data check before render:');
-      console.log('  currentStudents:', currentStudents ? currentStudents.length : 'null/undefined');
-      console.log('  currentDates:', currentDates ? currentDates.length : 'null/undefined');
-      console.log('  currentAttendanceMap:', currentAttendanceMap ? Object.keys(currentAttendanceMap).length : 'null/undefined');
-      
-      if (!currentStudents || !currentDates || !currentAttendanceMap) {
-        console.error('❌ Cannot toggle edit mode - missing data!');
-        showAlert('Error', 'Please load attendance data first before entering edit mode.', 'error');
-        isEditMode = !isEditMode; // Revert the toggle
-        return;
-      }
-      
-      if (isEditMode) {
-        // Entering edit mode
-        console.log('📝 Entering edit mode');
-        originalAttendanceMap = JSON.parse(JSON.stringify(currentAttendanceMap)); // Deep copy
-        editAttendanceBtn.classList.add('hidden');
-        saveAttendanceBtn.classList.remove('hidden');
-        cancelEditBtn.classList.remove('hidden');
-        exportExcelBtn.classList.add('hidden');
-        
-        // Re-render table with checkboxes
-        console.log('🔄 About to render table in EDIT mode with data:', {
-          students: currentStudents.length,
-          dates: currentDates.length,
-          attendanceKeys: Object.keys(currentAttendanceMap).length
-        });
-        renderAttendanceTable(currentStudents, currentDates, currentAttendanceMap);
-        
-        showAlert('Edit Mode', 'You can now edit attendance by checking/unchecking boxes. Click Save to save changes or Cancel to discard.', 'info');
-      } else {
-        // Exiting edit mode
-        console.log('👁️ Exiting edit mode');
-        editAttendanceBtn.classList.remove('hidden');
-        saveAttendanceBtn.classList.add('hidden');
-        cancelEditBtn.classList.add('hidden');
-        exportExcelBtn.classList.remove('hidden');
-        
-        // Re-render table in view mode
-        renderAttendanceTable(currentStudents, currentDates, currentAttendanceMap);
-      }
-    }
-
-    // Mark unsaved changes - make globally available
-    function markUnsavedChanges() {
-      console.log('💾 Marking unsaved changes');
-      // Visual indication that there are unsaved changes
-      saveAttendanceBtn.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
-      saveAttendanceBtn.innerHTML = '<i class="fas fa-save text-sm mr-1"></i><span class="hidden sm:inline">Save Changes*</span><span class="sm:hidden text-xs">Save*</span>';
-    }
-    
-    // Make function globally available
-    window.markUnsavedChanges = markUnsavedChanges;
-
-    // Save attendance changes
-    async function saveAttendanceChanges() {
-      console.log('💾 Save function called, isEditMode:', isEditMode);
-      
-      if (!isEditMode) {
-        console.log('❌ Not in edit mode, returning early');
-        return;
-      }
-      
-      try {
-        console.log('🔄 Starting save process...');
-        saveAttendanceBtn.disabled = true;
-        saveAttendanceBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i><span class="hidden sm:inline">Saving...</span><span class="sm:hidden text-xs">Saving...</span>';
-
-        // Collect updated attendance data
-        const updatedAttendanceMap = {};
-        currentDates.forEach(date => {
-          updatedAttendanceMap[date] = [];
-        });
-
-        // Get all checkboxes and build attendance map
-        const checkboxes = viewTbody.querySelectorAll('.checkbox, .attendance-checkbox');
-        console.log(`📋 Found ${checkboxes.length} checkboxes to process`);
-        
-        checkboxes.forEach(checkbox => {
-          if (checkbox.checked) {
-            const date = checkbox.dataset.date;
-            const studentId = checkbox.dataset.studentId;
-            if (!updatedAttendanceMap[date]) {
-              updatedAttendanceMap[date] = [];
-            }
-            updatedAttendanceMap[date].push(studentId);
+      // ✅ STEP 2: Apply each change to the copied data
+      changes.forEach((change, changeIndex) => {
+          const { date, studentId, sessionIndex, isPresent } = change;
+          
+          console.log(`🔄 Processing change ${changeIndex + 1}:`, {
+              date, studentId, sessionIndex, isPresent
+          });
+          
+          // Ensure date exists
+          if (!attendanceMap[date]) {
+              const dateSessions = currentSessionsMap[date] || [];
+              if (dateSessions.length > 1) {
+                  attendanceMap[date] = Array(dateSessions.length).fill().map(() => []);
+              } else {
+                  attendanceMap[date] = [];
+              }
           }
-        });
-        
-        console.log('📊 Updated attendance map:', updatedAttendanceMap);
-
-        // Send to server using the existing update-attendance endpoint
-        console.log(`🌐 Sending to API: /api/update-attendance/${currentStream}/sem${currentSemester}/${currentSubject}`);
-        const response = await fetch(`/api/update-attendance/${encodeURIComponent(currentStream)}/sem${currentSemester}/${encodeURIComponent(currentSubject)}`, {
+          
+          if (sessionIndex !== null && sessionIndex !== undefined) {
+              // ✅ MULTI-SESSION CHANGE
+              const sessionIdx = parseInt(sessionIndex);
+              console.log(`🔀 Multi-session change for session ${sessionIdx}`);
+              
+              // Ensure it's a multi-session array
+              if (!Array.isArray(attendanceMap[date]) || !Array.isArray(attendanceMap[date][0])) {
+                  const currentData = Array.isArray(attendanceMap[date]) ? attendanceMap[date] : [];
+                  const sessionCount = Math.max((currentSessionsMap[date] || []).length, sessionIdx + 1);
+                  attendanceMap[date] = Array(sessionCount).fill().map((_, idx) => 
+                      idx === 0 ? [...currentData] : []
+                  );
+              }
+              
+              if (!Array.isArray(attendanceMap[date][sessionIdx])) {
+                  attendanceMap[date][sessionIdx] = [];
+              }
+              
+              const sessionStudents = attendanceMap[date][sessionIdx];
+              const studentIdx = sessionStudents.indexOf(studentId);
+              
+              if (isPresent && studentIdx === -1) {
+                  sessionStudents.push(studentId);
+                  console.log(`✅ Added ${studentId} to session ${sessionIdx}`);
+              } else if (!isPresent && studentIdx !== -1) {
+                  sessionStudents.splice(studentIdx, 1);
+                  console.log(`❌ Removed ${studentId} from session ${sessionIdx}`);
+              }
+              
+          } else {
+              // ✅ SINGLE SESSION CHANGE
+              console.log(`📝 Single session change`);
+              
+              if (!Array.isArray(attendanceMap[date])) {
+                  attendanceMap[date] = [];
+              } else if (attendanceMap[date].length > 0 && Array.isArray(attendanceMap[date][0])) {
+                  attendanceMap[date] = [...(attendanceMap[date][0] || [])];
+              }
+              
+              const studentIdx = attendanceMap[date].indexOf(studentId);
+              
+              if (isPresent && studentIdx === -1) {
+                  attendanceMap[date].push(studentId);
+                  console.log(`✅ Added ${studentId} to single session`);
+              } else if (!isPresent && studentIdx !== -1) {
+                  attendanceMap[date].splice(studentIdx, 1);
+                  console.log(`❌ Removed ${studentId} from single session`);
+              }
+          }
+      });
+      
+      console.log('📋 Final attendanceMap to send to server:', attendanceMap);
+      
+      // ✅ STEP 3: Make the API call
+      console.log('🚀 Making API call to:', `/api/update-attendance/${encodeURIComponent(currentStream)}/sem${currentSemester}/${encodeURIComponent(currentSubject)}`);
+      
+      const requestBody = {
+          attendanceMap: attendanceMap,
+          metadata: {
+              totalChanges: changes.length,
+              updatedAt: new Date().toISOString(),
+              changeSource: 'bulk_edit'
+          }
+      };
+      
+      console.log('📤 Request body:', JSON.stringify(requestBody, null, 2));
+      
+      const response = await fetch(`/api/update-attendance/${encodeURIComponent(currentStream)}/sem${currentSemester}/${encodeURIComponent(currentSubject)}`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+              'Content-Type': 'application/json'
           },
-          body: JSON.stringify({
-            attendanceMap: updatedAttendanceMap
-          })
-        });
-
-        const result = await response.json();
-        console.log('💾 Save response:', result);
-
-        if (response.ok && result.success) {
-          console.log('✅ Save successful, exiting edit mode...');
-          
-          // Update current data
-          currentAttendanceMap = updatedAttendanceMap;
-          
-          // Exit edit mode properly - don't call toggleEditMode as it will toggle again
-          isEditMode = false;
-          console.log('📝 Set isEditMode to false');
-          
-          // Manually update UI to view mode
-          editAttendanceBtn.classList.remove('hidden');
-          saveAttendanceBtn.classList.add('hidden');
-          cancelEditBtn.classList.add('hidden');
-          exportExcelBtn.classList.remove('hidden');
-          console.log('🎯 Updated UI buttons for view mode');
-          
-          // Re-render table in view mode
-          renderAttendanceTable(currentStudents, currentDates, currentAttendanceMap);
-          console.log('🔄 Re-rendered table in view mode');
-          
-          // Update stats
-          updateAttendanceStats(currentStudents, currentDates, currentAttendanceMap);
-          
-          showAlert('Success', 'Attendance changes saved successfully!', 'success');
-          console.log('✅ Save process completed successfully');
-        } else {
-          console.error('❌ Save failed:', result);
-          throw new Error(result.message || 'Failed to save changes');
-        }
-
-      } catch (error) {
-        console.error('Save error:', error);
-        showAlert('Save Error', `Failed to save changes: ${error.message}`, 'error');
-      } finally {
-        saveAttendanceBtn.disabled = false;
-        saveAttendanceBtn.style.background = '';
-        saveAttendanceBtn.innerHTML = '<i class="fas fa-save text-sm mr-1"></i><span class="hidden sm:inline">Save Changes</span><span class="sm:hidden text-xs">Save</span>';
+          body: JSON.stringify(requestBody)
+      });
+      
+      console.log('📨 Response status:', response.status);
+      
+      if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ Response error text:', errorText);
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
-    }
-
-    // Cancel edit mode
-    function cancelEditMode() {
-      if (!isEditMode) return;
       
-      const confirmCancel = confirm('Are you sure you want to cancel? All unsaved changes will be lost.');
-      if (!confirmCancel) return;
+      const result = await response.json();
+      console.log('✅ Server response:', result);
       
-      // Restore original data
-      currentAttendanceMap = originalAttendanceMap;
+      if (!result.success) {
+          throw new Error(result.message || 'Server returned failure');
+      }
       
-      // Exit edit mode
-      isEditMode = false;
-      toggleEditMode();
+      return {
+          success: true,
+          message: result.message,
+          processedRecords: result.summary?.totalDates || result.updatedDates || 0,
+          totalChanges: result.summary?.totalPresentMarks || changes.length,
+          multiSessionSupport: result.summary?.sessionSupport || false,
+          updateResults: result.updateResults || [],
+          serverResponse: result
+      };
       
-      showAlert('Cancelled', 'Edit mode cancelled. No changes were saved.', 'info');
-    }
+  } catch (error) {
+      console.error('🌐 Server save error:', error);
+      console.error('🌐 Error stack:', error.stack);
+      return {
+          success: false,
+          message: error.message
+      };
+  }
+}
 
-    // Update attendance stats
-    function updateAttendanceStats(students, dates, attendanceMap) {
-      if (!attendanceStats || !students.length || !dates.length) return;
+// ✅ COMPLETE: Save attendance changes function
+async function saveAttendanceChanges() {
+  console.log('💾 Starting save attendance changes...');
+  
+  try {
+      // Get all checkboxes from the table
+      const checkboxes = viewTbody?.querySelectorAll('input[type="checkbox"]') || [];
+      console.log(`📋 Found ${checkboxes.length} checkboxes in table`);
+      
+      if (checkboxes.length === 0) {
+          showAlert('No Changes', 'No attendance data to save', 'warning');
+          return;
+      }
 
-      let totalPresent = 0;
-      let totalPossible = students.length * dates.length;
-      let above75 = 0;
-      let below75 = 0;
+      // Disable save button to prevent double-clicks
+      if (saveAttendanceBtn) {
+          saveAttendanceBtn.disabled = true;
+          saveAttendanceBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i><span class="hidden sm:inline">Saving...</span><span class="sm:hidden text-xs">Saving</span>';
+      }
 
-      students.forEach(stu => {
-        const attended = dates.filter(date => attendanceMap[date]?.includes(stu.studentID)).length;
-        totalPresent += attended;
-        const percentage = (attended / dates.length) * 100;
-        if (percentage >= 75) above75++; else below75++;
+      let changesCount = 0;
+      const changesToSave = [];
+      
+      console.log(`📋 Processing ${checkboxes.length} checkboxes...`);
+      
+      checkboxes.forEach((checkbox, index) => {
+          const date = checkbox.dataset.date;
+          const studentId = checkbox.dataset.studentId || checkbox.dataset['student-id'];
+          const sessionIndex = checkbox.dataset.session;
+          const isChecked = checkbox.checked;
+          
+          console.log(`🔍 Checkbox ${index}:`, {
+              date,
+              studentId,
+              sessionIndex,
+              isChecked,
+              hasDate: !!date,
+              hasStudentId: !!studentId
+          });
+          
+          if (!date || !studentId) {
+              console.warn(`⚠️ Skipping invalid checkbox ${index}: date=${date}, studentId=${studentId}`);
+              return;
+          }
+
+          // ✅ DETERMINE ORIGINAL STATE
+          let originalState = false;
+          
+          console.log(`🔍 Determining original state for ${studentId} on ${date} session ${sessionIndex}`);
+          
+          if (sessionIndex !== undefined && sessionIndex !== null && sessionIndex !== '') {
+              const sessionIdx = parseInt(sessionIndex);
+              const originalAttendance = originalAttendanceMap[date];
+              
+              if (Array.isArray(originalAttendance) && Array.isArray(originalAttendance[sessionIdx])) {
+                  originalState = originalAttendance[sessionIdx].includes(studentId);
+                  console.log(`🔍 Found in multi-session format: ${originalState}`);
+              } else if (originalAttendance && originalAttendance.studentsPresent && Array.isArray(originalAttendance.studentsPresent)) {
+                  originalState = originalAttendance.studentsPresent.includes(studentId);
+                  console.log(`🔍 Found in old format (multi-session fallback): ${originalState}`);
+              }
+          } else {
+              const originalAttendance = originalAttendanceMap[date];
+              
+              if (Array.isArray(originalAttendance)) {
+                  if (Array.isArray(originalAttendance[0])) {
+                      originalState = originalAttendance[0].includes(studentId);
+                      console.log(`🔍 Found in multi-session array [0]: ${originalState}`);
+                  } else {
+                      originalState = originalAttendance.includes(studentId);
+                      console.log(`🔍 Found in single session array: ${originalState}`);
+                  }
+              } else if (originalAttendance && originalAttendance.studentsPresent) {
+                  originalState = originalAttendance.studentsPresent.includes(studentId);
+                  console.log(`🔍 Found in old format: ${originalState}`);
+              }
+          }
+          
+          console.log(`📋 ${studentId} on ${date} session ${sessionIndex}: Original=${originalState}, Current=${isChecked}`);
+          
+          // Only process if state actually changed
+          if (isChecked !== originalState) {
+              console.log(`🔄 CHANGE DETECTED - ${studentId} on ${date} session ${sessionIndex}: ${originalState ? 'Present' : 'Absent'} → ${isChecked ? 'Present' : 'Absent'}`);
+              
+              changesToSave.push({
+                  date,
+                  studentId,
+                  sessionIndex: sessionIndex !== undefined && sessionIndex !== null && sessionIndex !== '' 
+                      ? parseInt(sessionIndex) 
+                      : null,
+                  isPresent: isChecked,
+                  originalState: originalState,
+                  stream: currentStream,
+                  semester: currentSemester,
+                  subject: currentSubject
+              });
+              
+              changesCount++;
+          } else {
+              console.log(`➡️ No change for ${studentId} on ${date} session ${sessionIndex}`);
+          }
       });
 
-      const overallPercentage = ((totalPresent / totalPossible) * 100).toFixed(1);
-
-      attendanceStats.innerHTML = `
-        <div class="text-center">
-          <div class="font-semibold">${students.length}</div>
-          <div class="text-xs">Students</div>
-        </div>
-        <div class="text-center">
-          <div class="font-semibold">${dates.length}</div>
-          <div class="text-xs">Days</div>
-        </div>
-        <div class="text-center">
-          <div class="font-semibold">${overallPercentage}%</div>
-          <div class="text-xs">Overall</div>
-        </div>
-        <div class="text-center">
-          <div class="font-semibold">${above75}/${below75}</div>
-          <div class="text-xs">Above/Below 75%</div>
-        </div>
-      `;
-    }
-
-    // Excel export function matching index.html
-    async function exportToExcel() {
-      console.log("🚀 Excel export started");
+      console.log(`📊 Changes summary:`);
+      console.log(`  Total changes detected: ${changesCount}`);
+      console.log(`  Changes to save:`, changesToSave);
       
-      const originalText = exportExcelBtn.innerHTML;
-      exportExcelBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Exporting...';
-      exportExcelBtn.disabled = true;
-
-      try {
-        if (typeof XLSX === 'undefined') {
-          throw new Error("XLSX library not loaded");
-        }
-        
-        const table = document.querySelector("#registerTable table");
-        
-        if (!table) {
-          throw new Error("No attendance table found. Please load the register first.");
-        }
-
-        const tbody = table.querySelector("tbody");
-        const rows = tbody ? tbody.querySelectorAll("tr") : [];
-        
-        if (rows.length === 0) {
-          throw new Error("No student data found. Please load attendance register first.");
-        }
-
-        const processedData = [];
-        
-        const headerRow = ["#", "Student ID", "Name"];
-        const dateHeaders = table.querySelectorAll("th[data-date]");
-        
-        dateHeaders.forEach(header => {
-          if (header.dataset.date) {
-            const date = new Date(header.dataset.date);
-            if (!isNaN(date.getTime())) {
-              headerRow.push(date.toLocaleDateString('en-GB', {
-                day: '2-digit',
-                month: '2-digit',
-                year: '2-digit'
-              }));
-            }
-          }
-        });
-        
-        headerRow.push("Total", "Present", "Percentage");
-        processedData.push(headerRow);
-
-        rows.forEach((row, rowIndex) => {
-          try {
-            const cells = row.querySelectorAll("td");
-            if (cells.length < 3) return;
-
-            let studentID = `Student_${rowIndex + 1}`;
-            let studentName = "Unknown";
-            let attended = 0;
-            let totalDays = 0;
-
-            if (cells[1]) {
-              const span = cells[1].querySelector('span');
-              studentID = span ? span.textContent.trim() : cells[1].textContent.trim();
-            }
-            
-            if (cells[2]) {
-              const span = cells[2].querySelector('span');
-              studentName = span ? span.textContent.trim() : cells[2].textContent.trim();
-            }
-
-            const dataRow = [rowIndex + 1, studentID, studentName];
-
-            // Count attendance from the current data
-            currentDates.forEach(date => {
-              totalDays++;
-              const isPresent = currentAttendanceMap[date]?.includes(studentID);
-              if (isPresent) attended++;
-              dataRow.push(isPresent ? "Present" : "Absent");
-            });
-
-            const percentage = totalDays > 0 ? (attended / totalDays) * 100 : 0;
-            
-            dataRow.push(totalDays, attended, `${percentage.toFixed(1)}%`);
-            processedData.push(dataRow);
-
-          } catch (e) {
-            console.warn(`⚠️ Error processing row ${rowIndex}:`, e);
-          }
-        });
-
-        if (processedData.length <= 1) {
-          throw new Error("No valid student data found.");
-        }
-
-        const ws = XLSX.utils.aoa_to_sheet(processedData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Attendance");
-
-        const fileName = `Attendance_${currentStream}_Sem${currentSemester}_${currentSubject}_${new Date().toISOString().split('T')[0]}.xlsx`;
-        
-        XLSX.writeFile(wb, fileName);
-        
-        showAlert("Export Success", `Attendance data exported successfully as ${fileName}`, "success");
-
-      } catch (error) {
-        console.error("❌ Export error:", error);
-        showAlert("Export Error", `Failed to export: ${error.message}`, "error");
-      } finally {
-        exportExcelBtn.innerHTML = originalText;
-        exportExcelBtn.disabled = false;
+      if (changesCount === 0) {
+          showAlert('No Changes', 'No attendance changes detected', 'info');
+          return;
       }
-    }
 
-    // Event listeners
-    streamSelect.addEventListener('change', () => {
-      subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
-      hideRegister();
-      if (streamSelect.value) {
-        populateSemesters(streamSelect.value);
+      // ✅ SAVE: Changes to server
+      console.log('🌐 Sending changes to server...');
+      const saveResult = await saveChangesToServer(changesToSave);
+      
+      console.log('📨 Save result:', saveResult);
+      
+      if (saveResult.success) {
+          console.log('✅ Save successful - updating local state...');
+          
+          // Apply changes to current data
+          changesToSave.forEach(change => {
+              const { date, studentId, sessionIndex, isPresent } = change;
+              
+              if (sessionIndex !== null && sessionIndex !== undefined) {
+                  // Multi-session
+                  if (!Array.isArray(currentAttendanceMap[date])) {
+                      currentAttendanceMap[date] = [];
+                  }
+                  if (!Array.isArray(currentAttendanceMap[date][sessionIndex])) {
+                      currentAttendanceMap[date][sessionIndex] = [];
+                  }
+                  
+                  const sessionStudents = currentAttendanceMap[date][sessionIndex];
+                  const idx = sessionStudents.indexOf(studentId);
+                  
+                  if (isPresent && idx === -1) {
+                      sessionStudents.push(studentId);
+                  } else if (!isPresent && idx !== -1) {
+                      sessionStudents.splice(idx, 1);
+                  }
+                  
+                  // Update sessionsMap
+                  if (currentSessionsMap[date] && currentSessionsMap[date][sessionIndex]) {
+                      currentSessionsMap[date][sessionIndex].studentsPresent = [...sessionStudents];
+                      currentSessionsMap[date][sessionIndex].totalPresent = sessionStudents.length;
+                  }
+              } else {
+                  // Single session
+                  if (!Array.isArray(currentAttendanceMap[date])) {
+                      currentAttendanceMap[date] = [];
+                  }
+                  
+                  const idx = currentAttendanceMap[date].indexOf(studentId);
+                  
+                  if (isPresent && idx === -1) {
+                      currentAttendanceMap[date].push(studentId);
+                  } else if (!isPresent && idx !== -1) {
+                      currentAttendanceMap[date].splice(idx, 1);
+                  }
+                  
+                  // Update sessionsMap
+                  if (currentSessionsMap[date] && currentSessionsMap[date][0]) {
+                      currentSessionsMap[date][0].studentsPresent = [...currentAttendanceMap[date]];
+                      currentSessionsMap[date][0].totalPresent = currentAttendanceMap[date].length;
+                  }
+              }
+          });
+          
+          // Update originals
+          originalAttendanceMap = JSON.parse(JSON.stringify(currentAttendanceMap));
+          originalSessionsMap = JSON.parse(JSON.stringify(currentSessionsMap));
+          
+          // Exit edit mode
+          isEditMode = false;
+          editAttendanceBtn?.classList.remove('hidden');
+          saveAttendanceBtn?.classList.add('hidden');
+          cancelEditBtn?.classList.add('hidden');
+          
+          // Re-render table and update stats
+          await renderAttendanceTable();
+          updateAttendanceStats();
+          
+          // Show success message
+          let successMessage = `Successfully saved ${changesCount} attendance changes!\n\n`;
+          successMessage += `📊 Server Response:\n`;
+          if (saveResult.processedRecords) {
+              successMessage += `• Records Updated: ${saveResult.processedRecords}\n`;
+          }
+          if (saveResult.totalChanges) {
+              successMessage += `• Changes Applied: ${saveResult.totalChanges}\n`;
+          }
+          successMessage += `• Update Method: Bulk Update\n`;
+          successMessage += `• Status: Data persisted to database`;
+          
+          showAlert('Changes Saved', successMessage, 'success');
+          
       } else {
-        semesterSelect.innerHTML = '<option value="">-- Select Semester --</option>';
+          throw new Error(saveResult.message || 'Failed to save changes to server');
       }
-    });
 
-    semesterSelect.addEventListener('change', () => {
-      subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
-      hideRegister();
-      if (streamSelect.value && semesterSelect.value) {
-        loadSubjects(streamSelect.value, semesterSelect.value);
+  } catch (error) {
+      console.error('❌ Save error:', error);
+      
+      let errorMessage = `Failed to save attendance changes:\n\n${error.message}`;
+      
+      if (error.message.includes('HTTP 400')) {
+          errorMessage += `\n\n💡 Possible causes:\n• Invalid attendance data format\n• Missing required fields`;
+      } else if (error.message.includes('HTTP 404')) {
+          errorMessage += `\n\n💡 Possible causes:\n• Subject not found\n• Stream/Semester invalid\n• API endpoint missing`;
+      } else if (error.message.includes('HTTP 500')) {
+          errorMessage += `\n\n💡 Possible causes:\n• Database connection issues\n• Server temporarily unavailable`;
+      } else if (error.message.includes('Failed to fetch')) {
+          errorMessage += `\n\n💡 Possible causes:\n• Network connection issues\n• Server not running`;
       }
-    });
+      
+      showAlert('Save Failed', errorMessage, 'error');
+      
+  } finally {
+      // Re-enable save button
+      if (saveAttendanceBtn) {
+          saveAttendanceBtn.disabled = false;
+          saveAttendanceBtn.innerHTML = '<i class="fas fa-save text-sm mr-1"></i><span class="hidden sm:inline">Save Changes</span><span class="sm:hidden text-xs">Save</span>';
+      }
+  }
+}
 
-    subjectSelect.addEventListener('change', () => {
-      hideRegister();
-    });
+// ✅ DEBUGGING: Add debug function to test save button
+function testSaveButton() {
+  console.log('🔧 Testing save button...');
+  console.log('saveAttendanceBtn exists:', !!saveAttendanceBtn);
+  console.log('isEditMode:', isEditMode);
+  console.log('Current students:', currentStudents.length);
+  console.log('Current dates:', currentDates.length);
+  
+  const checkboxes = viewTbody?.querySelectorAll('input[type="checkbox"]') || [];
+  console.log('Checkboxes found:', checkboxes.length);
+  
+  let checkedCount = 0;
+  checkboxes.forEach(cb => {
+      if (cb.checked) checkedCount++;
+  });
+  console.log('Checked boxes:', checkedCount);
+  
+  if (checkboxes.length === 0) {
+      console.log('❌ No checkboxes found - are you in edit mode?');
+  }
+  
+  // Force trigger save
+  if (typeof saveAttendanceChanges === 'function') {
+      console.log('✅ saveAttendanceChanges function exists');
+      console.log('🔄 Manually triggering save...');
+      saveAttendanceChanges();
+  } else {
+      console.log('❌ saveAttendanceChanges function not found');
+  }
+}
 
-    loadRegisterBtn.addEventListener('click', loadAttendanceRegister);
-    editAttendanceBtn.addEventListener('click', toggleEditMode);
-    saveAttendanceBtn.addEventListener('click', saveAttendanceChanges);
-    cancelEditBtn.addEventListener('click', cancelEditMode);
+// ✅ EXPOSE: Debug function for testing
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+  window.testSave = testSaveButton;
+  console.log('🔧 Debug: Use testSave() to test save functionality');
+}
+
+console.log('✅ Save functionality loaded');
+
+  // ✅ ENHANCED: Excel export with session support
+  async function exportToExcel() {
+    console.log("🚀 Excel export started");
     
-    // Date selector event listeners
-    fullRegisterBtn.addEventListener('click', () => toggleViewMode(true));
-    singleDateBtn.addEventListener('click', () => toggleViewMode(false));
-    specificDateInput.addEventListener('change', onDateSelect);
+    const originalText = exportExcelBtn.innerHTML;
+    exportExcelBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Exporting...';
+    exportExcelBtn.disabled = true;
+  
+    try {
+      if (typeof XLSX === 'undefined') {
+        throw new Error("XLSX library not loaded");
+      }
+      
+      const processedData = [];
+      
+      // Create headers
+      const headerRow = ["#", "Student ID", "Name"];
+      
+      currentDates.forEach(date => {
+        const dateObj = new Date(date);
+        const displayDate = dateObj.toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: '2-digit',
+          year: '2-digit'
+        });
+        
+        // Check for multiple sessions
+        const dateSessions = currentSessionsMap[date] || [];
+        if (dateSessions.length > 1) {
+          dateSessions.forEach((session, index) => {
+            headerRow.push(`${displayDate} S${index + 1}`);
+          });
+        } else {
+          headerRow.push(displayDate);
+        }
+      });
+      
+      headerRow.push("Total Sessions", "Present Sessions", "Percentage");
+      processedData.push(headerRow);
+  
+      // Add student data
+      currentStudents.forEach((stu, index) => {
+        let totalSessionsAttended = 0;
+        let totalSessionsPossible = 0;
+        
+        const dataRow = [index + 1, stu.studentID, stu.name];
+  
+        currentDates.forEach(date => {
+          const dateSessions = currentAttendanceMap[date] || [];
+          
+          if (Array.isArray(dateSessions) && dateSessions.length > 0) {
+            if (Array.isArray(dateSessions[0])) {
+              // Multiple sessions
+              dateSessions.forEach(sessionStudents => {
+                totalSessionsPossible++;
+                const isPresent = Array.isArray(sessionStudents) && sessionStudents.includes(stu.studentID);
+                if (isPresent) totalSessionsAttended++;
+                dataRow.push(isPresent ? "Present" : "Absent");
+              });
+            } else {
+              // Single session
+              totalSessionsPossible++;
+              const isPresent = dateSessions.includes(stu.studentID);
+              if (isPresent) totalSessionsAttended++;
+              dataRow.push(isPresent ? "Present" : "Absent");
+            }
+          } else {
+            // No data for this date
+            const sessionCount = currentSessionsMap[date]?.length || 1;
+            for (let i = 0; i < sessionCount; i++) {
+              totalSessionsPossible++;
+              dataRow.push("No Data");
+            }
+          }
+        });
+  
+        const percentage = totalSessionsPossible > 0 ? 
+          (totalSessionsAttended / totalSessionsPossible) * 100 : 0;
+        
+        dataRow.push(totalSessionsPossible, totalSessionsAttended, `${percentage.toFixed(1)}%`);
+        processedData.push(dataRow);
+      });
+  
+      // Create and export Excel file
+      const ws = XLSX.utils.aoa_to_sheet(processedData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Attendance");
+  
+      const fileName = `Attendance_${currentStream}_Sem${currentSemester}_${currentSubject}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      
+      XLSX.writeFile(wb, fileName);
+      
+      showAlert("Export Success", `Attendance data exported with session details as ${fileName}`, "success");
+  
+    } catch (error) {
+      console.error("❌ Export error:", error);
+      showAlert("Export Error", `Failed to export: ${error.message}`, "error");
+    } finally {
+      exportExcelBtn.innerHTML = originalText;
+      exportExcelBtn.disabled = false;
+    }
+  }
+  
+  // ✅ EVENT LISTENERS
+  streamSelect.addEventListener('change', () => {
+    subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+    hideRegister();
+    if (streamSelect.value) {
+      populateSemesters(streamSelect.value);
+    } else {
+      semesterSelect.innerHTML = '<option value="">-- Select Semester --</option>';
+    }
+  });
+  
+  semesterSelect.addEventListener('change', () => {
+    subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+    hideRegister();
+    if (streamSelect.value && semesterSelect.value) {
+      loadSubjects(streamSelect.value, semesterSelect.value);
+    }
+  });
+  
+  subjectSelect.addEventListener('change', hideRegister);
+  
+  loadRegisterBtn.addEventListener('click', loadAttendanceRegister);
+  editAttendanceBtn.addEventListener('click', toggleEditMode);
+  saveAttendanceBtn.addEventListener('click', saveAttendanceChanges);
+  cancelEditBtn.addEventListener('click', cancelEditMode);
+  exportExcelBtn.addEventListener('click', exportToExcel);
+  
+  // Date selector event listeners
+  fullRegisterBtn.addEventListener('click', () => toggleViewMode(true));
+  singleDateBtn.addEventListener('click', () => toggleViewMode(false));
+  specificDateInput.addEventListener('change', onDateSelect);
+  
+  // Initialize
+  populateStreams();
+  
+  console.log("✅ Enhanced View Attendance page loaded with multiple sessions support");
 
-    // Initialize
-    populateStreams();
-    
-    console.log("✅ View Attendance page loaded successfully");
+  // ✅ EXACT GLASSMORPHISM DESIGN FOR VIEW ATTENDANCE
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('📋 View Attendance page loaded');
+  
+  const urlParams = new URLSearchParams(window.location.search);
+  
+  if (urlParams.get('source') === 'completed') {
+      console.log('🎯 Redirected from completed classes');
+      
+      const subject = urlParams.get('subject');
+      const stream = urlParams.get('stream');
+      const semester = urlParams.get('semester');
+      const date = urlParams.get('date');
+      
+      console.log('📊 URL Parameters:', { subject, stream, semester, date });
+      
+      if (subject && stream && semester) {
+          startRobustSelection(subject, stream, semester, date);
+      }
+  }
+});
+
+function startRobustSelection(subject, stream, semester, date) {
+  console.log('🚀 Starting robust selection process...');
+  
+  showAttendanceStyleDebugPanel(subject, stream, semester, date);
+  
+  // Step 1: Wait for page to be fully ready, then select stream
+  setTimeout(() => {
+      selectStreamRobust(stream, subject, semester, date);
+  }, 1500);
+}
+
+// ✅ ENHANCED STREAM SELECTION WITH DEBUGGING
+function selectStreamRobust(stream, subject, semester, date) {
+  console.log('🔍 Looking for stream dropdown...');
+  
+  const streamSelectors = [
+      '#stream',
+      'select[name="stream"]',
+      '.stream-select',
+      '[id*="stream"]',
+      'select:first-of-type'
+  ];
+  
+  let streamSelect = null;
+  for (const selector of streamSelectors) {
+      streamSelect = document.querySelector(selector);
+      if (streamSelect) {
+          console.log('✅ Found stream dropdown:', selector);
+          break;
+      }
+  }
+  
+  if (!streamSelect) {
+      console.error('❌ Stream dropdown not found');
+      updateDebugStatus('stream', '❌ NOT FOUND');
+      return;
+  }
+  
+  console.log('📋 Stream options:', [...streamSelect.options].map(o => `"${o.value}" = "${o.textContent.trim()}"`));
+  
+  // Try multiple matching strategies
+  let matchedOption = null;
+  
+  // Strategy 1: Exact value match
+  matchedOption = [...streamSelect.options].find(opt => opt.value === stream);
+  if (matchedOption) {
+      console.log('✅ Stream matched by value:', matchedOption.textContent);
+  }
+  
+  // Strategy 2: Exact text match
+  if (!matchedOption) {
+      matchedOption = [...streamSelect.options].find(opt => 
+          opt.textContent.trim().toLowerCase() === stream.toLowerCase()
+      );
+      if (matchedOption) console.log('✅ Stream matched by text:', matchedOption.textContent);
+  }
+  
+  // Strategy 3: Contains match
+  if (!matchedOption) {
+      matchedOption = [...streamSelect.options].find(opt => 
+          opt.textContent.toLowerCase().includes(stream.toLowerCase()) ||
+          stream.toLowerCase().includes(opt.textContent.toLowerCase())
+      );
+      if (matchedOption) console.log('✅ Stream matched by contains:', matchedOption.textContent);
+  }
+  
+  if (matchedOption) {
+      streamSelect.value = matchedOption.value;
+      streamSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      streamSelect.dispatchEvent(new Event('input', { bubbles: true }));
+      
+      updateDebugStatus('stream', '✅ ' + matchedOption.textContent);
+      console.log('🎯 Stream selected, waiting for semester options...');
+      
+      // Wait for semester dropdown to populate, then select
+      waitForSemesterOptions(semester, subject, date);
+  } else {
+      console.error('❌ Stream not found:', stream);
+      updateDebugStatus('stream', '❌ NOT MATCHED: ' + stream);
+  }
+}
+
+// ✅ WAIT FOR SEMESTER OPTIONS TO LOAD
+function waitForSemesterOptions(semester, subject, date) {
+  console.log('⏳ Waiting for semester options to load...');
+  
+  let attempts = 0;
+  const maxAttempts = 20;
+  
+  const checkSemesterOptions = () => {
+      attempts++;
+      console.log(`🔄 Checking semester options (attempt ${attempts}/${maxAttempts})`);
+      
+      const semesterSelect = document.querySelector('#semester, select[name="semester"], [id*="semester"]');
+      
+      if (!semesterSelect) {
+          console.log('⚠️ Semester dropdown not found yet');
+          if (attempts < maxAttempts) {
+              setTimeout(checkSemesterOptions, 500);
+          }
+          return;
+      }
+      
+      const options = [...semesterSelect.options];
+      console.log('📋 Current semester options:', options.map(o => `"${o.value}" = "${o.textContent.trim()}"`));
+      
+      // Check if options are loaded (more than just default/placeholder)
+      const realOptions = options.filter(opt => opt.value && opt.value !== '' && opt.textContent.trim() !== '');
+      
+      if (realOptions.length === 0) {
+          console.log('⏳ Semester options not loaded yet, waiting...');
+          if (attempts < maxAttempts) {
+              setTimeout(checkSemesterOptions, 500);
+          } else {
+              console.error('❌ Semester options never loaded');
+              updateDebugStatus('semester', '❌ OPTIONS NOT LOADED');
+          }
+          return;
+      }
+      
+      console.log('✅ Semester options loaded:', realOptions.length);
+      selectSemesterRobust(semesterSelect, semester, subject, date);
+  };
+  
+  checkSemesterOptions();
+}
+
+// ✅ ENHANCED SEMESTER SELECTION
+function selectSemesterRobust(semesterSelect, semester, subject, date) {
+  console.log('🎯 Selecting semester:', semester);
+  
+  const options = [...semesterSelect.options];
+  console.log('📋 Available semesters:', options.map(o => `"${o.value}" = "${o.textContent.trim()}"`));
+  
+  let matchedOption = null;
+  
+  // Try different matching strategies
+  const semesterStr = String(semester);
+  
+  // Exact value match
+  matchedOption = options.find(opt => opt.value === semesterStr);
+  if (matchedOption) console.log('✅ Semester matched by value');
+  
+  // Exact text match
+  if (!matchedOption) {
+      matchedOption = options.find(opt => opt.textContent.trim() === semesterStr);
+      if (matchedOption) console.log('✅ Semester matched by text');
+  }
+  
+  // Contains match
+  if (!matchedOption) {
+      matchedOption = options.find(opt => 
+          opt.textContent.includes(semesterStr) || 
+          opt.value.includes(semesterStr)
+      );
+      if (matchedOption) console.log('✅ Semester matched by contains');
+  }
+  
+  if (matchedOption) {
+      semesterSelect.value = matchedOption.value;
+      semesterSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      semesterSelect.dispatchEvent(new Event('input', { bubbles: true }));
+      
+      updateDebugStatus('semester', '✅ ' + matchedOption.textContent);
+      console.log('🎯 Semester selected, waiting for subject options...');
+      
+      // Wait for subject dropdown to populate
+      waitForSubjectOptions(subject, date);
+  } else {
+      console.error('❌ Semester not found:', semester);
+      updateDebugStatus('semester', '❌ NOT MATCHED: ' + semester);
+  }
+}
+
+// ✅ WAIT FOR SUBJECT OPTIONS TO LOAD
+function waitForSubjectOptions(subject, date) {
+  console.log('⏳ Waiting for subject options to load...');
+  
+  let attempts = 0;
+  const maxAttempts = 25; // Longer wait for subjects
+  
+  const checkSubjectOptions = () => {
+      attempts++;
+      console.log(`🔄 Checking subject options (attempt ${attempts}/${maxAttempts})`);
+      
+      const subjectSelect = document.querySelector('#subject, select[name="subject"], [id*="subject"]');
+      
+      if (!subjectSelect) {
+          console.log('⚠️ Subject dropdown not found yet');
+          if (attempts < maxAttempts) {
+              setTimeout(checkSubjectOptions, 600);
+          }
+          return;
+      }
+      
+      const options = [...subjectSelect.options];
+      const realOptions = options.filter(opt => opt.value && opt.value !== '' && opt.textContent.trim() !== '');
+      
+      console.log('📋 Current subject options:', realOptions.map(o => `"${o.value}" = "${o.textContent.trim()}"`));
+      
+      if (realOptions.length === 0) {
+          console.log('⏳ Subject options not loaded yet, waiting...');
+          if (attempts < maxAttempts) {
+              setTimeout(checkSubjectOptions, 600);
+          } else {
+              console.error('❌ Subject options never loaded');
+              updateDebugStatus('subject', '❌ OPTIONS NOT LOADED');
+              showAttendanceStyleManualSelection(subject, date);
+          }
+          return;
+      }
+      
+      console.log('✅ Subject options loaded:', realOptions.length);
+      selectSubjectRobust(subjectSelect, subject, date);
+  };
+  
+  checkSubjectOptions();
+}
+
+// ✅ ENHANCED SUBJECT SELECTION WITH FUZZY MATCHING
+function selectSubjectRobust(subjectSelect, subject, date) {
+  console.log('🎯 Selecting subject:', subject);
+  
+  const options = [...subjectSelect.options];
+  console.log('📋 Available subjects:', options.map(o => `"${o.value}" = "${o.textContent.trim()}"`));
+  
+  let matchedOption = null;
+  const subjectLower = subject.toLowerCase();
+  
+  // Strategy 1: Exact value match
+  matchedOption = options.find(opt => opt.value.toLowerCase() === subjectLower);
+  if (matchedOption) console.log('✅ Subject matched by value');
+  
+  // Strategy 2: Exact text match
+  if (!matchedOption) {
+      matchedOption = options.find(opt => opt.textContent.trim().toLowerCase() === subjectLower);
+      if (matchedOption) console.log('✅ Subject matched by text');
+  }
+  
+  // Strategy 3: Subject contains option text
+  if (!matchedOption) {
+      matchedOption = options.find(opt => {
+          const optText = opt.textContent.trim().toLowerCase();
+          return optText && subjectLower.includes(optText);
+      });
+      if (matchedOption) console.log('✅ Subject matched by subject-contains-option');
+  }
+  
+  // Strategy 4: Option contains subject
+  if (!matchedOption) {
+      matchedOption = options.find(opt => {
+          const optText = opt.textContent.trim().toLowerCase();
+          return optText.includes(subjectLower);
+      });
+      if (matchedOption) console.log('✅ Subject matched by option-contains-subject');
+  }
+  
+  // Strategy 5: Fuzzy match (remove common words)
+  if (!matchedOption) {
+      const cleanSubject = subjectLower.replace(/\b(programming|language|system|management|analysis|design)\b/g, '').trim();
+      matchedOption = options.find(opt => {
+          const cleanOpt = opt.textContent.trim().toLowerCase().replace(/\b(programming|language|system|management|analysis|design)\b/g, '').trim();
+          return cleanOpt.includes(cleanSubject) || cleanSubject.includes(cleanOpt);
+      });
+      if (matchedOption) console.log('✅ Subject matched by fuzzy matching');
+  }
+  
+  if (matchedOption) {
+      subjectSelect.value = matchedOption.value;
+      subjectSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      subjectSelect.dispatchEvent(new Event('input', { bubbles: true }));
+      
+      updateDebugStatus('subject', '✅ ' + matchedOption.textContent);
+      console.log('🎯 Subject selected successfully!');
+      
+      // Set date and finalize
+      setTimeout(() => {
+          setDateAndAutoLoad(date);
+      }, 500);
+  } else {
+      console.error('❌ Subject not found:', subject);
+      updateDebugStatus('subject', '❌ NOT MATCHED: ' + subject);
+      showAttendanceStyleManualSelection(subject, date);
+  }
+}
+
+// ✅ SET DATE AND AUTO-LOAD (UPDATED)
+function setDateAndAutoLoad(date) {
+  console.log('📅 Setting date and auto-loading...');
+  
+  if (date) {
+      const dateInput = document.querySelector('#specificDate, input[type="date"]');
+      if (dateInput) {
+          dateInput.value = date;
+          updateDebugStatus('date', '✅ ' + date);
+      }
+      
+      const singleDateRadio = document.querySelector('#singleDateView, input[value="single"]');
+      if (singleDateRadio) {
+          singleDateRadio.checked = true;
+          singleDateRadio.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+  }
+  
+  updateDebugStatus('auto-load', '🔄 Auto-loading...');
+  
+  // Hide debug panel and start auto-load
+  hideDebugPanel();
+  
+  // Start automatic loading process
+  setTimeout(() => {
+      startAutoLoadProcess();
+  }, 1000);
+}
+
+// ✅ FAST BLUE-TEAL DEBUG PANEL
+function showAttendanceStyleDebugPanel(subject, stream, semester, date) {
+  const overlay = document.createElement('div');
+  overlay.id = 'debugPanel';
+  overlay.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 29, 57, 0.7); z-index: 10000;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      backdrop-filter: blur(5px);
+      animation: fadeIn 0.2s ease;
+  `;
+
+  overlay.innerHTML = `
+      <div style="
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(25px);
+          -webkit-backdrop-filter: blur(25px);
+          border-radius: 16px; 
+          padding: 24px; 
+          max-width: 320px; 
+          width: 100%;
+          box-shadow: 0 15px 35px rgba(10, 65, 116, 0.3); 
+          text-align: left;
+          border: 1px solid rgba(15, 118, 110, 0.4);
+          animation: slideUp 0.3s ease;
+      ">
+          <!-- Header -->
+          <div style="text-align: center; margin-bottom: 20px;">
+              <i class="fas fa-cog" style="color: #0f766e; font-size: 2.5rem; margin-bottom: 12px; animation: spin 1s linear infinite;"></i>
+              <h3 style="color: #001D39; margin: 0; font-size: 1.1rem; font-weight: 700;">Auto-Loading Register</h3>
+          </div>
+          
+          <!-- Details -->
+          <div style="margin-bottom: 20px; line-height: 1.6;">
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                  <i class="fas fa-book" style="color: #0f766e; font-size: 1rem; width: 16px;"></i>
+                  <span style="color: #001D39; font-weight: 600; font-size: 0.9rem;">${subject}</span>
+              </div>
+              
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                  <i class="fas fa-graduation-cap" style="color: #0f766e; font-size: 1rem; width: 16px;"></i>
+                  <span style="color: #001D39; font-weight: 500; font-size: 0.9rem;">${stream} • Sem ${semester}</span>
+              </div>
+              
+              <div style="display: flex; align-items: center; gap: 10px;">
+                  <i class="fas fa-calendar-alt" style="color: #0f766e; font-size: 1rem; width: 16px;"></i>
+                  <span style="color: #001D39; font-weight: 500; font-size: 0.9rem;">${date}</span>
+              </div>
+          </div>
+          
+          <!-- Status -->
+          <div id="debugStatus" style="margin-bottom: 20px; line-height: 1.6;">
+              <div id="streamStatus" style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 0.85rem;">
+                  <i class="fas fa-circle" style="color: #0f766e; font-size: 0.4rem; width: 16px;"></i>
+                  <span>Stream: Searching...</span>
+              </div>
+              <div id="semesterStatus" style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 0.85rem;">
+                  <i class="fas fa-circle" style="color: #64748b; font-size: 0.4rem; width: 16px;"></i>
+                  <span>Semester: Waiting...</span>
+              </div>
+              <div id="subjectStatus" style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 0.85rem;">
+                  <i class="fas fa-circle" style="color: #64748b; font-size: 0.4rem; width: 16px;"></i>
+                  <span>Subject: Waiting...</span>
+              </div>
+              <div id="dateStatus" style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 0.85rem;">
+                  <i class="fas fa-circle" style="color: #64748b; font-size: 0.4rem; width: 16px;"></i>
+                  <span>Date: Waiting...</span>
+              </div>
+              <div id="auto-loadStatus" style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem;">
+                  <i class="fas fa-circle" style="color: #64748b; font-size: 0.4rem; width: 16px;"></i>
+                  <span>Auto-load: Waiting...</span>
+              </div>
+          </div>
+          
+          <!-- Note -->
+          <div style="
+              background: linear-gradient(135deg, rgba(15, 118, 110, 0.1) 0%, rgba(6, 182, 212, 0.05) 100%);
+              padding: 10px 12px; border-radius: 8px;
+              border-left: 3px solid #06b6d4;
+              backdrop-filter: blur(10px);
+              -webkit-backdrop-filter: blur(10px);
+          ">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                  <i class="fas fa-magic" style="color: #06b6d4; font-size: 0.9rem;"></i>
+                  <span style="color: #001D39; font-size: 0.8rem; font-weight: 500;">Fully automatic process</span>
+              </div>
+          </div>
+      </div>
+  `;
+
+  // Fast animations - reduced duration
+  if (!document.getElementById('fast-animations')) {
+      const style = document.createElement('style');
+      style.id = 'fast-animations';
+      style.textContent = `
+          @keyframes fadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+          }
+          
+          @keyframes slideUp {
+              from { 
+                  opacity: 0; 
+                  transform: translateY(20px) scale(0.95); 
+              }
+              to { 
+                  opacity: 1; 
+                  transform: translateY(0) scale(1); 
+              }
+          }
+          
+          @keyframes spin {
+              from { transform: rotate(0deg); }
+              to { transform: rotate(360deg); }
+          }
+          
+          @keyframes fadeOut {
+              from { opacity: 1; transform: translateY(0) scale(1); }
+              to { opacity: 0; transform: translateY(-10px) scale(0.95); }
+          }
+      `;
+      document.head.appendChild(style);
+  }
+
+  document.body.appendChild(overlay);
+}
+
+// ✅ FAST STATUS UPDATE FUNCTION
+function updateDebugStatus(field, status) {
+  const statusElement = document.getElementById(field + 'Status');
+  if (statusElement) {
+      const icon = statusElement.querySelector('i');
+      const span = statusElement.querySelector('span');
+      
+      if (status.includes('✅')) {
+          icon.style.color = '#0f766e';  // Teal
+          span.style.color = '#0f766e';
+          span.textContent = field + ': ' + status.replace('✅ ', '');
+      } else if (status.includes('❌')) {
+          icon.style.color = '#ef4444';  // Red
+          span.style.color = '#ef4444';
+          span.textContent = field + ': ' + status.replace('❌ ', '');
+      } else if (status.includes('🔄')) {
+          icon.style.color = '#06b6d4';  // Cyan
+          span.style.color = '#06b6d4';
+          span.textContent = field + ': ' + status.replace('🔄 ', '');
+      } else {
+          icon.style.color = '#64748b';  // Gray
+          span.style.color = '#64748b';
+          span.textContent = field + ': ' + status;
+      }
+  }
+}
+
+// ✅ FAST HIDE FUNCTION
+function hideDebugPanel() {
+  const panel = document.getElementById('debugPanel');
+  if (panel) {
+      panel.style.animation = 'fadeOut 0.2s ease';
+      setTimeout(() => panel.remove(), 200);
+  }
+}
+
+
+// ✅ ATTENDANCE STYLE AUTO-LOADING MESSAGE
+function startAutoLoadProcess() {
+  console.log('🚀 Starting automatic load process...');
+  
+  showAttendanceStyleAutoLoadingMessage();
+  
+  // Try multiple strategies to trigger the load
+  setTimeout(() => {
+      attemptAutoLoad();
+  }, 800);
+}
+// ✅ ULTRA-FAST AUTO-LOADING MESSAGE (BLUE-TEAL COLORS)
+function showAttendanceStyleAutoLoadingMessage() {
+  const overlay = document.createElement('div');
+  overlay.id = 'autoLoadingMessage';
+  overlay.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 29, 57, 0.7); z-index: 10000;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      backdrop-filter: blur(8px);
+      animation: ultraFastFadeIn 0.15s ease;
+  `;
+
+  overlay.innerHTML = `
+      <div style="
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(25px);
+          -webkit-backdrop-filter: blur(25px);
+          border-radius: 20px; 
+          padding: 28px; 
+          max-width: 340px; 
+          width: 100%;
+          box-shadow: 0 20px 40px rgba(10, 65, 116, 0.3); 
+          text-align: center;
+          border: 1px solid rgba(15, 118, 110, 0.4);
+          position: relative;
+          overflow: hidden;
+          animation: ultraFastSlideUp 0.2s ease;
+      ">
+          <!-- Loading Animation Circle -->
+          <div style="
+              width: 80px;
+              height: 80px;
+              border-radius: 50%;
+              background: linear-gradient(135deg, #4e8ea2, #0f766e);
+              margin: 0 auto 20px auto;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              position: relative;
+              box-shadow: 0 8px 25px rgba(78, 142, 162, 0.3);
+              animation: ultraFastPulse 0.3s ease;
+          ">
+              <div style="
+                  width: 32px;
+                  height: 32px;
+                  border: 3px solid transparent;
+                  border-top-color: white;
+                  border-right-color: white;
+                  border-radius: 50%;
+                  animation: ultraFastSpin 0.6s linear infinite;
+              "></div>
+          </div>
+          
+          <!-- Title -->
+          <h3 style="
+              color: #001D39; 
+              margin: 0 0 16px 0; 
+              font-size: 1.3rem; 
+              font-weight: 700;
+              letter-spacing: -0.02em;
+          ">Loading Register...</h3>
+          
+          <!-- Status -->
+          <p style="
+              color: rgba(1, 29, 57, 0.7); 
+              font-size: 0.9rem; 
+              margin-bottom: 20px; 
+              line-height: 1.5;
+              font-weight: 500;
+          " id="autoLoadStatus">
+              🎯 Triggering attendance view...
+          </p>
+          
+          <!-- Progress Details -->
+          <div style="
+              background: linear-gradient(135deg, rgba(15, 118, 110, 0.1) 0%, rgba(6, 182, 212, 0.05) 100%);
+              padding: 16px 20px; 
+              border-radius: 12px;
+              border: 1px solid rgba(15, 118, 110, 0.2);
+              backdrop-filter: blur(10px);
+              -webkit-backdrop-filter: blur(10px);
+          ">
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                  <i class="fas fa-check" style="color: #0f766e; font-size: 1rem; width: 18px;"></i>
+                  <span style="color: #001D39; font-weight: 600; font-size: 0.85rem;">Form configured</span>
+              </div>
+              
+              <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="
+                      width: 12px;
+                      height: 12px;
+                      border: 2px solid #0f766e;
+                      border-top-color: transparent;
+                      border-radius: 50%;
+                      animation: ultraFastSpin 0.6s linear infinite;
+                  "></div>
+                  <span style="color: #0f766e; font-weight: 600; font-size: 0.85rem;">Loading register...</span>
+              </div>
+          </div>
+      </div>
+  `;
+
+  document.body.appendChild(overlay);
+  
+  // Add ultra-fast animations if not exists
+  if (!document.getElementById('ultra-fast-animations')) {
+      const style = document.createElement('style');
+      style.id = 'ultra-fast-animations';
+      style.textContent = `
+          @keyframes ultraFastFadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+          }
+          
+          @keyframes ultraFastSlideUp {
+              from { 
+                  opacity: 0; 
+                  transform: translateY(10px) scale(0.98); 
+              }
+              to { 
+                  opacity: 1; 
+                  transform: translateY(0) scale(1); 
+              }
+          }
+          
+          @keyframes ultraFastPulse {
+              0% { 
+                  transform: scale(0.9);
+                  opacity: 0;
+              }
+              100% { 
+                  transform: scale(1);
+                  opacity: 1;
+              }
+          }
+          
+          @keyframes ultraFastSpin {
+              from { transform: rotate(0deg); }
+              to { transform: rotate(360deg); }
+          }
+          
+          @keyframes fadeOut {
+              from { opacity: 1; transform: translateY(0) scale(1); }
+              to { opacity: 0; transform: translateY(-5px) scale(0.98); }
+          }
+      `;
+      document.head.appendChild(style);
+  }
+}
+
+// ✅ ULTRA-FAST STATUS UPDATE
+function updateAutoLoadStatus(status) {
+  const statusElement = document.getElementById('autoLoadStatus');
+  if (statusElement) {
+      statusElement.textContent = status;
+      // Add micro-animation for status change
+      statusElement.style.transform = 'scale(1.02)';
+      setTimeout(() => {
+          statusElement.style.transform = 'scale(1)';
+      }, 100);
+  }
+}
+
+function updateAutoLoadStatus(status) {
+  const statusElement = document.getElementById('autoLoadStatus');
+  if (statusElement) {
+      statusElement.textContent = status;
+  }
+}
+
+function attemptAutoLoad() {
+  console.log('🎯 Attempting automatic load...');
+  
+  // Strategy 1: Try common button IDs
+  const buttonIds = [
+      'loadRegisterBtn', 'loadRegister', 'submitBtn', 'loadButton',
+      'viewRegisterBtn', 'showRegisterBtn', 'getRegisterBtn'
+  ];
+  
+  for (const btnId of buttonIds) {
+      const btn = document.getElementById(btnId);
+      if (btn && btn.offsetParent !== null) {
+          console.log('✅ Found button by ID:', btnId);
+          updateAutoLoadStatus('🎯 Loading register...');
+          
+          setTimeout(() => {
+              btn.click();
+              console.log('🎯 Button clicked successfully');
+              showAttendanceStyleAutoLoadSuccess();
+          }, 500);
+          return;
+      }
+  }
+  
+  // Strategy 2: Try button selectors
+  const buttonSelectors = [
+      'button[onclick*="load"]', 'button[onclick*="Load"]', 
+      'button[onclick*="submit"]', 'button[type="submit"]',
+      'input[type="submit"]', 'button.load-btn'
+  ];
+  
+  for (const selector of buttonSelectors) {
+      const btn = document.querySelector(selector);
+      if (btn && btn.offsetParent !== null) {
+          console.log('✅ Found button by selector:', selector);
+          updateAutoLoadStatus('🎯 Loading register...');
+          
+          setTimeout(() => {
+              btn.click();
+              console.log('🎯 Button clicked via selector');
+              showAttendanceStyleAutoLoadSuccess();
+          }, 500);
+          return;
+      }
+  }
+  
+  // Strategy 3: Try function calls
+  const functionNames = [
+      'loadRegister', 'loadAttendanceRegister', 'submitForm', 
+      'loadData', 'fetchRegister', 'viewRegister'
+  ];
+  
+  for (const funcName of functionNames) {
+      if (typeof window[funcName] === 'function') {
+          console.log('✅ Found function:', funcName);
+          updateAutoLoadStatus('🎯 Calling load function...');
+          
+          setTimeout(() => {
+              try {
+                  window[funcName]();
+                  console.log('🎯 Function called successfully');
+                  showAttendanceStyleAutoLoadSuccess();
+                  return;
+              } catch (error) {
+                  console.error('❌ Function call failed:', error);
+              }
+          }, 500);
+          return;
+      }
+  }
+  
+  // Strategy 4: Try form submission
+  const forms = document.querySelectorAll('form');
+  if (forms.length > 0) {
+      console.log('✅ Found form, attempting submission');
+      updateAutoLoadStatus('🎯 Submitting form...');
+      
+      setTimeout(() => {
+          const form = forms[0];
+          
+          // Multiple form submission methods
+          if (form.requestSubmit) {
+              form.requestSubmit();
+          } else {
+              form.submit();
+          }
+          
+          form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+          
+          console.log('🎯 Form submission attempted');
+          showAttendanceStyleAutoLoadSuccess();
+      }, 500);
+      return;
+  }
+  
+  // If all strategies fail
+  console.warn('⚠️ Could not auto-load, showing manual guidance');
+  showAttendanceStyleAutoLoadFallback();
+}
+
+// ✅ FAST ATTENDANCE STYLE AUTO-LOAD SUCCESS (BLUE-TEAL COLORS)
+function showAttendanceStyleAutoLoadSuccess() {
+  const loadingDiv = document.getElementById('autoLoadingMessage');
+  if (loadingDiv) {
+      const modal = loadingDiv.querySelector('div');
+      modal.innerHTML = `
+          <!-- Success Animation Circle -->
+          <div style="
+              width: 80px;
+              height: 80px;
+              border-radius: 50%;
+              background: linear-gradient(135deg, #0f766e, #06b6d4);
+              margin: 0 auto 20px auto;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              position: relative;
+              box-shadow: 0 8px 25px rgba(15, 118, 110, 0.3);
+              animation: fastSuccessPulse 0.4s ease;
+          ">
+              <i class="fas fa-check" style="
+                  color: white; 
+                  font-size: 2.2rem;
+                  animation: fastCheckMark 0.5s ease 0.1s both;
+              "></i>
+          </div>
+          
+          <!-- Title -->
+          <h3 style="
+              color: #001D39; 
+              margin: 0 0 16px 0; 
+              font-size: 1.3rem; 
+              font-weight: 700;
+              letter-spacing: -0.02em;
+          ">Register Loading!</h3>
+          
+          <!-- Success Message -->
+          <p style="
+              color: rgba(1, 29, 57, 0.7); 
+              font-size: 0.85rem; 
+              margin-bottom: 0; 
+              line-height: 1.5;
+              font-weight: 500;
+          ">
+              ✨ Attendance register is being loaded automatically...
+          </p>
+      `;
+      
+      // Add fast animations if not exists
+      if (!document.getElementById('fast-check-animations')) {
+          const style = document.createElement('style');
+          style.id = 'fast-check-animations';
+          style.textContent = `
+              @keyframes fastCheckMark {
+                  0% { 
+                      transform: scale(0);
+                      opacity: 0;
+                  }
+                  100% { 
+                      transform: scale(1);
+                      opacity: 1;
+                  }
+              }
+              
+              @keyframes fastSuccessPulse {
+                  0% { 
+                      transform: scale(0.8);
+                      opacity: 0;
+                  }
+                  100% { 
+                      transform: scale(1);
+                      opacity: 1;
+                  }
+              }
+          `;
+          document.head.appendChild(style);
+      }
+      
+      // Fast auto-hide after 2 seconds (reduced from 3)
+      setTimeout(() => {
+          if (loadingDiv && loadingDiv.parentNode) {
+              loadingDiv.style.animation = 'fadeOut 0.2s ease';
+              setTimeout(() => {
+                  if (loadingDiv.parentNode) loadingDiv.remove();
+              }, 200);
+          }
+      }, 2000);
+  }
+}
+
+// ✅ ALSO UPDATE LOADING MESSAGE FOR CONSISTENCY
+function showLoadingRegisterMessage() {
+  const existing = document.getElementById('loadingMessage');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'autoLoadingMessage';
+  overlay.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 29, 57, 0.7); z-index: 10000;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      backdrop-filter: blur(8px);
+      animation: fastFadeIn 0.2s ease;
+  `;
+
+  overlay.innerHTML = `
+      <div style="
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(25px);
+          -webkit-backdrop-filter: blur(25px);
+          border-radius: 20px; 
+          padding: 28px; 
+          max-width: 340px; 
+          width: 100%;
+          box-shadow: 0 20px 40px rgba(10, 65, 116, 0.3); 
+          text-align: center;
+          border: 1px solid rgba(15, 118, 110, 0.4);
+          position: relative;
+          overflow: hidden;
+          animation: fastSlideUp 0.25s ease;
+      ">
+          <!-- Loading Animation Circle -->
+          <div style="
+              width: 80px;
+              height: 80px;
+              border-radius: 50%;
+              background: linear-gradient(135deg, #4e8ea2, #0f766e);
+              margin: 0 auto 20px auto;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              position: relative;
+              box-shadow: 0 8px 25px rgba(78, 142, 162, 0.3);
+              animation: fastSuccessPulse 0.4s ease;
+          ">
+              <div style="
+                  width: 32px;
+                  height: 32px;
+                  border: 3px solid transparent;
+                  border-top-color: white;
+                  border-right-color: white;
+                  border-radius: 50%;
+                  animation: fastSpin 0.8s linear infinite;
+              "></div>
+          </div>
+          
+          <!-- Title -->
+          <h3 style="
+              color: #001D39; 
+              margin: 0 0 16px 0; 
+              font-size: 1.3rem; 
+              font-weight: 700;
+              letter-spacing: -0.02em;
+          ">Loading Register...</h3>
+          
+          <!-- Status -->
+          <p style="
+              color: rgba(1, 29, 57, 0.7); 
+              font-size: 0.9rem; 
+              margin-bottom: 20px; 
+              line-height: 1.5;
+              font-weight: 500;
+          " id="autoLoadStatus">
+              🎯 Triggering attendance view...
+          </p>
+          
+          <!-- Progress Details -->
+          <div style="
+              background: linear-gradient(135deg, rgba(15, 118, 110, 0.1) 0%, rgba(6, 182, 212, 0.05) 100%);
+              padding: 16px 20px; 
+              border-radius: 12px;
+              border: 1px solid rgba(15, 118, 110, 0.2);
+              backdrop-filter: blur(10px);
+              -webkit-backdrop-filter: blur(10px);
+          ">
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                  <i class="fas fa-check" style="color: #0f766e; font-size: 1rem; width: 18px;"></i>
+                  <span style="color: #001D39; font-weight: 600; font-size: 0.85rem;">Form configured</span>
+              </div>
+              
+              <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="
+                      width: 12px;
+                      height: 12px;
+                      border: 2px solid #0f766e;
+                      border-top-color: transparent;
+                      border-radius: 50%;
+                      animation: fastSpin 0.8s linear infinite;
+                  "></div>
+                  <span style="color: #0f766e; font-weight: 600; font-size: 0.85rem;">Loading register...</span>
+              </div>
+          </div>
+      </div>
+  `;
+
+  // Add fast animations for loading
+  if (!document.getElementById('fast-loading-animations')) {
+      const style = document.createElement('style');
+      style.id = 'fast-loading-animations';
+      style.textContent = `
+          @keyframes fastFadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+          }
+          
+          @keyframes fastSlideUp {
+              from { 
+                  opacity: 0; 
+                  transform: translateY(15px) scale(0.95); 
+              }
+              to { 
+                  opacity: 1; 
+                  transform: translateY(0) scale(1); 
+              }
+          }
+          
+          @keyframes fastSpin {
+              from { transform: rotate(0deg); }
+              to { transform: rotate(360deg); }
+          }
+          
+          @keyframes fadeOut {
+              from { opacity: 1; transform: translateY(0) scale(1); }
+              to { opacity: 0; transform: translateY(-10px) scale(0.95); }
+          }
+      `;
+      document.head.appendChild(style);
+  }
+
+  document.body.appendChild(overlay);
+}
+
+
+// ✅ ALSO UPDATE THE LOADING MESSAGE WITH BLUE-TEAL COLORS
+function showLoadingRegisterMessage() {
+  const existing = document.getElementById('loadingMessage');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'autoLoadingMessage';
+  overlay.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 29, 57, 0.7); z-index: 10000;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      backdrop-filter: blur(8px);
+      animation: fadeIn 0.3s ease;
+  `;
+
+  overlay.innerHTML = `
+      <div style="
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(25px);
+          -webkit-backdrop-filter: blur(25px);
+          border-radius: 20px; 
+          padding: 28px; 
+          max-width: 340px; 
+          width: 100%;
+          box-shadow: 0 20px 40px rgba(10, 65, 116, 0.3); 
+          text-align: center;
+          border: 1px solid rgba(189, 216, 233, 0.4);
+          position: relative;
+          overflow: hidden;
+          animation: slideUp 0.4s ease;
+      ">
+          <!-- Loading Animation Circle -->
+          <div style="
+              width: 80px;
+              height: 80px;
+              border-radius: 50%;
+              background: linear-gradient(135deg, #4e8ea2, #0f766e);
+              margin: 0 auto 20px auto;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              position: relative;
+              box-shadow: 0 8px 25px rgba(78, 142, 162, 0.3);
+              animation: successPulse 0.6s ease;
+          ">
+              <div style="
+                  width: 32px;
+                  height: 32px;
+                  border: 3px solid transparent;
+                  border-top-color: white;
+                  border-right-color: white;
+                  border-radius: 50%;
+                  animation: spin 1s linear infinite;
+              "></div>
+          </div>
+          
+          <!-- Title -->
+          <h3 style="
+              color: #001D39; 
+              margin: 0 0 16px 0; 
+              font-size: 1.3rem; 
+              font-weight: 700;
+              letter-spacing: -0.02em;
+          ">Loading Register...</h3>
+          
+          <!-- Status -->
+          <p style="
+              color: rgba(1, 29, 57, 0.7); 
+              font-size: 0.9rem; 
+              margin-bottom: 20px; 
+              line-height: 1.5;
+              font-weight: 500;
+          " id="autoLoadStatus">
+              🎯 Triggering attendance view...
+          </p>
+          
+          <!-- Progress Details -->
+          <div style="
+              background: linear-gradient(135deg, rgba(15, 118, 110, 0.1) 0%, rgba(6, 182, 212, 0.05) 100%);
+              padding: 16px 20px; 
+              border-radius: 12px;
+              border: 1px solid rgba(15, 118, 110, 0.2);
+              backdrop-filter: blur(10px);
+              -webkit-backdrop-filter: blur(10px);
+          ">
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                  <i class="fas fa-check" style="color: #0f766e; font-size: 1rem; width: 18px;"></i>
+                  <span style="color: #001D39; font-weight: 600; font-size: 0.85rem;">Form configured</span>
+              </div>
+              
+              <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="
+                      width: 12px;
+                      height: 12px;
+                      border: 2px solid #0f766e;
+                      border-top-color: transparent;
+                      border-radius: 50%;
+                      animation: spin 1s linear infinite;
+                  "></div>
+                  <span style="color: #0f766e; font-weight: 600; font-size: 0.85rem;">Loading register...</span>
+              </div>
+          </div>
+      </div>
+  `;
+
+  // Add animations
+  if (!document.getElementById('loading-animations')) {
+      const style = document.createElement('style');
+      style.id = 'loading-animations';
+      style.textContent = `
+          @keyframes fadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+          }
+          
+          @keyframes slideUp {
+              from { 
+                  opacity: 0; 
+                  transform: translateY(30px) scale(0.9); 
+              }
+              to { 
+                  opacity: 1; 
+                  transform: translateY(0) scale(1); 
+              }
+          }
+          
+          @keyframes spin {
+              from { transform: rotate(0deg); }
+              to { transform: rotate(360deg); }
+          }
+          
+          @keyframes fadeOut {
+              from { opacity: 1; transform: translateY(0) scale(1); }
+              to { opacity: 0; transform: translateY(-20px) scale(0.9); }
+          }
+      `;
+      document.head.appendChild(style);
+  }
+
+  document.body.appendChild(overlay);
+}
+
+// ✅ ATTENDANCE STYLE FALLBACK
+function showAttendanceStyleAutoLoadFallback() {
+  const loadingDiv = document.getElementById('autoLoadingMessage');
+  if (loadingDiv) {
+      const modal = loadingDiv.querySelector('div');
+      modal.innerHTML = `
+          <!-- Warning Animation Circle -->
+          <div style="
+              width: 80px;
+              height: 80px;
+              border-radius: 50%;
+              background: linear-gradient(135deg, #f59e0b, #d97706);
+              margin: 0 auto 20px auto;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              position: relative;
+              box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+              animation: successPulse 0.6s ease;
+          ">
+              <i class="fas fa-hand-point-right" style="
+                  color: white; 
+                  font-size: 1.8rem;
+              "></i>
+          </div>
+          
+          <!-- Title -->
+          <h3 style="
+              color: var(--navy-deep); 
+              margin: 0 0 16px 0; 
+              font-size: 1.3rem; 
+              font-weight: 700;
+              letter-spacing: -0.02em;
+          ">Almost Ready!</h3>
+          
+          <!-- Message -->
+          <p style="
+              color: rgba(1, 29, 57, 0.7); 
+              font-size: 0.85rem; 
+              margin-bottom: 24px; 
+              line-height: 1.5;
+              font-weight: 500;
+          ">
+              Form is configured. Please click "Load Register" to view attendance.
+          </p>
+          
+          <!-- OK Button -->
+          <button onclick="this.parentElement.parentElement.remove(); highlightAttendanceStyleLoadButton();" style="
+              width: 100%;
+              padding: 14px 20px; 
+              border: none; 
+              background: linear-gradient(135deg, var(--navy-deep), var(--steel-blue));
+              color: white; 
+              border-radius: 12px; 
+              font-weight: 700; 
+              cursor: pointer; 
+              font-size: 1rem;
+              transition: all 0.3s ease;
+              box-shadow: 0 6px 20px rgba(10, 65, 116, 0.3);
+              backdrop-filter: blur(10px);
+              -webkit-backdrop-filter: blur(10px);
+          ">
+              <i class="fas fa-search" style="margin-right: 8px;"></i>
+              Show Load Button
+          </button>
+      `;
+  }
+}
+
+// ✅ ATTENDANCE STYLE MANUAL SELECTION
+function showAttendanceStyleManualSelection(subject, date) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 29, 57, 0.7); z-index: 10000;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      backdrop-filter: blur(8px);
+      animation: fadeIn 0.3s ease;
+  `;
+
+  overlay.innerHTML = `
+      <div style="
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(25px);
+          -webkit-backdrop-filter: blur(25px);
+          border-radius: 20px; 
+          padding: 28px; 
+          max-width: 340px; 
+          width: 100%;
+          box-shadow: 0 20px 40px rgba(10, 65, 116, 0.3); 
+          text-align: center;
+          border: 1px solid rgba(189, 216, 233, 0.4);
+          position: relative;
+          overflow: hidden;
+          animation: slideUp 0.4s ease;
+      ">
+          <!-- Warning Animation Circle -->
+          <div style="
+              width: 80px;
+              height: 80px;
+              border-radius: 50%;
+              background: linear-gradient(135deg, #f59e0b, #d97706);
+              margin: 0 auto 20px auto;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              position: relative;
+              box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+              animation: successPulse 0.6s ease;
+          ">
+              <i class="fas fa-hand-point-right" style="
+                  color: white; 
+                  font-size: 1.8rem;
+              "></i>
+          </div>
+          
+          <!-- Title -->
+          <h3 style="
+              color: var(--navy-deep); 
+              margin: 0 0 16px 0; 
+              font-size: 1.3rem; 
+              font-weight: 700;
+              letter-spacing: -0.02em;
+          ">Manual Selection Needed</h3>
+          
+          <!-- Message -->
+          <p style="
+              color: rgba(1, 29, 57, 0.7); 
+              font-size: 0.85rem; 
+              margin-bottom: 24px; 
+              line-height: 1.5;
+              font-weight: 500;
+          ">
+              Could not auto-select "<strong>${subject}</strong>". Please select it manually from the dropdown.
+          </p>
+          
+          <!-- OK Button -->
+          <button onclick="this.parentElement.parentElement.remove(); highlightAttendanceStyleLoadButton();" style="
+              width: 100%;
+              padding: 14px 20px; 
+              border: none; 
+              background: linear-gradient(135deg, #f59e0b, #d97706);
+              color: white; 
+              border-radius: 12px; 
+              font-weight: 700; 
+              cursor: pointer; 
+              font-size: 1rem;
+              transition: all 0.3s ease;
+              box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+              backdrop-filter: blur(10px);
+              -webkit-backdrop-filter: blur(10px);
+          ">
+              <i class="fas fa-thumbs-up" style="margin-right: 8px;"></i>
+              OK, I'll select it
+          </button>
+      </div>
+  `;
+
+  document.body.appendChild(overlay);
+}
+
+// ✅ ATTENDANCE STYLE HIGHLIGHT
+function highlightAttendanceStyleLoadButton() {
+  const possibleSelectors = [
+      '#loadRegisterBtn', '#loadRegister', '#submitBtn',
+      'button[onclick*="load"]', 'button[type="submit"]', '.load-btn'
+  ];
+  
+  for (const selector of possibleSelectors) {
+      const btn = document.querySelector(selector);
+      if (btn && btn.offsetParent !== null) {
+          console.log('✨ Highlighting button:', selector);
+          
+          btn.style.cssText += `
+              animation: mega-glow 1.5s ease-in-out infinite alternate !important;
+              box-shadow: 0 0 50px var(--light-blue) !important;
+              transform: scale(1.1) !important;
+              z-index: 9999 !important;
+              position: relative !important;
+              border: 3px solid var(--light-blue) !important;
+              backdrop-filter: blur(10px) !important;
+          `;
+          
+          // Add pulsing text
+          const originalText = btn.textContent;
+          let pulseCount = 0;
+          const pulseInterval = setInterval(() => {
+              btn.textContent = pulseCount % 2 === 0 ? '👆 CLICK HERE 👆' : originalText;
+              pulseCount++;
+              if (pulseCount > 10) {
+                  btn.textContent = originalText;
+                  clearInterval(pulseInterval);
+              }
+          }, 800);
+          
+          // Add mega glow animation
+          if (!document.getElementById('mega-glow-style')) {
+              const style = document.createElement('style');
+              style.id = 'mega-glow-style';
+              style.textContent = `
+                  @keyframes mega-glow {
+                      from { 
+                          box-shadow: 0 0 30px var(--light-blue); 
+                          transform: scale(1.1); 
+                      }
+                      to { 
+                          box-shadow: 0 0 60px #bde4ff; 
+                          transform: scale(1.15); 
+                      }
+                  }
+              `;
+              document.head.appendChild(style);
+          }
+          break;
+      }
+  }
+}
+
+// Make functions global for onclick handlers
+window.hideDebugPanel = hideDebugPanel;
+window.highlightAttendanceStyleLoadButton = highlightAttendanceStyleLoadButton;
+
+console.log('✅ Attendance-style view loader with exact glassmorphism design initialized');
+
   </script>
+
+  
 
 </body>
 </html>
