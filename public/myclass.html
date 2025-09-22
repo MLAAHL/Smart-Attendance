@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Smart-Attendance</title>
     <!-- Add College Logo as Favicon -->
-  <link rel="icon" type="image/png" href="logo2.png" sizes="32x32">
-  <link rel="icon" type="image/png" href="logo2.png" sizes="16x16">
-  <link rel="apple-touch-icon" href="logo2.png" sizes="180x180">
-  <link rel="shortcut icon" href="logo2.png">
+    <link rel="icon" type="image/png" href="logo2.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="logo2.png" sizes="16x16">
+    <link rel="apple-touch-icon" href="logo2.png" sizes="180x180">
+    <link rel="shortcut icon" href="logo2.png">
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   
@@ -1950,172 +1950,327 @@
       }
     }
     function updateCompletedDisplay() {
-      const emptyCompletedPrompt = document.getElementById('emptyCompletedPrompt');
-      const completedList = document.getElementById('completedList');
-    
-      if (!emptyCompletedPrompt || !completedList) {
+    const emptyCompletedPrompt = document.getElementById('emptyCompletedPrompt');
+    const completedList = document.getElementById('completedList');
+
+    if (!emptyCompletedPrompt || !completedList) {
         console.warn('Completed DOM elements not found');
         return;
-      }
-    
-      document.getElementById('completedCount').textContent = completedClasses.length;
-    
-      if (completedClasses.length === 0) {
+    }
+
+    document.getElementById('completedCount').textContent = completedClasses.length;
+
+    if (completedClasses.length === 0) {
         emptyCompletedPrompt.classList.remove('hidden');
         completedList.innerHTML = '';
-      } else {
+    } else {
         emptyCompletedPrompt.classList.add('hidden');
         
         // Sort by completion time - most recent first (stack order)
         const sortedClasses = [...completedClasses].sort((a, b) => {
-          // Sort by timestamp if available, otherwise by id or array position
-          if (a.timestamp && b.timestamp) {
-            return b.timestamp - a.timestamp; // Most recent first
-          }
-          // Fallback to id comparison (higher id = more recent)
-          return (b.id || 0) - (a.id || 0);
+            // Sort by timestamp if available, otherwise by id or array position
+            if (a.timestamp && b.timestamp) {
+                return b.timestamp - a.timestamp; // Most recent first
+            }
+            // Fallback to id comparison (higher id = more recent)
+            return (b.id || 0) - (a.id || 0);
         });
         
         completedList.innerHTML = sortedClasses.map((item, index) => {
-          const streamData = streams.find(s => s.name === item.stream) || streams[0];
-          
-          // Smart period calculation based on 30-minute threshold
-          const formatTimeAsPeriod = (timeString) => {
-            try {
-              let time = timeString;
-              if (time.includes('at ')) {
-                time = time.split('at ')[1]; // Extract time if it has "at" prefix
-              }
-              
-              const timeMatch = time.match(/(\d{1,2}):(\d{2})/);
-              if (timeMatch) {
-                const hour = parseInt(timeMatch[1]);
-                const minute = parseInt(timeMatch[2]);
-                
-                let startHour, startMinute;
-                
-                // If minutes <= 30, start from the hour, else start from 30 minutes
-                if (minute <= 30) {
-                  startHour = hour;
-                  startMinute = 0;
-                } else {
-                  startHour = hour;
-                  startMinute = 30;
-                }
-                
-                // Calculate end time (1 hour later)
-                let endHour = startHour;
-                let endMinute = startMinute + 60;
-                
-                if (endMinute >= 60) {
-                  endMinute -= 60;
-                  endHour += 1;
-                }
-                
-                // Format with AM/PM
-                const formatTime = (h, m) => {
-                  const period = h >= 12 ? 'PM' : 'AM';
-                  const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
-                  const displayMinute = m.toString().padStart(2, '0');
-                  return `${displayHour}:${displayMinute} ${period}`;
-                };
-                
-                return `${formatTime(startHour, startMinute)} - ${formatTime(endHour, endMinute)}`;
-              }
-            } catch (error) {
-              console.warn('Error formatting time:', error);
-            }
+            const streamData = streams.find(s => s.name === item.stream) || streams[0];
             
-            return timeString; // Fallback to original time
-          };
-    
-          // 📅 FORMAT DATE DISPLAY
-          const formatCompletedDate = (item) => {
-            try {
-              // Try to extract date from timestamp or completedTime
-              let dateToFormat = null;
-              
-              if (item.timestamp) {
-                dateToFormat = new Date(item.timestamp);
-              } else if (item.completedDate) {
-                dateToFormat = new Date(item.completedDate);
-              } else if (item.completedTime && item.completedTime.includes('at ')) {
-                // Extract date if completedTime has format "Sep 19, 2025 at 2:30 PM"
-                const datePart = item.completedTime.split(' at ')[0];
-                dateToFormat = new Date(datePart);
-              } else {
-                // Default to today if no date info available
-                dateToFormat = new Date();
-              }
-              
-              // Check if date is valid
-              if (isNaN(dateToFormat.getTime())) {
-                dateToFormat = new Date();
-              }
-              
-              const today = new Date();
-              const yesterday = new Date(today);
-              yesterday.setDate(yesterday.getDate() - 1);
-              
-              // Format based on relative time
-              if (dateToFormat.toDateString() === today.toDateString()) {
-                return 'Today';
-              } else if (dateToFormat.toDateString() === yesterday.toDateString()) {
-                return 'Yesterday';
-              } else {
-                // Format as "Sep 19" or "Sep 19, 2024" if different year
-                const options = { month: 'short', day: 'numeric' };
-                if (dateToFormat.getFullYear() !== today.getFullYear()) {
-                  options.year = 'numeric';
+            // Smart period calculation based on 30-minute threshold
+            const formatTimeAsPeriod = (timeString) => {
+                try {
+                    let time = timeString;
+                    if (time.includes('at ')) {
+                        time = time.split('at ')[1]; // Extract time if it has "at" prefix
+                    }
+                    
+                    const timeMatch = time.match(/(\d{1,2}):(\d{2})/);
+                    if (timeMatch) {
+                        const hour = parseInt(timeMatch[1]);
+                        const minute = parseInt(timeMatch[2]);
+                        
+                        let startHour, startMinute;
+                        
+                        // If minutes <= 30, start from the hour, else start from 30 minutes
+                        if (minute <= 30) {
+                            startHour = hour;
+                            startMinute = 0;
+                        } else {
+                            startHour = hour;
+                            startMinute = 30;
+                        }
+                        
+                        // Calculate end time (1 hour later)
+                        let endHour = startHour;
+                        let endMinute = startMinute + 60;
+                        
+                        if (endMinute >= 60) {
+                            endMinute -= 60;
+                            endHour += 1;
+                        }
+                        
+                        // Format with AM/PM
+                        const formatTime = (h, m) => {
+                            const period = h >= 12 ? 'PM' : 'AM';
+                            const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+                            const displayMinute = m.toString().padStart(2, '0');
+                            return `${displayHour}:${displayMinute} ${period}`;
+                        };
+                        
+                        return `${formatTime(startHour, startMinute)} - ${formatTime(endHour, endMinute)}`;
+                    }
+                } catch (error) {
+                    console.warn('Error formatting time:', error);
                 }
-                return dateToFormat.toLocaleDateString('en-US', options);
-              }
-            } catch (error) {
-              console.warn('Error formatting date:', error);
-              return 'Today';
-            }
-          };
-    
-          // Add "recent" indicator for the first item
-          const recentBadge = index === 0 ? `
-            <div class="absolute top-2 right-2">
-             
-            </div>
-          ` : '';
-    
-          return `
-            <div class="relative rounded-xl p-4 shadow-md transition-all duration-300 hover:shadow-lg" style="background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(129, 199, 132, 0.05)); border-left: 4px solid #4CAF50; border: 1px solid rgba(76, 175, 80, 0.2);">
-              ${recentBadge}
-              <div class="flex items-center">
-                <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 shadow-sm" style="background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(129, 199, 132, 0.3));">
-                  <i class="fas fa-check text-sm" style="color: #4CAF50;"></i>
+                
+                return timeString; // Fallback to original time
+            };
+
+            // 📅 FORMAT DATE DISPLAY
+            const formatCompletedDate = (item) => {
+                try {
+                    // Try to extract date from timestamp or completedTime
+                    let dateToFormat = null;
+                    
+                    if (item.timestamp) {
+                        dateToFormat = new Date(item.timestamp);
+                    } else if (item.completedDate) {
+                        dateToFormat = new Date(item.completedDate);
+                    } else if (item.completedTime && item.completedTime.includes('at ')) {
+                        // Extract date if completedTime has format "Sep 19, 2025 at 2:30 PM"
+                        const datePart = item.completedTime.split(' at ')[0];
+                        dateToFormat = new Date(datePart);
+                    } else {
+                        // Default to today if no date info available
+                        dateToFormat = new Date();
+                    }
+                    
+                    // Check if date is valid
+                    if (isNaN(dateToFormat.getTime())) {
+                        dateToFormat = new Date();
+                    }
+                    
+                    const today = new Date();
+                    const yesterday = new Date(today);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    
+                    // Format based on relative time
+                    if (dateToFormat.toDateString() === today.toDateString()) {
+                        return 'Today';
+                    } else if (dateToFormat.toDateString() === yesterday.toDateString()) {
+                        return 'Yesterday';
+                    } else {
+                        // Format as "Sep 19" or "Sep 19, 2024" if different year
+                        const options = { month: 'short', day: 'numeric' };
+                        if (dateToFormat.getFullYear() !== today.getFullYear()) {
+                            options.year = 'numeric';
+                        }
+                        return dateToFormat.toLocaleDateString('en-US', options);
+                    }
+                } catch (error) {
+                    console.warn('Error formatting date:', error);
+                    return 'Today';
+                }
+            };
+
+            // Add "recent" indicator for the first item
+            const recentBadge = index === 0 ? `
+                <div class="absolute top-2 right-2">
                 </div>
-                <div class="flex-1">
-                  <div class="flex items-center justify-between mb-1">
+            ` : '';
+
+            // ✅ GENERATE UNIQUE VIEW URL PARAMETERS
+            const generateViewUrl = (item) => {
+                const params = new URLSearchParams({
+                    subject: item.subject || '',
+                    stream: item.stream || '',
+                    semester: item.semester || '',
+                    date: item.attendanceDate || new Date().toISOString().split('T')[0], // Use today if no date
+                    timestamp: item.timestamp || Date.now(),
+                    source: 'completed'
+                });
+                
+                return `view-attendance.html?${params.toString()}`;
+            };
+
+            return `
+                <div class="relative rounded-xl p-4 shadow-md transition-all duration-300 hover:shadow-lg group" style="background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(129, 199, 132, 0.05)); border-left: 4px solid #4CAF50; border: 1px solid rgba(76, 175, 80, 0.2);">
+                    ${recentBadge}
                     <div class="flex items-center">
-                      <div class="w-4 h-4 rounded mr-2 flex items-center justify-center shadow-sm" style="background: linear-gradient(135deg, #4E8EA2, #6EA2B3);">
-                        <i class="fas fa-book text-xs text-white"></i>
-                      </div>
-                      <h4 class="font-bold text-sm" style="color: #001D39;">${item.subject}</h4>
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 shadow-sm" style="background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(129, 199, 132, 0.3));">
+                            <i class="fas fa-check text-sm" style="color: #4CAF50;"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-1">
+                                <div class="flex items-center">
+                                    <div class="w-4 h-4 rounded mr-2 flex items-center justify-center shadow-sm" style="background: linear-gradient(135deg, #4E8EA2, #6EA2B3);">
+                                        <i class="fas fa-book text-xs text-white"></i>
+                                    </div>
+                                    <h4 class="font-bold text-sm" style="color: #001D39;">${item.subject}</h4>
+                                </div>
+                                <span class="text-xs font-medium" style="color: #7BBDE8;">
+                                    <i class="fas fa-calendar-alt mr-1"></i>
+                                    ${formatCompletedDate(item)}
+                                </span>
+                            </div>
+                            <p class="text-xs font-medium mb-2" style="color: #49769F;">${streamData.displayName || item.stream} • Sem ${item.semester}</p>
+                            <div class="flex items-center justify-between">
+                                <p class="text-xs font-semibold" style="color: #4CAF50;">
+                                    <i class="fas fa-clock mr-1"></i>
+                                    Period: ${formatTimeAsPeriod(item.completedTime)}
+                                </p>
+                                
+                                <!-- ✅ VIEW ATTENDANCE BUTTON -->
+                                <button 
+                                    onclick="viewCompletedAttendance('${item.subject}', '${item.stream}', '${item.semester}', '${item.attendanceDate || new Date().toISOString().split('T')[0]}', ${item.timestamp || Date.now()})"
+                                    class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 opacity-0 group-hover:opacity-100 shadow-sm"
+                                    style="background: linear-gradient(135deg, #1e3a8a, #0f766e); color: white; border: 1px solid rgba(15, 118, 110, 0.3);"
+                                    title="View attendance register for this class">
+                                    <i class="fas fa-eye text-xs mr-1.5"></i>
+                                    View 
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <span class="text-xs font-medium" style="color: #7BBDE8;">
-                      <i class="fas fa-calendar-alt mr-1"></i>
-                      ${formatCompletedDate(item)}
-                    </span>
-                  </div>
-                  <p class="text-xs font-medium mb-1" style="color: #49769F;">${streamData.displayName || item.stream} • Sem ${item.semester}</p>
-                  <p class="text-xs font-semibold" style="color: #4CAF50;">
-                    <i class="fas fa-clock mr-1"></i>
-                    Period: ${formatTimeAsPeriod(item.completedTime)}
-                  </p>
                 </div>
-              </div>
-            </div>
-          `;
+            `;
         }).join('');
-      }
     }
-    
+}
+
+// ✅ ENHANCED FUNCTION: Handle viewing completed attendance
+function viewCompletedAttendance(subject, stream, semester, date, timestamp) {
+  try {
+      console.log('🎯 Opening view for:', { subject, stream, semester, date });
+      
+      // ✅ CLEAN PARAMETERS (remove quotes/escape characters)
+      const cleanSubject = String(subject || '').replace(/['"]/g, '');
+      const cleanStream = String(stream || '').replace(/['"]/g, '');
+      const cleanSemester = String(semester || '').replace(/['"]/g, '');
+      const cleanDate = String(date || new Date().toISOString().split('T')[0]).replace(/['"]/g, '');
+      const cleanTimestamp = String(timestamp || Date.now());
+
+      // ✅ STORE CONTEXT IN SESSIONSTORAGE
+      const attendanceContext = {
+          subject: cleanSubject,
+          stream: cleanStream, 
+          semester: cleanSemester,
+          date: cleanDate,
+          timestamp: cleanTimestamp,
+          source: 'completed',
+          returnUrl: window.location.href,
+          createdAt: Date.now()
+      };
+      
+      sessionStorage.setItem('attendanceViewContext', JSON.stringify(attendanceContext));
+      
+      // ✅ BUILD CLEAN URL WITH PARAMETERS
+      const params = new URLSearchParams({
+          subject: cleanSubject,
+          stream: cleanStream,
+          semester: cleanSemester,
+          date: cleanDate,
+          source: 'completed',
+          t: Date.now() // Cache buster
+      });
+      
+      const viewUrl = `view-attendance.html?${params.toString()}`;
+      
+      console.log('📋 Redirecting to:', viewUrl);
+      console.log('📊 Stored context:', attendanceContext);
+      
+      // ✅ REDIRECT WITH FEEDBACK
+      showNotification('Opening attendance register...', 'info', 2000);
+      
+      setTimeout(() => {
+          window.location.href = viewUrl;
+      }, 100);
+      
+  } catch (error) {
+      console.error('❌ Error viewing attendance:', error);
+      if (typeof showAlert === 'function') {
+          showAlert('Error', 'Failed to open attendance view. Please try again.', 'error');
+      } else {
+          alert('Error: Failed to open attendance view');
+      }
+  }
+}
+
+// ✅ UTILITY FUNCTIONS
+function getAttendanceContext() {
+  try {
+      const context = sessionStorage.getItem('attendanceViewContext');
+      return context ? JSON.parse(context) : null;
+  } catch (error) {
+      console.error('Error getting attendance context:', error);
+      return null;
+  }
+}
+
+function clearAttendanceContext() {
+  try {
+      sessionStorage.removeItem('attendanceViewContext');
+      console.log('✅ Attendance context cleared');
+  } catch (error) {
+      console.error('Error clearing context:', error);
+  }
+}
+
+// ✅ ENHANCED BUTTON STYLES
+function addViewButtonStyles() {
+  if (document.getElementById('view-button-styles')) return;
+  
+  const styles = document.createElement('style');
+  styles.id = 'view-button-styles';
+  styles.textContent = `
+      .attendance-view-btn {
+          background: linear-gradient(135deg, #1e3a8a, #0f766e) !important;
+          color: white !important;
+          border: 1px solid rgba(15, 118, 110, 0.3) !important;
+          transition: all 0.2s ease !important;
+          opacity: 0;
+          transform: translateX(10px);
+      }
+      
+      .group:hover .attendance-view-btn {
+          opacity: 1 !important;
+          transform: translateX(0) !important;
+      }
+      
+      .attendance-view-btn:hover {
+          background: linear-gradient(135deg, #1e40af, #0d9488) !important;
+          box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3) !important;
+          transform: translateY(-2px) !important;
+      }
+      
+      @media (max-width: 768px) {
+          .attendance-view-btn {
+              opacity: 1 !important;
+              transform: translateX(0) !important;
+          }
+      }
+      
+      /* Loading animation */
+      @keyframes pulse-loading {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+      }
+      
+      .loading-pulse {
+          animation: pulse-loading 1.5s ease-in-out infinite;
+      }
+  `;
+  document.head.appendChild(styles);
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', addViewButtonStyles);
+
+console.log('✅ View attendance system initialized');
+
     
     async function onSemesterChange() {
       const semester = elements.semesterSelect?.value;
