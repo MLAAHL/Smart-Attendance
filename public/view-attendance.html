@@ -1164,6 +1164,286 @@ function cancelEditMode() {
     
     showAlert('Edit Cancelled', 'All changes have been discarded', 'info');
 }
+// ✅ FIXED: Compact attendance stats with proper error handling
+function updateAttendanceStats() {
+  console.log('📊 Updating attendance stats...');
+  
+  try {
+      // ✅ FIND: Get stats container element (multiple possible selectors)
+      let attendanceStats = document.getElementById('attendanceStats') || 
+                            document.getElementById('attendance-stats') ||
+                            document.querySelector('.attendance-stats') ||
+                            document.querySelector('[data-stats-container]') ||
+                            document.querySelector('#statsContainer') ||
+                            document.querySelector('.stats-container');
+      
+      // ✅ VALIDATE: Check if required data exists
+      if (!attendanceStats) {
+          console.warn('📊 Stats container not found - skipping update');
+          return;
+      }
+      
+      if (!window.currentStudents || !Array.isArray(window.currentStudents) || window.currentStudents.length === 0) {
+          console.warn('📊 No current students data available');
+          attendanceStats.innerHTML = getEmptyStatsHTML('No students data');
+          return;
+      }
+      
+      if (!window.currentDates || !Array.isArray(window.currentDates) || window.currentDates.length === 0) {
+          console.warn('📊 No current dates data available');
+          attendanceStats.innerHTML = getEmptyStatsHTML('No dates data');
+          return;
+      }
+      
+      // ✅ SAFE ACCESS: Use window object for global variables
+      const students = window.currentStudents || [];
+      const dates = window.currentDates || [];
+      const attendanceMap = window.currentAttendanceMap || {};
+      const sessionsMap = window.currentSessionsMap || {};
+      
+      console.log('📊 Processing stats for:', {
+          students: students.length,
+          dates: dates.length,
+          attendanceMapKeys: Object.keys(attendanceMap).length,
+          sessionsMapKeys: Object.keys(sessionsMap).length
+      });
+      
+      // ✅ CALCULATE: Enhanced statistics
+      let totalSessions = 0;
+      let totalAttended = 0;
+      let totalPossibleAttendance = 0;
+      let validDatesCount = 0;
+      
+      dates.forEach(date => {
+          const dateSessions = sessionsMap[date] || [];
+          const dateAttendance = attendanceMap[date];
+          
+          // Count sessions for this date
+          const sessionCount = Math.max(1, dateSessions.length);
+          totalSessions += sessionCount;
+          
+          // Calculate possible attendance for this date
+          totalPossibleAttendance += students.length * sessionCount;
+          
+          if (dateAttendance) {
+              validDatesCount++;
+              
+              if (Array.isArray(dateAttendance)) {
+                  if (dateAttendance.length > 0 && Array.isArray(dateAttendance[0])) {
+                      // ✅ MULTI-SESSION: [[session1], [session2], ...]
+                      dateAttendance.forEach((sessionData, sessionIndex) => {
+                          if (Array.isArray(sessionData)) {
+                              totalAttended += sessionData.length;
+                              console.log(`📊 Multi-session ${date} session ${sessionIndex}: ${sessionData.length} present`);
+                          }
+                      });
+                  } else {
+                      // ✅ SINGLE SESSION: [student1, student2, ...]
+                      totalAttended += dateAttendance.length;
+                      console.log(`📊 Single session ${date}: ${dateAttendance.length} present`);
+                  }
+              } else if (dateAttendance.studentsPresent && Array.isArray(dateAttendance.studentsPresent)) {
+                  // ✅ OLD FORMAT: { studentsPresent: [...] }
+                  totalAttended += dateAttendance.studentsPresent.length;
+                  console.log(`📊 Old format ${date}: ${dateAttendance.studentsPresent.length} present`);
+              }
+          }
+      });
+      
+      // ✅ CALCULATE: Final statistics
+      const averageAttendance = totalPossibleAttendance > 0 
+          ? ((totalAttended / totalPossibleAttendance) * 100).toFixed(1) 
+          : "0.0";
+      
+      const totalAbsent = totalPossibleAttendance - totalAttended;
+      
+      console.log('📊 Final calculations:', {
+          totalSessions,
+          totalAttended,
+          totalPossibleAttendance,
+          totalAbsent,
+          averageAttendance: averageAttendance + '%',
+          validDates: validDatesCount
+      });
+      
+      // ✅ RENDER: Compact stats cards with enhanced design
+      attendanceStats.innerHTML = `
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              
+              <!-- Students Card -->
+              <div class="stats-card" data-stat="students">
+                  <div class="flex items-center p-3 rounded-xl transition-all duration-300 hover:scale-105" 
+                       style="background: rgba(255,255,255,0.95); border: 1px solid rgba(59,108,135,0.1); backdrop-filter: blur(5px); box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                      <div class="w-8 h-8 rounded-full flex items-center justify-center mr-3" style="background: rgba(59,108,135,0.12);">
+                          <i class="fas fa-users text-xs" style="color: #3b6c87;"></i>
+                      </div>
+                      <div class="flex-1">
+                          <div class="text-xs font-medium text-gray-500">Students</div>
+                          <div class="text-lg font-bold" style="color: #3b6c87;">${students.length}</div>
+                      </div>
+                  </div>
+              </div>
+  
+              <!-- Sessions Card -->
+              <div class="stats-card" data-stat="sessions">
+                  <div class="flex items-center p-3 rounded-xl transition-all duration-300 hover:scale-105" 
+                       style="background: rgba(255,255,255,0.95); border: 1px solid rgba(16,185,129,0.15); backdrop-filter: blur(5px); box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                      <div class="w-8 h-8 rounded-full flex items-center justify-center mr-3" style="background: rgba(16,185,129,0.12);">
+                          <i class="fas fa-check-circle text-xs" style="color: #10b981;"></i>
+                      </div>
+                      <div class="flex-1">
+                          <div class="text-xs font-medium text-gray-500">Sessions</div>
+                          <div class="text-lg font-bold" style="color: #10b981;">${totalSessions}</div>
+                      </div>
+                  </div>
+              </div>
+  
+              <!-- Attendance Card -->
+              <div class="stats-card" data-stat="attendance">
+                  <div class="flex items-center p-3 rounded-xl transition-all duration-300 hover:scale-105" 
+                       style="background: rgba(255,255,255,0.95); border: 1px solid rgba(251,146,60,0.2); backdrop-filter: blur(5px); box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                      <div class="w-8 h-8 rounded-full flex items-center justify-center mr-3" style="background: rgba(251,146,60,0.15);">
+                          <i class="fas fa-chart-line text-xs" style="color: #f97316;"></i>
+                      </div>
+                      <div class="flex-1">
+                          <div class="text-xs font-medium text-gray-500">Attendance</div>
+                          <div class="text-lg font-bold" style="color: #f97316;">${averageAttendance}%</div>
+                      </div>
+                  </div>
+              </div>
+  
+              <!-- Days Card -->
+              <div class="stats-card" data-stat="days">
+                  <div class="flex items-center p-3 rounded-xl transition-all duration-300 hover:scale-105" 
+                       style="background: rgba(255,255,255,0.95); border: 1px solid rgba(99,102,241,0.15); backdrop-filter: blur(5px); box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                      <div class="w-8 h-8 rounded-full flex items-center justify-center mr-3" style="background: rgba(99,102,241,0.12);">
+                          <i class="fas fa-calendar-alt text-xs" style="color: #6366f1;"></i>
+                      </div>
+                      <div class="flex-1">
+                          <div class="text-xs font-medium text-gray-500">Days</div>
+                          <div class="text-lg font-bold" style="color: #6366f1;">${dates.length}</div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          
+          <!-- Additional Details (Mobile Responsive) -->
+          <div class="mt-4 p-3 rounded-xl" style="background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.1);">
+              <div class="grid grid-cols-2 gap-4 text-center">
+                  <div>
+                      <div class="text-xs font-medium text-gray-500">Total Present</div>
+                      <div class="text-sm font-bold text-green-600">${totalAttended}</div>
+                  </div>
+                  <div>
+                      <div class="text-xs font-medium text-gray-500">Total Absent</div>
+                      <div class="text-sm font-bold text-red-500">${totalAbsent}</div>
+                  </div>
+              </div>
+          </div>
+      `;
+      
+      console.log('✅ Compact stats updated successfully:', { 
+          students: students.length,
+          sessions: totalSessions,
+          attended: totalAttended,
+          possible: totalPossibleAttendance,
+          avgAttendance: averageAttendance + '%',
+          days: dates.length,
+          validDates: validDatesCount
+      });
+      
+  } catch (error) {
+      console.error('❌ Stats update error:', error);
+      console.error('❌ Error stack:', error.stack);
+      
+      // ✅ FALLBACK: Show error state
+      const attendanceStats = document.getElementById('attendanceStats') || 
+                              document.querySelector('.attendance-stats') ||
+                              document.querySelector('#statsContainer');
+      
+      if (attendanceStats) {
+          attendanceStats.innerHTML = getErrorStatsHTML(error.message);
+      }
+  }
+}
+
+// ✅ HELPER: Generate empty stats HTML
+function getEmptyStatsHTML(reason = 'No data available') {
+  return `
+      <div class="p-4 rounded-xl text-center" style="background: rgba(156,163,175,0.1); border: 1px solid rgba(156,163,175,0.2);">
+          <i class="fas fa-info-circle text-2xl mb-2" style="color: #9ca3af;"></i>
+          <div class="text-sm font-medium" style="color: #6b7280;">${reason}</div>
+          <div class="text-xs mt-1" style="color: #9ca3af;">Load attendance data to see statistics</div>
+      </div>
+  `;
+}
+
+// ✅ HELPER: Generate error stats HTML
+function getErrorStatsHTML(errorMessage) {
+  return `
+      <div class="p-4 rounded-xl text-center" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);">
+          <i class="fas fa-exclamation-triangle text-2xl mb-2" style="color: #ef4444;"></i>
+          <div class="text-sm font-medium" style="color: #ef4444;">Error loading statistics</div>
+          <div class="text-xs mt-1" style="color: #b91c1c;">${errorMessage}</div>
+      </div>
+  `;
+}
+
+// ✅ INITIALIZE: Set up stats container if it doesn't exist
+function initializeStatsContainer() {
+  if (!document.getElementById('attendanceStats') && !document.querySelector('.attendance-stats')) {
+      console.log('📊 Creating stats container...');
+      
+      // Try to find a suitable parent container
+      const possibleParents = [
+          document.getElementById('dashboard-content'),
+          document.getElementById('main-content'),
+          document.querySelector('.dashboard'),
+          document.querySelector('.attendance-content'),
+          document.querySelector('main'),
+          document.body
+      ];
+      
+      const parent = possibleParents.find(el => el !== null);
+      
+      if (parent) {
+          const statsContainer = document.createElement('div');
+          statsContainer.id = 'attendanceStats';
+          statsContainer.className = 'attendance-stats mb-4';
+          
+          // Insert at the beginning of parent
+          parent.insertBefore(statsContainer, parent.firstChild);
+          
+          console.log('✅ Stats container created and inserted');
+          
+          // Initialize with empty state
+          updateAttendanceStats();
+      }
+  }
+}
+
+// ✅ EXPOSE: Global functions with error protection
+window.updateAttendanceStats = function() {
+  try {
+      updateAttendanceStats();
+  } catch (error) {
+      console.error('❌ Global updateAttendanceStats error:', error);
+  }
+};
+
+// ✅ AUTO-INITIALIZE: On DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(initializeStatsContainer, 500);
+});
+
+// ✅ AUTO-UPDATE: When data changes (if applicable)
+if (window.addEventListener) {
+  window.addEventListener('attendanceDataUpdated', updateAttendanceStats);
+  window.addEventListener('studentsLoaded', updateAttendanceStats);
+  window.addEventListener('datesLoaded', updateAttendanceStats);
+}
+
+console.log('✅ Enhanced attendance stats functionality loaded');
 
 
 // ✅ TOGGLE VIEW MODE
