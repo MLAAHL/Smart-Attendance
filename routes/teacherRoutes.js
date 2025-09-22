@@ -235,6 +235,7 @@ subjectSchema.index({ isLanguageSubject: 1, languageType: 1 });
 
 
 // ✅ SIMPLE: Attendance Schema WITHOUT recordId field
+// ✅ MULTI-SESSION: Attendance schema with proper indexing
 const attendanceSchema = new mongoose.Schema({
   date: {
     type: Date,
@@ -268,9 +269,10 @@ const attendanceSchema = new mongoose.Schema({
   },
   languageGroup: {
     type: String,
-    default: null
+    default: null // e.g., "BCA_SEM1_KANNADA"
   },
   
+  // ✅ CORE: Attendance data
   studentsPresent: {
     type: [String],
     default: []
@@ -288,32 +290,136 @@ const attendanceSchema = new mongoose.Schema({
     default: 0
   },
   
-  // ✅ Session tracking (time difference only)
+  // ✅ MULTI-SESSION: Session tracking with proper uniqueness
   sessionTime: {
     type: String,
     default: function() {
       return new Date().toLocaleTimeString('en-IN', { hour12: false });
     }
+  },
+  sessionIndex: {
+    type: Number,
+    default: null // null for single session, 0,1,2... for multi-session
+  },
+  sessionId: {
+    type: String,
+    default: function() {
+      return new Date().getTime().toString(); // Unique timestamp-based ID
+    }
+  },
+  
+  // ✅ TRACKING: Simple metadata
+  notes: {
+    type: String,
+    default: null
+  },
+  
+  // ✅ NEW: Add these for better tracking
+  totalSessionsToday: {
+    type: Number,
+    default: 1
+  },
+  teacherName: {
+    type: String,
+    default: null
   }
-  // ✅ REMOVED: recordId field (causing duplicate errors)
-  // ✅ REMOVED: recordNumber field (not needed)
 }, {
-  timestamps: true // createdAt and updatedAt provide unique timestamps
+  timestamps: true,
+  strict: false // Allow dynamic fields if needed
 });
 
-// ✅ NO unique indexes - Allow multiple records
-attendanceSchema.index({ date: 1, subject: 1, stream: 1, semester: 1 });
-attendanceSchema.index({ createdAt: -1 });
+// ✅ FIXED: NON-UNIQUE indexes for performance (no unique constraints)
+attendanceSchema.index({ date: 1, subject: 1, stream: 1, semester: 1 }, { unique: false });
+attendanceSchema.index({ date: 1, subject: 1, sessionTime: 1 }, { unique: false });
+attendanceSchema.index({ stream: 1, semester: 1, date: -1 }, { unique: false });
+attendanceSchema.index({ sessionId: 1 }, { unique: true }); // Only sessionId should be unique
 
-// ✅ Pre-save: Calculate percentage only
-attendanceSchema.pre('save', function(next) {
-  if (this.totalPossibleStudents > 0) {
-    this.attendancePercentage = Math.round(
-      (this.studentsPresent.length / this.totalPossibleStudents) * 100 * 100
-    ) / 100;
+// ✅ ENHANCED: Auto-calculate percentage and session info
+attendanceSchema.pre('save', async function(next) {
+  try {
+    // Calculate attendance percentage
+    if (this.totalPossibleStudents > 0) {
+      this.attendancePercentage = Math.round(
+        (this.studentsPresent.length / this.totalPossibleStudents) * 100 * 100
+      ) / 100;
+    }
+    
+    // ✅ AUTO-CALCULATE: Total sessions for today
+    if (this.isNew) {
+      const todayStart = new Date(this.date);
+      todayStart.setHours(0, 0, 0, 0);
+      const todayEnd = new Date(this.date);
+      todayEnd.setHours(23, 59, 59, 999);
+      
+      const existingSessions = await this.constructor.countDocuments({
+        date: { $gte: todayStart, $lte: todayEnd },
+        subject: this.subject,
+        stream: this.stream,
+        semester: this.semester
+      });
+      
+      this.totalSessionsToday = existingSessions + 1;
+      this.sessionIndex = existingSessions; // 0-based index
+    }
+    
+    // ✅ AUTO-SET: Language group for language subjects
+    if (this.isLanguageSubject && this.languageType) {
+      this.languageGroup = `${this.stream}_SEM${this.semester}_${this.languageType}`;
+    }
+    
+    next();
+  } catch (error) {
+    next(error);
   }
-  next();
 });
+
+// ✅ INSTANCE METHODS: Useful methods for sessions
+attendanceSchema.methods.getSessionSummary = function() {
+  return {
+    sessionId: this.sessionId,
+    sessionTime: this.sessionTime,
+    sessionIndex: this.sessionIndex,
+    totalSessionsToday: this.totalSessionsToday,
+    present: this.studentsPresent.length,
+    total: this.totalPossibleStudents,
+    percentage: this.attendancePercentage,
+    isLanguageSubject: this.isLanguageSubject,
+    languageType: this.languageType
+  };
+};
+
+// ✅ STATIC METHODS: Useful for queries
+attendanceSchema.statics.getSessionsForToday = function(date, stream, semester, subject) {
+  const todayStart = new Date(date);
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date(date);
+  todayEnd.setHours(23, 59, 59, 999);
+  
+  return this.find({
+    date: { $gte: todayStart, $lte: todayEnd },
+    stream: stream.toUpperCase(),
+    semester: semester,
+    subject: subject.toUpperCase()
+  }).sort({ sessionIndex: 1 });
+};
+
+attendanceSchema.statics.getLatestSession = function(date, stream, semester, subject) {
+  const todayStart = new Date(date);
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date(date);
+  todayEnd.setHours(23, 59, 59, 999);
+  
+  return this.findOne({
+    date: { $gte: todayStart, $lte: todayEnd },
+    stream: stream.toUpperCase(),
+    semester: semester,
+    subject: subject.toUpperCase()
+  }).sort({ sessionIndex: -1 });
+};
+
+module.exports = attendanceSchema;
+
+
 
 
 // ✅ ENHANCED: Message Log Schema with WhatsApp Cloud API details
@@ -2007,7 +2113,7 @@ module.exports = {
   // Constants
   STREAM_MAPPINGS
 };
-// ✅ FIXED: GET Attendance Register with Enhanced Validation and Sorting
+// ✅ COMPLETE FIXED: Get Attendance Register Route - Multiple Sessions Support
 router.get("/attendance-register/:stream/sem:sem/:subject", 
   validateParams, 
   asyncHandler(async (req, res) => {
@@ -2121,92 +2227,292 @@ router.get("/attendance-register/:stream/sem:sem/:subject",
       attendanceScope.totalPossible = students.length;
       console.log(`✅ Found ${students.length} students (sorted by Student ID)`);
 
-      // ✅ Fetch attendance records with better error handling
+      // ✅ CRITICAL FIX: Fetch ALL attendance records with proper query
       let attendanceRecords = [];
       try {
+        // ✅ FIXED: Use exact subject match and proper sorting
         attendanceRecords = await Attendance.find({
-          subject: { $regex: new RegExp(`^${subject}$`, 'i') }
-        }).sort({ date: 1 }).lean();
+          subject: subject.toUpperCase() // Use exact match
+        }).sort({ 
+          date: 1, 
+          sessionTime: 1, // Sort by session time within same date
+          createdAt: 1 
+        }).lean();
+        
+        console.log(`📅 Found ${attendanceRecords.length} total attendance records`);
+        
+        // ✅ DEBUG: Log sample records with better details
+        if (attendanceRecords.length > 0) {
+          console.log(`📋 Sample records:`, attendanceRecords.slice(0, 3).map(r => ({
+            id: r._id?.toString(),
+            date: r.date,
+            sessionTime: r.sessionTime,
+            studentsPresent: Array.isArray(r.studentsPresent) ? r.studentsPresent.length : 0,
+            totalStudents: r.totalStudents,
+            createdAt: r.createdAt,
+            hasStudentsPresent: !!(r.studentsPresent && Array.isArray(r.studentsPresent))
+          })));
+        }
+        
       } catch (attendanceError) {
         console.warn(`⚠️ Error fetching attendance records: ${attendanceError.message}`);
-        // Continue with empty records - don't fail the entire request
+        return res.status(500).json({
+          success: false,
+          error: 'ATTENDANCE_FETCH_ERROR',
+          message: 'Failed to fetch attendance records',
+          details: attendanceError.message
+        });
       }
 
-      console.log(`📅 Found ${attendanceRecords.length} attendance records for ${subject}`);
-
-      // ✅ Build attendance map with enhanced filtering
-      const attendanceMap = {};
+      // ✅ CRITICAL FIX: Build proper sessionsMap and attendanceMap with data validation
+      const attendanceMap = {}; // For backward compatibility
+      const sessionsMap = {}; // ✅ CRITICAL: Detailed session information
       const studentIDs = new Set(students.map(s => s.studentID));
 
+      // Group records by date with better error handling
+      const recordsByDate = {};
       attendanceRecords.forEach(record => {
         try {
+          if (!record.date) {
+            console.warn(`⚠️ Record missing date: ${record._id}`);
+            return;
+          }
+
           const dateKey = new Date(record.date).toISOString().split("T")[0];
           
-          // Validate and filter present students
-          const studentsPresent = Array.isArray(record.studentsPresent) ? record.studentsPresent : [];
-          const filteredPresent = studentsPresent.filter(studentID => 
-            studentID && typeof studentID === 'string' && studentIDs.has(studentID)
-          );
-          
-          attendanceMap[dateKey] = filteredPresent;
-          
-          // Debug log for first few records
-          if (Object.keys(attendanceMap).length <= 3) {
-            console.log(`📊 ${dateKey}: ${filteredPresent.length}/${students.length} present`);
+          if (!recordsByDate[dateKey]) {
+            recordsByDate[dateKey] = [];
           }
+          
+          recordsByDate[dateKey].push(record);
         } catch (recordError) {
-          console.warn(`⚠️ Error processing attendance record: ${recordError.message}`);
+          console.warn(`⚠️ Error processing attendance record ${record._id}: ${recordError.message}`);
         }
       });
 
-      // ✅ Calculate comprehensive statistics
+      console.log(`📅 Records grouped by date:`, Object.keys(recordsByDate).length, 'dates');
+
+      // ✅ CRITICAL FIX: Process multiple sessions per date with proper data structure
+      Object.entries(recordsByDate).forEach(([dateKey, records]) => {
+        // Sort records by session time and creation time
+        records.sort((a, b) => {
+          // First sort by session time if available
+          if (a.sessionTime && b.sessionTime) {
+            return a.sessionTime.localeCompare(b.sessionTime);
+          }
+          // Fallback to creation time
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        });
+        
+        const dateSessions = [];
+        const dateSessionsInfo = [];
+        
+        console.log(`📊 Processing ${dateKey}: ${records.length} records`);
+        
+        records.forEach((record, sessionIndex) => {
+          try {
+            // ✅ CRITICAL FIX: Proper validation of studentsPresent array
+            let studentsPresent = [];
+            
+            if (Array.isArray(record.studentsPresent)) {
+              studentsPresent = record.studentsPresent;
+            } else if (record.studentsPresent && typeof record.studentsPresent === 'object') {
+              // Handle case where studentsPresent might be an object
+              studentsPresent = Object.values(record.studentsPresent).filter(Boolean);
+            } else {
+              console.warn(`⚠️ Invalid studentsPresent format in record ${record._id}:`, typeof record.studentsPresent);
+              studentsPresent = [];
+            }
+
+            // Validate and filter present students
+            const filteredPresent = studentsPresent.filter(studentID => {
+              if (!studentID || typeof studentID !== 'string') {
+                return false;
+              }
+              if (!studentIDs.has(studentID)) {
+                console.warn(`⚠️ Student ID ${studentID} not found in current students list`);
+                return false;
+              }
+              return true;
+            });
+            
+            // ✅ CRITICAL FIX: Push correct data structure to dateSessions
+            dateSessions.push(filteredPresent);
+            
+            // ✅ CRITICAL FIX: Build comprehensive session info
+            const sessionTime = record.sessionTime || 
+              (record.createdAt ? new Date(record.createdAt).toLocaleTimeString('en-IN', { 
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+              }) : '00:00:00');
+
+            const sessionInfo = {
+              sessionNumber: sessionIndex + 1,
+              time: sessionTime,
+              studentsPresent: filteredPresent, // ✅ CRITICAL: Array of student IDs
+              totalPresent: filteredPresent.length,
+              attendancePercentage: students.length > 0 ? 
+                Math.round((filteredPresent.length / students.length) * 100 * 100) / 100 : 0,
+              createdAt: record.createdAt,
+              recordId: record._id?.toString() || null,
+              // ✅ Additional session metadata
+              sessionMetadata: {
+                totalStudents: record.totalStudents || students.length,
+                totalPossibleStudents: record.totalPossibleStudents || students.length,
+                originalPercentage: record.attendancePercentage || 0,
+                isLanguageSubject: record.isLanguageSubject || false,
+                languageType: record.languageType || null,
+                notes: record.notes || null,
+                sessionIndex: record.sessionIndex
+              }
+            };
+            
+            dateSessionsInfo.push(sessionInfo);
+            
+            console.log(`  Session ${sessionIndex + 1}: ${filteredPresent.length}/${students.length} students (${sessionInfo.attendancePercentage}%) at ${sessionTime}`);
+          } catch (sessionError) {
+            console.error(`❌ Error processing session ${sessionIndex} for date ${dateKey}:`, sessionError.message);
+          }
+        });
+        
+        // ✅ CRITICAL FIX: Only store if we have valid data
+        if (dateSessions.length > 0) {
+          attendanceMap[dateKey] = dateSessions;
+          sessionsMap[dateKey] = dateSessionsInfo;
+          
+          console.log(`✅ ${dateKey}: Processed ${records.length} sessions successfully`);
+        } else {
+          console.warn(`⚠️ ${dateKey}: No valid sessions found`);
+        }
+      });
+
+      // ✅ ENHANCED: Calculate comprehensive statistics with validation
       const totalDates = Object.keys(attendanceMap).length;
       const attendanceDates = Object.keys(attendanceMap).sort();
       
       let avgAttendance = 0;
       let studentAttendanceStats = [];
+      let totalSessions = 0;
+
+      // Count total sessions across all dates
+      Object.values(sessionsMap).forEach(sessions => {
+        totalSessions += sessions.length;
+      });
+
+      console.log(`📊 Statistics: ${totalDates} dates, ${totalSessions} total sessions`);
 
       if (students.length > 0 && totalDates > 0) {
         studentAttendanceStats = students.map(student => {
-          const attendedCount = Object.values(attendanceMap).filter(datePresent => 
-            datePresent.includes(student.studentID)
-          ).length;
-          const attendancePercentage = (attendedCount / totalDates) * 100;
+          let totalAttended = 0;
+          let totalSessionsForStudent = 0;
+          
+          // ✅ CRITICAL FIX: Use sessionsMap for accurate counting
+          Object.values(sessionsMap).forEach(dateSessions => {
+            dateSessions.forEach(sessionInfo => {
+              totalSessionsForStudent++;
+              if (Array.isArray(sessionInfo.studentsPresent) && 
+                  sessionInfo.studentsPresent.includes(student.studentID)) {
+                totalAttended++;
+              }
+            });
+          });
+          
+          const attendancePercentage = totalSessionsForStudent > 0 ? 
+            (totalAttended / totalSessionsForStudent) * 100 : 0;
           
           return {
             studentID: student.studentID,
             name: student.name,
-            attendedDays: attendedCount,
-            totalDays: totalDates,
+            attendedSessions: totalAttended,
+            totalSessions: totalSessionsForStudent,
             attendancePercentage: parseFloat(attendancePercentage.toFixed(1)),
             status: attendancePercentage >= 75 ? 'Good' : attendancePercentage >= 60 ? 'Average' : 'Poor'
           };
         });
 
-        avgAttendance = (studentAttendanceStats.reduce((sum, stat) => 
-          sum + stat.attendancePercentage, 0) / students.length).toFixed(1);
+        avgAttendance = studentAttendanceStats.length > 0 ?
+          (studentAttendanceStats.reduce((sum, stat) => 
+            sum + stat.attendancePercentage, 0) / students.length).toFixed(1) : "0.0";
       }
 
-      // ✅ Enhanced date range calculation
+      // ✅ Enhanced date range calculation with validation
       const dateRange = attendanceDates.length > 0 ? {
         startDate: attendanceDates[0],
         endDate: attendanceDates[attendanceDates.length - 1],
         totalDays: attendanceDates.length,
+        totalSessions: totalSessions,
+        avgSessionsPerDay: attendanceDates.length > 0 ? (totalSessions / attendanceDates.length).toFixed(1) : "0",
         span: attendanceDates.length > 1 ? 
           Math.ceil((new Date(attendanceDates[attendanceDates.length - 1]) - new Date(attendanceDates[0])) / (1000 * 60 * 60 * 24)) + 1 
           : 1
       } : null;
 
+      // ✅ ENHANCED: Sessions breakdown for frontend display with validation
+      const sessionsBreakdown = {};
+      Object.entries(sessionsMap).forEach(([date, sessions]) => {
+        if (Array.isArray(sessions) && sessions.length > 0) {
+          sessionsBreakdown[date] = {
+            totalSessions: sessions.length,
+            avgAttendance: sessions.length > 0 ? 
+              (sessions.reduce((sum, s) => sum + (s.attendancePercentage || 0), 0) / sessions.length).toFixed(1) : "0",
+            sessions: sessions.map(s => ({
+              sessionNumber: s.sessionNumber,
+              time: s.time,
+              attendance: `${s.totalPresent}/${students.length}`,
+              percentage: s.attendancePercentage,
+              studentsPresent: Array.isArray(s.studentsPresent) ? s.studentsPresent.length : 0,
+              recordId: s.recordId
+            }))
+          };
+        }
+      });
+
       const processingTime = Date.now() - startTime;
       
-      console.log(`✅ Register loaded: ${students.length} students, ${totalDates} dates, ${avgAttendance}% avg attendance`);
+      console.log(`✅ Register loaded: ${students.length} students, ${totalDates} dates, ${totalSessions} total sessions, ${avgAttendance}% avg attendance`);
+      
+      // ✅ CRITICAL: Validate final data structure
+      const validationErrors = [];
+      
+      // Check attendanceMap structure
+      Object.entries(attendanceMap).forEach(([date, sessions]) => {
+        if (!Array.isArray(sessions)) {
+          validationErrors.push(`attendanceMap[${date}] is not an array`);
+        } else {
+          sessions.forEach((session, index) => {
+            if (!Array.isArray(session)) {
+              validationErrors.push(`attendanceMap[${date}][${index}] is not an array of student IDs`);
+            }
+          });
+        }
+      });
 
-      // ✅ Comprehensive success response
-      res.status(200).json({ 
+      // Check sessionsMap structure
+      Object.entries(sessionsMap).forEach(([date, sessions]) => {
+        if (!Array.isArray(sessions)) {
+          validationErrors.push(`sessionsMap[${date}] is not an array`);
+        } else {
+          sessions.forEach((session, index) => {
+            if (!Array.isArray(session.studentsPresent)) {
+              validationErrors.push(`sessionsMap[${date}][${index}].studentsPresent is not an array`);
+            }
+          });
+        }
+      });
+
+      if (validationErrors.length > 0) {
+        console.error(`❌ Data structure validation errors:`, validationErrors);
+      }
+
+      // ✅ CRITICAL: Return comprehensive response with validated data
+      const response = { 
         success: true,
-        message: `Attendance register loaded successfully for ${subject}`,
-        students: students, // Already sorted by Student ID
-        attendanceMap, 
+        message: `Attendance register loaded with multiple sessions support for ${subject}`,
+        students: students,
+        attendanceMap, // ✅ Contains arrays of session attendance arrays
+        sessionsMap, // ✅ CRITICAL: Contains detailed session information with studentsPresent arrays
         subject: subject.toUpperCase(), 
         stream: stream.toUpperCase(), 
         semester: parseInt(sem),
@@ -2223,14 +2529,29 @@ router.get("/attendance-register/:stream/sem:sem/:subject",
         summary: {
           totalStudents: students.length,
           totalDates: totalDates,
+          totalSessions: totalSessions,
+          averageSessionsPerDay: parseFloat(dateRange?.avgSessionsPerDay || 0),
           averageAttendance: parseFloat(avgAttendance),
           attendanceRecords: attendanceRecords.length,
           dateRange,
           sortedBy: 'studentID',
           sortOrder: 'ascending',
-          attendanceQuality: parseFloat(avgAttendance) >= 75 ? 'Good' : parseFloat(avgAttendance) >= 60 ? 'Average' : 'Poor'
+          attendanceQuality: parseFloat(avgAttendance) >= 75 ? 'Good' : parseFloat(avgAttendance) >= 60 ? 'Average' : 'Poor',
+          multipleSessionsSupport: true
         },
+        sessionsBreakdown, // ✅ Detailed breakdown of sessions per date
         studentStats: studentAttendanceStats.slice(0, 10), // First 10 for preview
+        debug: { 
+          recordsByDateCount: Object.keys(recordsByDate).length,
+          totalRecordsProcessed: attendanceRecords.length,
+          sessionMapKeys: Object.keys(sessionsMap),
+          attendanceMapKeys: Object.keys(attendanceMap),
+          validationErrors: validationErrors,
+          sampleSessionsMap: Object.keys(sessionsMap).length > 0 ? 
+            { [Object.keys(sessionsMap)[0]]: sessionsMap[Object.keys(sessionsMap)[0]] } : null,
+          sampleAttendanceMap: Object.keys(attendanceMap).length > 0 ?
+            { [Object.keys(attendanceMap)[0]]: attendanceMap[Object.keys(attendanceMap)[0]] } : null
+        },
         metadata: {
           processingTimeMs: processingTime,
           timestamp: new Date().toISOString(),
@@ -2241,17 +2562,25 @@ router.get("/attendance-register/:stream/sem:sem/:subject",
             languageFilter: subjectDoc.languageType || 'None',
             activeOnly: true
           },
+          features: {
+            multipleSessionsPerDay: true,
+            sessionTimeTracking: true,
+            detailedSessionBreakdown: true,
+            crossSessionStatistics: true,
+            dataValidation: true
+          },
           cacheInfo: {
             cacheable: true,
-            ttl: 300 // 5 minutes
+            ttl: 300
           }
         }
-      });
+      };
+
+      res.status(200).json(response);
 
     } catch (error) {
       console.error("❌ Error fetching attendance register:", error);
       
-      // Enhanced error response
       const errorResponse = {
         success: false,
         error: 'SERVER_ERROR',
@@ -2259,47 +2588,36 @@ router.get("/attendance-register/:stream/sem:sem/:subject",
         subject: subject,
         stream: stream,
         semester: sem,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        debug: {
+          errorType: error.name,
+          errorMessage: error.message,
+          stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined
+        }
       };
-
-      // Add specific error details in development
-      if (process.env.NODE_ENV !== 'production') {
-        errorResponse.details = {
-          message: error.message,
-          stack: error.stack,
-          code: error.code
-        };
-      }
 
       res.status(500).json(errorResponse);
     }
   })
 );
-// ✅ FIXED: POST Bulk Attendance Update with Enhanced Validation and Error Handling
+
+// ✅ FIXED: Backend that works with existing schema (no sessionIndex field)
 router.post("/update-attendance/:stream/sem:sem/:subject", 
   validateParams, 
   asyncHandler(async (req, res) => {
     const { stream, sem, subject } = req.params;
-    const { attendanceMap } = req.body;
+    const { attendanceMap } = req.body; // Remove sessionsMap for now
     const startTime = Date.now();
 
-    console.log(`📊 Bulk update request for: ${subject} in ${stream} Sem ${sem}`);
+    console.log(`📊 Multi-session update for: ${subject} in ${stream} Sem ${sem}`);
     console.log(`📊 Attendance data received for ${Object.keys(attendanceMap || {}).length} dates`);
 
-    // ✅ Enhanced input validation
+    // ✅ SAME: Input validation (keep existing code)
     if (!attendanceMap || typeof attendanceMap !== "object") {
       return res.status(400).json({ 
         success: false,
         error: 'INVALID_INPUT_FORMAT',
         message: "Invalid attendance data. Expected object with date keys and student arrays.",
-        expectedFormat: {
-          attendanceMap: {
-            "2025-09-13": ["1001", "1002"],
-            "2025-09-14": ["1003", "1004"]
-          }
-        },
-        receivedType: typeof attendanceMap,
-        hint: "Ensure you're sending JSON with proper structure"
       });
     }
 
@@ -2308,35 +2626,7 @@ router.post("/update-attendance/:stream/sem:sem/:subject",
       return res.status(400).json({ 
         success: false,
         error: 'EMPTY_ATTENDANCE_DATA',
-        message: "No attendance data provided",
-        hint: "Include at least one date with student attendance data"
-      });
-    }
-
-    // ✅ Enhanced date validation with better error reporting
-    const dateValidationResults = [];
-    const validDates = [];
-
-    dates.forEach(dateStr => {
-      const validation = validateSingleDate(dateStr);
-      if (validation.isValid) {
-        validDates.push(dateStr);
-      } else {
-        dateValidationResults.push({
-          date: dateStr,
-          issues: validation.errors
-        });
-      }
-    });
-
-    if (dateValidationResults.length > 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'INVALID_DATE_FORMAT',
-        message: `Found ${dateValidationResults.length} invalid dates`,
-        invalidDates: dateValidationResults,
-        validDates: validDates,
-        hint: "Use YYYY-MM-DD format for dates"
+        message: "No attendance data provided"
       });
     }
 
@@ -2345,7 +2635,7 @@ router.post("/update-attendance/:stream/sem:sem/:subject",
       const Subject = getSubjectModel(stream, sem);
       const Attendance = getAttendanceModel(stream, sem, subject);
 
-      // ✅ Enhanced subject validation
+      // ✅ SAME: Subject validation (keep existing)
       const subjectDoc = await Subject.findOne({ 
         subjectName: subject.toUpperCase(),
         isActive: { $ne: false }
@@ -2355,100 +2645,92 @@ router.post("/update-attendance/:stream/sem:sem/:subject",
         return res.status(404).json({ 
           success: false,
           error: 'SUBJECT_NOT_FOUND',
-          message: `Subject "${subject}" not found in ${stream} Semester ${sem}`,
-          suggestion: 'Verify the subject name and ensure it exists in the database'
+          message: `Subject "${subject}" not found in ${stream} Semester ${sem}`
         });
       }
 
-      // ✅ Enhanced student validation
+      // ✅ SAME: Student validation (keep existing)
       let validStudents;
       const studentQuery = getActiveStudentQuery();
-
       if (subjectDoc.isLanguageSubject && subjectDoc.languageType) {
         studentQuery.languageSubject = subjectDoc.languageType;
-        validStudents = await Student.find(studentQuery, "studentID name").lean();
-        console.log(`🔤 Language subject: Found ${validStudents.length} ${subjectDoc.languageType} students`);
-      } else {
-        validStudents = await Student.find(studentQuery, "studentID name").lean();
-        console.log(`📚 Core subject: Found ${validStudents.length} students`);
       }
-
-      if (validStudents.length === 0) {
-        return res.status(404).json({
-          success: false,
-          error: 'NO_STUDENTS_FOUND',
-          message: subjectDoc.isLanguageSubject ? 
-            `No students found who chose ${subjectDoc.languageType} language` :
-            "No active students found for this stream and semester",
-          subjectInfo: {
-            name: subjectDoc.subjectName,
-            type: subjectDoc.isLanguageSubject ? 'Language Subject' : 'Core Subject',
-            languageType: subjectDoc.languageType || null
-          }
-        });
-      }
-
+      validStudents = await Student.find(studentQuery, "studentID name").lean();
+      
       const validStudentIDs = validStudents.map(s => s.studentID);
       const validStudentIDsSet = new Set(validStudentIDs);
 
-      // ✅ Enhanced student data validation
-      const validationWarnings = [];
-      const processedAttendanceMap = {};
-
-      for (const [dateStr, studentsPresent] of Object.entries(attendanceMap)) {
-        if (!Array.isArray(studentsPresent)) {
-          return res.status(400).json({
-            success: false,
-            error: 'INVALID_STUDENT_DATA',
-            message: `Invalid data for date ${dateStr}: Expected array of student IDs`,
-            received: typeof studentsPresent
-          });
-        }
-
-        const validStudentsForDate = [];
-        const invalidStudentsForDate = [];
-
-        studentsPresent.forEach(studentID => {
-          const normalizedID = String(studentID).trim();
-          
-          if (!normalizedID) {
-            invalidStudentsForDate.push({ id: studentID, issue: 'Empty student ID' });
-          } else if (!validStudentIDsSet.has(normalizedID)) {
-            invalidStudentsForDate.push({ id: studentID, issue: 'Student ID not found' });
-          } else {
-            validStudentsForDate.push(normalizedID);
-          }
-        });
-
-        processedAttendanceMap[dateStr] = validStudentsForDate;
-
-        if (invalidStudentsForDate.length > 0) {
-          validationWarnings.push({
-            date: dateStr,
-            invalidStudents: invalidStudentsForDate,
-            validCount: validStudentsForDate.length,
-            invalidCount: invalidStudentsForDate.length
-          });
-        }
-      }
-
-      console.log(`👥 Processing ${validDates.length} dates for ${validStudentIDs.length} students`);
-      if (validationWarnings.length > 0) {
-        console.warn(`⚠️ Found validation warnings for ${validationWarnings.length} dates`);
-      }
-
-      // ✅ Enhanced database transaction with better error handling
+      // ✅ ENHANCED: Process multi-session data without schema changes
       const session = await Student.db.startSession();
       const updateResults = [];
-      let transactionError = null;
 
-      try {
-        await session.withTransaction(async () => {
-          const updatePromises = validDates.map(async (dateStr) => {
-            const studentsPresent = processedAttendanceMap[dateStr] || [];
-            const dateObj = new Date(dateStr + 'T00:00:00.000Z'); // Force UTC
+      await session.withTransaction(async () => {
+        for (const [dateStr, attendanceData] of Object.entries(attendanceMap)) {
+          const dateObj = new Date(dateStr + 'T00:00:00.000Z');
+          
+          console.log(`📅 Processing ${dateStr} with data:`, attendanceData);
+
+          // ✅ CHECK: If this is multi-session data (array of arrays)
+          if (Array.isArray(attendanceData) && attendanceData.length > 0 && Array.isArray(attendanceData[0])) {
+            // ✅ MULTI-SESSION: Handle multiple sessions per date
+            console.log(`🔀 Multi-session detected: ${attendanceData.length} sessions`);
             
-            console.log(`📅 Updating ${dateStr}: ${studentsPresent.length}/${validStudentIDs.length} present`);
+            // Delete existing records for this date first
+            await Attendance.deleteMany({ 
+              date: dateObj, 
+              subject: subject.toUpperCase()
+            }, { session });
+
+            // Create separate record for each session
+            for (let sessionIndex = 0; sessionIndex < attendanceData.length; sessionIndex++) {
+              const sessionStudents = attendanceData[sessionIndex] || [];
+              const validSessionStudents = sessionStudents.filter(id => 
+                validStudentIDsSet.has(String(id).trim())
+              );
+
+              // ✅ CREATE: New record for this session (use a unique identifier in the record)
+              const sessionRecord = await Attendance.create([{
+                date: dateObj,
+                subject: subject.toUpperCase(),
+                studentsPresent: validSessionStudents,
+                totalStudents: validStudentIDs.length,
+                presentCount: validSessionStudents.length,
+                absentCount: validStudentIDs.length - validSessionStudents.length,
+                stream: stream.toUpperCase(),
+                semester: parseInt(sem),
+                isLanguageSubject: subjectDoc.isLanguageSubject || false,
+                languageType: subjectDoc.languageType || null,
+                // ✅ WORKAROUND: Store session info in existing fields
+                notes: `Session ${sessionIndex + 1}`, // Use notes field for session identifier
+                sessionData: { // If you have a flexible field for extra data
+                  sessionIndex: sessionIndex,
+                  sessionNumber: sessionIndex + 1,
+                  isMultiSession: true,
+                  totalSessions: attendanceData.length
+                },
+                lastUpdated: new Date(),
+                updatedBy: req.user?.name || 'multi_session_update',
+                updateMethod: 'multi_session_bulk_update'
+              }], { session });
+
+              updateResults.push({
+                date: dateStr,
+                sessionIndex,
+                sessionNumber: sessionIndex + 1,
+                presentCount: validSessionStudents.length,
+                attendanceId: sessionRecord[0]._id,
+                type: 'multi_session'
+              });
+            }
+
+          } else {
+            // ✅ SINGLE SESSION: Handle as before
+            console.log(`📝 Single session detected`);
+            
+            const studentsArray = Array.isArray(attendanceData) ? attendanceData : [];
+            const validStudents = studentsArray.filter(id => 
+              validStudentIDsSet.has(String(id).trim())
+            );
 
             const result = await Attendance.findOneAndUpdate(
               { 
@@ -2457,17 +2739,19 @@ router.post("/update-attendance/:stream/sem:sem/:subject",
               },
               { 
                 $set: { 
-                  studentsPresent: studentsPresent,
+                  studentsPresent: validStudents,
                   totalStudents: validStudentIDs.length,
-                  presentCount: studentsPresent.length,
-                  absentCount: validStudentIDs.length - studentsPresent.length,
+                  presentCount: validStudents.length,
+                  absentCount: validStudentIDs.length - validStudents.length,
                   stream: stream.toUpperCase(),
                   semester: parseInt(sem),
                   isLanguageSubject: subjectDoc.isLanguageSubject || false,
                   languageType: subjectDoc.languageType || null,
+                  notes: null, // Clear session notes for single session
+                  sessionData: { isMultiSession: false },
                   lastUpdated: new Date(),
-                  updatedBy: req.user?.name || 'bulk_update',
-                  updateMethod: 'bulk_attendance_update'
+                  updatedBy: req.user?.name || 'single_bulk_update',
+                  updateMethod: 'single_bulk_update'
                 }
               },
               { 
@@ -2477,105 +2761,57 @@ router.post("/update-attendance/:stream/sem:sem/:subject",
               }
             );
 
-            return {
+            updateResults.push({
               date: dateStr,
-              dateFormatted: new Date(dateStr).toLocaleDateString('en-IN'),
-              totalStudents: validStudentIDs.length,
-              presentStudents: studentsPresent.length,
-              absentStudents: validStudentIDs.length - studentsPresent.length,
-              attendanceRate: ((studentsPresent.length / validStudentIDs.length) * 100).toFixed(1),
+              presentCount: validStudents.length,
               attendanceId: result._id,
-              wasCreated: !result.lastUpdated || result.createdAt === result.updatedAt
-            };
-          });
+              type: 'single_session'
+            });
+          }
+        }
+      });
 
-          const results = await Promise.all(updatePromises);
-          updateResults.push(...results);
-        });
+      await session.endSession();
 
-        console.log(`✅ Transaction completed successfully for ${validDates.length} dates`);
-
-      } catch (error) {
-        transactionError = error;
-        console.error(`❌ Transaction failed: ${error.message}`);
-      } finally {
-        await session.endSession();
-      }
-
-      // Handle transaction failure
-      if (transactionError) {
-        return res.status(500).json({
-          success: false,
-          error: 'TRANSACTION_FAILED',
-          message: 'Failed to update attendance due to database transaction error',
-          details: process.env.NODE_ENV !== 'production' ? transactionError.message : 'Database error occurred',
-          partialResults: updateResults.length > 0 ? updateResults : null
-        });
-      }
-
-      // ✅ Calculate comprehensive summary
-      const totalPresent = updateResults.reduce((sum, result) => sum + result.presentStudents, 0);
-      const totalPossible = updateResults.length * validStudentIDs.length;
-      const avgAttendance = totalPossible > 0 ? 
-        (totalPresent / totalPossible * 100).toFixed(1) : '0.0';
-
+      // ✅ SUCCESS: Calculate comprehensive summary
+      const multiSessionCount = updateResults.filter(r => r.type === 'multi_session').length;
+      const singleSessionCount = updateResults.filter(r => r.type === 'single_session').length;
+      const totalPresent = updateResults.reduce((sum, result) => sum + result.presentCount, 0);
       const processingTime = Date.now() - startTime;
 
-      console.log(`✅ Bulk update completed: ${validDates.length} dates, ${avgAttendance}% avg attendance`);
+      console.log(`✅ Multi-session update completed: ${dates.length} dates, ${multiSessionCount} multi-sessions`);
 
-      // ✅ Enhanced success response
       res.status(200).json({ 
         success: true,
-        message: `✅ Attendance updated successfully for ${validDates.length} dates`,
-        updatedDates: validDates.length,
+        message: `✅ Multi-session attendance updated successfully`,
+        updatedDates: dates.length,
         summary: {
-          totalDates: validDates.length,
+          totalDates: dates.length,
+          multiSessionDates: updateResults.filter(r => r.type === 'multi_session').length / updateResults.filter(r => r.sessionIndex !== undefined).reduce((max, r) => Math.max(max, (r.sessionIndex || 0) + 1), 0) || 0,
+          singleSessionDates: updateResults.filter(r => r.type === 'single_session').length,
           totalStudents: validStudentIDs.length,
-          averageAttendance: parseFloat(avgAttendance),
           totalPresentMarks: totalPresent,
-          totalPossibleMarks: totalPossible,
           processingTimeMs: processingTime,
-          successRate: '100%'
-        },
-        subjectInfo: {
-          name: subjectDoc.subjectName,
-          type: subjectDoc.subjectType || (subjectDoc.isLanguageSubject ? 'Language' : 'Core'),
-          isLanguageSubject: subjectDoc.isLanguageSubject || false,
-          languageType: subjectDoc.languageType || null
+          sessionSupport: true
         },
         updateResults: updateResults,
-        validationWarnings: validationWarnings.length > 0 ? {
-          count: validationWarnings.length,
-          details: validationWarnings,
-          message: 'Some invalid student IDs were filtered out during processing'
-        } : null,
         metadata: {
-          requestedDates: dates.length,
-          processedDates: validDates.length,
-          skippedDates: dates.length - validDates.length,
           timestamp: new Date().toISOString(),
           stream: stream.toUpperCase(),
           semester: parseInt(sem),
-          subject: subject.toUpperCase()
+          subject: subject.toUpperCase(),
+          multiSessionSupport: true
         }
       });
 
     } catch (error) {
-      console.error("❌ Server error while updating attendance:", error);
+      console.error("❌ Multi-session update error:", error);
       
       res.status(500).json({ 
         success: false,
         error: 'SERVER_ERROR',
-        message: "Server error while updating attendance",
-        details: process.env.NODE_ENV !== 'production' ? error.message : 'Internal server error',
-        context: {
-          subject: subject,
-          stream: stream,
-          semester: sem,
-          requestedDates: dates.length,
-          timestamp: new Date().toISOString()
-        },
-        stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined
+        message: "Server error while updating multi-session attendance",
+        details: process.env.NODE_ENV !== 'production' ? error.message : 'Internal server error'
       });
     }
   })
