@@ -1312,8 +1312,22 @@ function showSubmittedConfirmation(subject, date, presentStudents, totalStudents
 
   // Event listeners
   okBtn.onclick = () => {
+    // Check if we should redirect back to myclass.html
+    const redirectPage = sessionStorage.getItem('redirectAfterAttendance');
+    
     overlay.style.animation = 'fadeOut 0.3s ease';
-    setTimeout(() => overlay.remove(), 300);
+    setTimeout(() => {
+      overlay.remove();
+      
+      // If we came from myclass.html, redirect back there
+      if (redirectPage === 'myclass.html') {
+        sessionStorage.removeItem('redirectAfterAttendance'); // Clean up
+        console.log('Redirecting back to class queue...');
+        setTimeout(() => {
+          window.location.href = 'myclass.html';
+        }, 1000);
+      }
+    }, 300);
   };
   
   overlay.onclick = (e) => {
@@ -1326,8 +1340,22 @@ function showSubmittedConfirmation(subject, date, presentStudents, totalStudents
   // Auto close after 4 seconds
   setTimeout(() => {
     if (overlay.parentElement) {
+      // Check if we should redirect back to myclass.html
+      const redirectPage = sessionStorage.getItem('redirectAfterAttendance');
+      
       overlay.style.animation = 'fadeOut 0.3s ease';
-      setTimeout(() => overlay.remove(), 300);
+      setTimeout(() => {
+        overlay.remove();
+        
+        // If we came from myclass.html, redirect back there
+        if (redirectPage === 'myclass.html') {
+          sessionStorage.removeItem('redirectAfterAttendance'); // Clean up
+          console.log('Redirecting back to class queue...');
+          setTimeout(() => {
+            window.location.href = 'myclass.html';
+          }, 1000);
+        }
+      }, 300);
     }
   }, 4000);
 }

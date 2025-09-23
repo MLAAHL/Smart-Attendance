@@ -3619,6 +3619,9 @@ async function takeAttendance(itemId) {
     // Store class info in sessionStorage for index.html to pick up
     sessionStorage.setItem('selectedClass', JSON.stringify(classInfo));
     
+    // Store redirect information so index.html knows to come back here
+    sessionStorage.setItem('redirectAfterAttendance', 'myclass.html');
+    
     // Use center blue notification
     showNotification('Redirecting...', 'success');
     
