@@ -1214,59 +1214,86 @@
 
     // Enhanced streams configuration based on your structure - LUXE NOIR Theme
     const streams = [
-      {
-        name: "BCA",
-        icon: '<i class="fas fa-laptop-code" style="color: #060D0C;"></i>',
-        color: "bg-gray-100",
-        textColor: "text-gray-800",
-        borderColor: "border-gray-500",
-        luxeColor: "#060D0C"
-      },
-      {
-        name: "BBA",
-        icon: '<i class="fas fa-chart-line" style="color: #2A3B36;"></i>',
-        color: "bg-gray-100",
-        textColor: "text-gray-800",
-        borderColor: "border-gray-500",
-        luxeColor: "#2A3B36"
-      },
-      {
-        name: "BCom",
-        displayName: "BCom",
-        icon: '<i class="fas fa-money-bill-wave" style="color: #060D0C;"></i>',
-        color: "bg-gray-100",
-        textColor: "text-gray-800",
-        borderColor: "border-gray-500",
-        luxeColor: "#060D0C"
-      },
-      {
-        name: "BCom Section B",
-        displayName: "BCom B",
-        icon: '<i class="fas fa-money-bill-wave" style="color: #2A3B36;"></i>',
-        color: "bg-gray-100",
-        textColor: "text-gray-800",
-        borderColor: "border-gray-500",
-        limitedSemesters: [5, 6],
-        luxeColor: "#2A3B36"
-      },
-      {
-        name: "BCom-BDA",
-        displayName: "BDA",
-        icon: '<i class="fas fa-chart-bar" style="color: #060D0C;"></i>',
-        color: "bg-gray-100",
-        textColor: "text-gray-800",
-        borderColor: "border-gray-500",
-        luxeColor: "#060D0C"
-      },
-      {
-        name: "BCom A and F",
-        icon: '<i class="fas fa-calculator" style="color: #2A3B36;"></i>',
-        color: "bg-gray-100",
-        textColor: "text-gray-800",
-        borderColor: "border-gray-500",
-        luxeColor: "#2A3B36"
-      },
-    ];
+    {
+      name: "BCA",
+      icon: '<i class="fas fa-laptop-code" style="color: #060D0C;"></i>',
+      color: "bg-gray-100",
+      textColor: "text-gray-800",
+      borderColor: "border-gray-500",
+      luxeColor: "#060D0C"
+    },
+    {
+      name: "BBA",
+      icon: '<i class="fas fa-chart-line" style="color: #2A3B36;"></i>',
+      color: "bg-gray-100",
+      textColor: "text-gray-800",
+      borderColor: "border-gray-500",
+      luxeColor: "#2A3B36"
+    },
+    {
+      name: "BCOM",  // ✅ FIXED: Changed from "BCom" to "BCOM" for consistency
+      displayName: "BCom",
+      icon: '<i class="fas fa-money-bill-wave" style="color: #060D0C;"></i>',
+      color: "bg-gray-100",
+      textColor: "text-gray-800",
+      borderColor: "border-gray-500",
+      luxeColor: "#060D0C"
+    },
+    
+    // ✅ UPDATED: Section B with all semesters (removed limitedSemesters)
+    {
+      name: "BCOM SECTION B",  // ✅ FIXED: Proper naming for backend compatibility
+      displayName: "BCom B",
+      icon: '<i class="fas fa-users" style="color: #1E40AF;"></i>',  // ✅ UPDATED: Better section icon
+      color: "bg-blue-50",     // ✅ UPDATED: Distinct blue theme
+      textColor: "text-blue-800",
+      borderColor: "border-blue-400",
+      // ✅ REMOVED: limitedSemesters - now supports all semesters 1-8
+      luxeColor: "#1E40AF",
+      sectionInfo: {
+        section: "B",
+        collectionPrefix: "bcomsectionb",  // For backend: bcomsectionb_sem5_subjects
+        description: "Section B - All Semesters"
+      }
+    },
+    
+    // ✅ NEW: Section C addition
+    {
+      name: "BCOM SECTION C",  // ✅ NEW: Section C support
+      displayName: "BCom C",
+      icon: '<i class="fas fa-user-graduate" style="color: #7C3AED;"></i>',  // ✅ NEW: Purple graduate icon
+      color: "bg-purple-50",   // ✅ NEW: Distinct purple theme
+      textColor: "text-purple-800",
+      borderColor: "border-purple-400",
+      // ✅ NEW: Full semester support (1-8)
+      luxeColor: "#7C3AED",
+      sectionInfo: {
+        section: "C", 
+        collectionPrefix: "bcomsectionc",  // For backend: bcomsectionc_sem5_subjects
+        description: "Section C - All Semesters"
+      }
+    },
+    
+    {
+      name: "BCom-BDA",
+      displayName: "BDA",
+      icon: '<i class="fas fa-chart-bar" style="color: #060D0C;"></i>',
+      color: "bg-gray-100",
+      textColor: "text-gray-800",
+      borderColor: "border-gray-500",
+      luxeColor: "#060D0C"
+    },
+    {
+      name: "BCom A and F",
+      displayName: "A & F",  // ✅ IMPROVED: Shorter display name
+      icon: '<i class="fas fa-calculator" style="color: #2A3B36;"></i>',
+      color: "bg-gray-100",
+      textColor: "text-gray-800",
+      borderColor: "border-gray-500",
+      luxeColor: "#2A3B36"
+    }
+  ];
+  
 
     // Global variables
     let attendanceQueue = [];
@@ -1614,143 +1641,432 @@
       }
     }
 
-    // Select stream function
-    function selectStream(streamName) {
-      if (!streamName) {
-        // Reset if no stream selected
-        selectedStreamData = null;
-        elements.selectedStream.value = '';
-        elements.semesterSelect.innerHTML = '<option value="">Select stream first</option>';
-        elements.subjectSelect.innerHTML = '<option value="">Select stream first</option>';
-        elements.subjectSelect.disabled = true;
-        elements.addBtn.disabled = true;
-        return;
-      }
+    // ✅ FIXED: Select stream function with enhanced validation
+function selectStream(streamName) {
+  console.log(`🎯 Selecting stream: ${streamName}`);
+  
+  if (!streamName) {
+    // Reset if no stream selected
+    selectedStreamData = null;
+    elements.selectedStream.value = '';
+    elements.semesterSelect.innerHTML = '<option value="">Select stream first</option>';
+    elements.subjectSelect.innerHTML = '<option value="">Select stream first</option>';
+    elements.subjectSelect.disabled = true;
+    elements.addBtn.disabled = true;
+    return;
+  }
 
-      // Find selected stream data
-      const streamData = streams.find(s => s.name === streamName);
-      
-      // Update selected stream
-      selectedStreamData = streamData;
-      elements.selectedStream.value = streamName;
-      
-      // Update semesters based on selection
-      updateSemesters();
-      
-      // Reset subject selection
-      elements.subjectSelect.innerHTML = '<option value="">Select semester first</option>';
-      elements.subjectSelect.disabled = true;
-      elements.addBtn.disabled = true;
-    }
+  // ✅ ENHANCED: Find selected stream data with validation
+  const streamData = streams.find(s => s.name === streamName);
+  
+  if (!streamData) {
+    console.error(`❌ Stream not found: ${streamName}`);
+    showNotification(`Stream "${streamName}" not found`, 'error');
+    return;
+  }
+  
+  // Update selected stream
+  selectedStreamData = streamData;
+  elements.selectedStream.value = streamName;
+  
+  console.log(`✅ Stream selected:`, streamData);
+  
+  // Update semesters based on selection
+  updateSemesters();
+  
+  // Reset subject selection
+  elements.subjectSelect.innerHTML = '<option value="">Select semester first</option>';
+  elements.subjectSelect.disabled = true;
+  elements.addBtn.disabled = true;
+  
+  // Show success message
+  showNotification(`Selected: ${streamData.displayName || streamName}`, 'success');
+}
 
-    // Update semester options based on stream selection
-    function updateSemesters() {
-      const semesterSelect = elements.semesterSelect;
+// ✅ FIXED: Update semester options with proper validation
+function updateSemesters() {
+  console.log('📚 Updating semesters for:', selectedStreamData);
+  
+  const semesterSelect = elements.semesterSelect;
+  
+  if (!semesterSelect) {
+    console.error('❌ Semester select element not found');
+    return;
+  }
+  
+  // Clear existing options
+  semesterSelect.innerHTML = '<option value="">Select semester</option>';
+  
+  if (!selectedStreamData) {
+    console.warn('⚠️ No stream data selected');
+    return;
+  }
+  
+  try {
+    if (selectedStreamData.limitedSemesters && selectedStreamData.limitedSemesters.length > 0) {
+      // ✅ LIMITED SEMESTERS: Add only specified semesters
+      console.log(`📋 Adding limited semesters:`, selectedStreamData.limitedSemesters);
       
-      // Clear existing options
-      semesterSelect.innerHTML = '<option value="">Select semester</option>';
-      
-      if (selectedStreamData && selectedStreamData.limitedSemesters) {
-        // Add only limited semesters
-        selectedStreamData.limitedSemesters.forEach(sem => {
-          const option = document.createElement('option');
-          option.value = sem;
-          option.textContent = `Semester ${sem}`;
-          semesterSelect.appendChild(option);
-        });
-      } else {
-        // Add all semesters
-        for (let i = 1; i <= 6; i++) {
-          const option = document.createElement('option');
-          option.value = i;
-          option.textContent = `Semester ${i}`;
-        }
-      }
-    }
-
-    // Reset form function
-    function resetForm() {
-      // Reset stream selection
-      if (elements.streamContainer) {
-        elements.streamContainer.value = '';
-      }
-      
-      // Reset other form elements
-      if (elements.selectedStream) {
-        elements.selectedStream.value = '';
-      }
-      
-      if (elements.semesterSelect) {
-        elements.semesterSelect.innerHTML = '<option value="">Select stream first</option>';
-      }
-      
-      if (elements.subjectSelect) {
-        elements.subjectSelect.innerHTML = '<option value="">Select stream first</option>';
-        elements.subjectSelect.disabled = true;
-      }
-      
-      if (elements.addBtn) {
-        elements.addBtn.disabled = true;
-      }
-      
-      // Reset global variables
-      selectedStreamData = null;
-    }
-
-    function checkNewDay() {
-      const today = new Date().toDateString();
-      const lastClear = localStorage.getItem('lastClearDate');
-      
-      if (lastClear !== today) {
-        localStorage.setItem('lastClearDate', today);
-      }
-    }
-
-    // ============================================================================
-    // SECTION MANAGEMENT
-    // ============================================================================
-    
-    function showSection(sectionId) {
-      // Hide all sections
-      document.querySelectorAll('.section-content').forEach(section => {
-        section.classList.add('hidden');
+      selectedStreamData.limitedSemesters.forEach(sem => {
+        const option = document.createElement('option');
+        option.value = sem;
+        option.textContent = `Semester ${sem}`;
+        semesterSelect.appendChild(option);
       });
       
-      // Show selected section
-      document.getElementById(sectionId).classList.remove('hidden');
-      currentSection = sectionId;
+      // Show limitation info
+      showNotification(`${selectedStreamData.displayName || selectedStreamData.name} - Limited to semesters: ${selectedStreamData.limitedSemesters.join(', ')}`, 'info');
       
-      // Reset all tab buttons to inactive state
-      document.querySelectorAll('#todayTab, #subjectsTab, #completedTab').forEach(tab => {
+    } else {
+      // ✅ ALL SEMESTERS: Add full range (1-8, but display up to 6 for most cases)
+      const maxSemesters = getMaxSemestersForStream(selectedStreamData.name);
+      console.log(`📋 Adding all semesters (1-${maxSemesters})`);
+      
+      for (let i = 1; i <= maxSemesters; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = `Semester ${i}`;
+        semesterSelect.appendChild(option);
+      }
+      
+      // Show full support info
+      showNotification(`${selectedStreamData.displayName || selectedStreamData.name} - All semesters available`, 'success');
+    }
+    
+    // Enable semester selection
+    semesterSelect.disabled = false;
+    
+  } catch (error) {
+    console.error('❌ Error updating semesters:', error);
+    showNotification('Error updating semesters', 'error');
+    
+    // Fallback: Add default semesters
+    for (let i = 1; i <= 6; i++) {
+      const option = document.createElement('option');
+      option.value = i;
+      option.textContent = `Semester ${i}`;
+      semesterSelect.appendChild(option);
+    }
+  }
+}
+
+// ✅ NEW: Get maximum semesters for a stream
+function getMaxSemestersForStream(streamName) {
+  // Define max semesters per stream
+  const maxSemestersByStream = {
+    'BCA': 6,
+    'BBA': 6,
+    'BCOM': 6,
+    'BCom': 6,
+
+    'BCom-BDA': 6,
+    'BCom A and F': 6,
+    'BDA': 6
+  };
+  
+  return maxSemestersByStream[streamName] || 6; // Default to 6
+}
+
+// ✅ ENHANCED: Reset form with proper cleanup
+function resetForm() {
+  console.log('🔄 Resetting form...');
+  
+  try {
+    // Reset stream selection
+    if (elements.streamContainer) {
+      // Clear any active stream selections
+      const activeCards = elements.streamContainer.querySelectorAll('.stream-card.active');
+      activeCards.forEach(card => card.classList.remove('active'));
+    }
+    
+    // Reset form elements with validation
+    if (elements.selectedStream) {
+      elements.selectedStream.value = '';
+    }
+    
+    if (elements.semesterSelect) {
+      elements.semesterSelect.innerHTML = '<option value="">Select stream first</option>';
+      elements.semesterSelect.disabled = false; // Keep enabled for better UX
+    }
+    
+    if (elements.subjectSelect) {
+      elements.subjectSelect.innerHTML = '<option value="">Select stream first</option>';
+      elements.subjectSelect.disabled = true;
+    }
+    
+    if (elements.addBtn) {
+      elements.addBtn.disabled = true;
+    }
+    
+    // Reset global variables
+    selectedStreamData = null;
+    
+    console.log('✅ Form reset completed');
+    showNotification('Form reset', 'info');
+    
+  } catch (error) {
+    console.error('❌ Error resetting form:', error);
+    showNotification('Error resetting form', 'error');
+  }
+}
+
+// ✅ ENHANCED: Check new day with better date handling
+function checkNewDay() {
+  try {
+    const today = new Date().toDateString();
+    const lastClear = localStorage.getItem('lastClearDate');
+    
+    console.log(`📅 Checking new day: ${today} vs ${lastClear}`);
+    
+    if (lastClear !== today) {
+      console.log('🆕 New day detected, updating localStorage');
+      localStorage.setItem('lastClearDate', today);
+      
+      // Optional: Clear any day-specific data
+      clearDaySpecificData();
+      
+      showNotification('New day started!', 'info');
+    }
+  } catch (error) {
+    console.error('❌ Error checking new day:', error);
+  }
+}
+
+// ✅ NEW: Clear day-specific data
+function clearDaySpecificData() {
+  try {
+    // Clear any attendance queues or temporary data
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.includes('attendance_') || key.includes('temp_')) {
+        keysToRemove.push(key);
+      }
+    }
+    
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    console.log(`🧹 Cleared ${keysToRemove.length} day-specific items`);
+  } catch (error) {
+    console.error('❌ Error clearing day-specific data:', error);
+  }
+}
+
+// ✅ FIXED: Section management with enhanced error handling
+function showSection(sectionId) {
+  console.log(`📋 Showing section: ${sectionId}`);
+  
+  try {
+    if (!sectionId) {
+      console.error('❌ No section ID provided');
+      return;
+    }
+    
+    // ✅ VALIDATION: Check if section exists
+    const targetSection = document.getElementById(sectionId);
+    if (!targetSection) {
+      console.error(`❌ Section not found: ${sectionId}`);
+      showNotification(`Section "${sectionId}" not found`, 'error');
+      return;
+    }
+    
+    // Hide all sections
+    const allSections = document.querySelectorAll('.section-content');
+    allSections.forEach(section => {
+      section.classList.add('hidden');
+    });
+    
+    // Show selected section
+    targetSection.classList.remove('hidden');
+    currentSection = sectionId;
+    
+    console.log(`✅ Section shown: ${sectionId}`);
+    
+    // ✅ ENHANCED: Reset all tab buttons with validation
+    const tabButtons = document.querySelectorAll('#todayTab, #subjectsTab, #completedTab');
+    
+    tabButtons.forEach(tab => {
+      if (tab) {
         tab.style.background = 'transparent';
         tab.style.color = '#49769F';
         tab.style.boxShadow = 'none';
-      });
-      
-      // Highlight active tab with blue gradient
-      const activeTabMap = {
-        'todaySection': 'todayTab',
-        'subjectsSection': 'subjectsTab', 
-        'completedSection': 'completedTab'
-      };
-      
-      const activeTab = document.getElementById(activeTabMap[sectionId]);
-      if (activeTab) {
-        activeTab.style.background = 'linear-gradient(135deg, #0A4174, #49769F)';
-        activeTab.style.color = 'white';
-        activeTab.style.boxShadow = '0 2px 8px rgba(10, 65, 116, 0.3)';
       }
-      
-      // Update displays based on section
-      if (sectionId === 'todaySection') {
-        updateQueueDisplay();
-      } else if (sectionId === 'subjectsSection') {
-        updateSubjectsDisplay();
-      } else if (sectionId === 'completedSection') {
-        updateCompletedDisplay();
-      }
+    });
+    
+    // ✅ ENHANCED: Highlight active tab with proper mapping
+    const activeTabMap = {
+      'todaySection': 'todayTab',
+      'subjectsSection': 'subjectsTab', 
+      'completedSection': 'completedTab'
+    };
+    
+    const activeTabId = activeTabMap[sectionId];
+    const activeTab = document.getElementById(activeTabId);
+    
+    if (activeTab) {
+      activeTab.style.background = 'linear-gradient(135deg, #0A4174, #49769F)';
+      activeTab.style.color = 'white';
+      activeTab.style.boxShadow = '0 2px 8px rgba(10, 65, 116, 0.3)';
+      console.log(`✅ Active tab highlighted: ${activeTabId}`);
+    } else {
+      console.warn(`⚠️ Active tab not found: ${activeTabId}`);
     }
     
+    // ✅ ENHANCED: Update displays with error handling
+    try {
+      switch (sectionId) {
+        case 'todaySection':
+          if (typeof updateQueueDisplay === 'function') {
+            updateQueueDisplay();
+          } else {
+            console.warn('⚠️ updateQueueDisplay function not found');
+          }
+          break;
+          
+        case 'subjectsSection':
+          if (typeof updateSubjectsDisplay === 'function') {
+            updateSubjectsDisplay();
+          } else {
+            console.warn('⚠️ updateSubjectsDisplay function not found');
+          }
+          break;
+          
+        case 'completedSection':
+          if (typeof updateCompletedDisplay === 'function') {
+            updateCompletedDisplay();
+          } else {
+            console.warn('⚠️ updateCompletedDisplay function not found');
+          }
+          break;
+          
+        default:
+          console.log(`📋 Section "${sectionId}" shown without specific update function`);
+      }
+    } catch (displayError) {
+      console.error(`❌ Error updating display for ${sectionId}:`, displayError);
+      showNotification(`Error updating ${sectionId} display`, 'error');
+    }
+    
+  } catch (error) {
+    console.error('❌ Error showing section:', error);
+    showNotification('Error switching sections', 'error');
+  }
+}
+
+// ✅ NEW: Notification system for better user feedback
+function showNotification(message, type = 'info') {
+  console.log(`📢 Notification (${type}): ${message}`);
+  
+  // Create notification element if it doesn't exist
+  let notification = document.getElementById('notification');
+  if (!notification) {
+    notification = document.createElement('div');
+    notification.id = 'notification';
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      z-index: 9999;
+      transition: all 0.3s ease;
+      transform: translateX(100%);
+    `;
+    document.body.appendChild(notification);
+  }
+  
+  // Set notification style based on type
+  const styles = {
+    success: 'background: #4CAF50;',
+    error: 'background: #E63946;',
+    warning: 'background: #FF9800;',
+    info: 'background: #2196F3;'
+  };
+  
+  notification.style.background = styles[type] || styles.info;
+  notification.textContent = message;
+  
+  // Show notification
+  notification.style.transform = 'translateX(0)';
+  
+  // Auto-hide after 3 seconds
+  setTimeout(() => {
+    notification.style.transform = 'translateX(100%)';
+  }, 3000);
+}
+
+// ✅ NEW: Validate stream and semester combination
+function validateStreamSemester(streamName, semester) {
+  const streamData = streams.find(s => s.name === streamName);
+  if (!streamData) {
+    return { valid: false, error: `Stream "${streamName}" not found` };
+  }
+  
+  if (streamData.limitedSemesters) {
+    if (!streamData.limitedSemesters.includes(parseInt(semester))) {
+      return { 
+        valid: false, 
+        error: `${streamData.displayName || streamName} only supports semesters: ${streamData.limitedSemesters.join(', ')}` 
+      };
+    }
+  }
+  
+  const sem = parseInt(semester);
+  const maxSem = getMaxSemestersForStream(streamName);
+  if (sem < 1 || sem > maxSem) {
+    return { 
+      valid: false, 
+      error: `Semester must be between 1 and ${maxSem} for ${streamData.displayName || streamName}` 
+    };
+  }
+  
+  return { valid: true };
+}
+
+// ✅ NEW: Initialize form elements with error handling
+function initializeFormElements() {
+  try {
+    // Ensure all required elements exist
+    const requiredElements = ['selectedStream', 'semesterSelect', 'subjectSelect', 'addBtn'];
+    
+    requiredElements.forEach(elementId => {
+      if (!elements[elementId]) {
+        console.warn(`⚠️ Element not found: ${elementId}`);
+      }
+    });
+    
+    // Set up event listeners
+    if (elements.semesterSelect) {
+      elements.semesterSelect.addEventListener('change', function() {
+        const streamName = elements.selectedStream?.value;
+        const semester = this.value;
+        
+        if (streamName && semester) {
+          const validation = validateStreamSemester(streamName, semester);
+          if (!validation.valid) {
+            showNotification(validation.error, 'error');
+            this.value = '';
+            return;
+          }
+        }
+      });
+    }
+    
+    console.log('✅ Form elements initialized');
+    
+  } catch (error) {
+    console.error('❌ Error initializing form elements:', error);
+  }
+}
+
+// ✅ CALL INITIALIZATION: Run when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeFormElements);
+} else {
+  initializeFormElements();
+}
+
 
     // Page navigation
     function showHomePage() {
