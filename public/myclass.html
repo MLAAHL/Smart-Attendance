@@ -683,6 +683,12 @@
           <span class="font-medium text-sm">Settings</span>
         </a>
       </li>
+      <li>
+        <button onclick="openWhatsAppContact()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 hover:shadow-md" style="color: #001D39;" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.1)'" onmouseout="this.style.backgroundColor='transparent'">
+          <i class="fab fa-whatsapp text-sm w-5" style="color: #25D366;"></i>
+          <span class="font-medium text-sm">Contact Support</span>
+        </button>
+      </li>
     </ul>
     
     <!-- Clean Logout Button -->
@@ -4058,6 +4064,44 @@ if (!document.querySelector('#centerNotificationStyles')) {
       
       console.log('✅ All menu event handlers setup completed');
     }
+
+    function openWhatsAppContact() {
+      const whatsappNumber = '917483729869'; // Replace with your number
+      
+      // ✅ Shorter personalized message
+      const message = encodeURIComponent(`Hi Skanda! 👋
+    
+    I need help with the Smart Attendance System. 
+    
+    Please let me know:
+    • What problem are you facing?
+    • Can you send a screenshot of the issue?
+    
+    Thanks for your support! 🙏`);
+      
+      const whatsappURL = `https://wa.me/${whatsappNumber}?text=${message}`;
+      
+      try {
+        if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+          window.location.href = `whatsapp://send?phone=${whatsappNumber}&text=${message}`;
+          setTimeout(() => window.open(whatsappURL, '_blank'), 2000);
+        } else {
+          window.open(whatsappURL, '_blank');
+        }
+        
+        // Close mobile menu
+        const mobileMenu = document.getElementById('mobileMenu');
+        if (mobileMenu) {
+          mobileMenu.classList.add('-translate-x-full');
+          setTimeout(() => mobileMenu.classList.add('hidden'), 300);
+        }
+        
+      } catch (error) {
+        console.error('❌ WhatsApp error:', error);
+        alert(`Contact Skanda: ${whatsappNumber.replace(/^91/, '+91 ')}\n\nMessage: Hi Skanda! I need help with the Smart Attendance System. Please let me know what problem you're facing and send screenshots if possible.`);
+      }
+    }
+    
   </script>
 </body>
 </html>
