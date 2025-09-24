@@ -513,10 +513,10 @@ const STREAM_MAPPINGS = {
   "BCOMAF": "bcom_a_and_f",
   
   // BDA STREAMS
-  "BCom-BDA": "bcom_bda",
-  "BCOM-BDA": "bcom_bda",
-  "BCom BDA": "bcom_bda",
-  "BCOM BDA": "bcom_bda",
+  "BCom-BDA": "bcom-bda",
+  "BCOM-BDA": "bcom-bda",
+  "BCom BDA": "bcom-bda",
+  "BCOM BDA": "bcom-bda",
   "BDA": "bda"
 };
 
