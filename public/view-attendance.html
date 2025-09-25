@@ -455,6 +455,10 @@
           <i class="fas fa-times mr-2"></i>Cancel
         </button>
         
+        <button id="deleteAttendanceBtn" class="btn btn-danger px-4 py-2 hidden">
+          <i class="fas fa-trash mr-2"></i>Delete Attendance
+        </button>
+        
         <button id="exportExcelBtn" onclick="exportToExcel()" class="btn btn-primary px-4 py-2 hidden">
           <i class="fas fa-file-excel mr-2"></i>Export
         </button>
@@ -519,6 +523,7 @@ const exportExcelBtn = document.getElementById('exportExcelBtn');
 const editAttendanceBtn = document.getElementById('editAttendanceBtn');
 const saveAttendanceBtn = document.getElementById('saveAttendanceBtn');
 const cancelEditBtn = document.getElementById('cancelEditBtn');
+const deleteAttendanceBtn = document.getElementById('deleteAttendanceBtn');
 
 // Date selector elements
 const fullRegisterBtn = document.getElementById('fullRegisterBtn') || document.querySelector('[data-view="full"]');
@@ -566,6 +571,7 @@ function setupEventListeners() {
     if (editAttendanceBtn) editAttendanceBtn.addEventListener('click', toggleEditMode);
     if (saveAttendanceBtn) saveAttendanceBtn.addEventListener('click', saveAttendanceChanges);
     if (cancelEditBtn) cancelEditBtn.addEventListener('click', cancelEditMode);
+    if (deleteAttendanceBtn) deleteAttendanceBtn.addEventListener('click', deleteAttendanceRecord);
     if (fullRegisterBtn) fullRegisterBtn.addEventListener('click', () => toggleViewMode(true));
     if (singleDateBtn) singleDateBtn.addEventListener('click', () => toggleViewMode(false));
     if (specificDateInput) specificDateInput.addEventListener('change', onDateSelect);
@@ -1016,7 +1022,7 @@ async function loadSubjects(stream, sem) {
 
 // ✅ HIDE REGISTER
 function hideRegister() {
-    const elementsToHide = [registerTable, exportExcelBtn, editAttendanceBtn, saveAttendanceBtn, cancelEditBtn];
+    const elementsToHide = [registerTable, exportExcelBtn, editAttendanceBtn, saveAttendanceBtn, cancelEditBtn, deleteAttendanceBtn];
     
     elementsToHide.forEach(element => {
         if (element) element.classList.add('hidden');
@@ -1129,6 +1135,11 @@ function toggleEditMode() {
         saveAttendanceBtn?.classList.remove('hidden');
         cancelEditBtn?.classList.remove('hidden');
         
+        // Show delete button only in single date mode
+        if (!isFullRegisterView) {
+            deleteAttendanceBtn?.classList.remove('hidden');
+        }
+        
         // Update button text to indicate edit mode
         if (saveAttendanceBtn) {
             saveAttendanceBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
@@ -1142,6 +1153,7 @@ function toggleEditMode() {
         editAttendanceBtn?.classList.remove('hidden');
         saveAttendanceBtn?.classList.add('hidden');
         cancelEditBtn?.classList.add('hidden');
+        deleteAttendanceBtn?.classList.add('hidden');
     }
     
     // Re-render table to show/hide checkboxes
@@ -1156,6 +1168,7 @@ function cancelEditMode() {
     editAttendanceBtn?.classList.remove('hidden');
     saveAttendanceBtn?.classList.add('hidden');
     cancelEditBtn?.classList.add('hidden');
+    deleteAttendanceBtn?.classList.add('hidden');
     
     // Restore original data
     currentAttendanceMap = JSON.parse(JSON.stringify(originalAttendanceMap));
@@ -1166,6 +1179,112 @@ function cancelEditMode() {
     
     showAlert('Edit Cancelled', 'All changes have been discarded', 'info');
 }
+
+// ✅ DELETE ATTENDANCE RECORD
+async function deleteAttendanceRecord() {
+    console.log('🗑️ Delete attendance record requested...');
+    
+    // Only allow delete in single date mode
+    if (isFullRegisterView) {
+        showAlert('Delete Not Allowed', 'Delete is only available in single date view mode.', 'warning');
+        return;
+    }
+    
+    // Get selected date
+    const selectedDate = document.getElementById('specificDateInput')?.value;
+    if (!selectedDate) {
+        showAlert('Date Required', 'Please select a date first.', 'warning');
+        return;
+    }
+    
+    // Confirm deletion
+    const confirmed = confirm(
+        `Delete Attendance Record\n\n` +
+        `Are you sure you want to delete the entire attendance record for:\n\n` +
+        `Stream: ${currentStream}\n` +
+        `Semester: ${currentSemester}\n` +
+        `Subject: ${currentSubject}\n` +
+        `Date: ${selectedDate}\n\n` +
+        `This action cannot be undone!`
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+        const response = await fetch(`/api/delete-attendance/${currentStream}/sem${currentSemester}/${currentSubject}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                date: selectedDate
+            })
+        });
+        
+        if (response.ok) {
+            // Exit edit mode immediately
+            isEditMode = false;
+            editAttendanceBtn?.classList.remove('hidden');
+            saveAttendanceBtn?.classList.add('hidden');
+            cancelEditBtn?.classList.add('hidden');
+            deleteAttendanceBtn?.classList.add('hidden');
+            
+            // Remove the deleted date from current data
+            if (currentAttendanceMap[selectedDate]) {
+                delete currentAttendanceMap[selectedDate];
+                delete originalAttendanceMap[selectedDate];
+            }
+            if (currentSessionsMap[selectedDate]) {
+                delete currentSessionsMap[selectedDate];
+                delete originalSessionsMap[selectedDate];
+            }
+            
+            // Remove from currentDates array
+            const dateIndex = currentDates.indexOf(selectedDate);
+            if (dateIndex > -1) {
+                currentDates.splice(dateIndex, 1);
+            }
+            
+            // Switch to full register view
+            isFullRegisterView = true;
+            toggleViewMode(true);
+            
+            // Check if there are any attendance records left
+            if (currentDates.length === 0) {
+                // No attendance records remain - show empty message
+                if (registerTable) {
+                    registerTable.innerHTML = `
+                        <div class="text-center py-12">
+                            <div class="text-gray-500 text-lg mb-4">
+                                <i class="fas fa-calendar-times text-4xl mb-4 block"></i>
+                                No attendance records found for this subject
+                            </div>
+                        </div>
+                    `;
+                    registerTable.classList.remove('hidden');
+                }
+                
+                // Hide action buttons except load register
+                exportExcelBtn?.classList.add('hidden');
+                editAttendanceBtn?.classList.add('hidden');
+            } else {
+                // Refresh the table to show remaining records
+                await renderAttendanceTable();
+                updateAttendanceStats();
+            }
+            
+            showAlert('Success', 'Attendance deleted successfully!', 'success');
+            
+        } else {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to delete attendance record');
+        }
+    } catch (error) {
+        console.error('❌ Error deleting attendance:', error);
+        showAlert('Delete Failed', `Failed to delete attendance record:\n\n${error.message}`, 'error');
+    }
+}
+
 // ✅ FIXED: Compact attendance stats with proper error handling
 function updateAttendanceStats() {
   console.log('📊 Updating attendance stats...');
@@ -2582,6 +2701,7 @@ console.log('✅ Save functionality loaded');
   editAttendanceBtn.addEventListener('click', toggleEditMode);
   saveAttendanceBtn.addEventListener('click', saveAttendanceChanges);
   cancelEditBtn.addEventListener('click', cancelEditMode);
+  deleteAttendanceBtn.addEventListener('click', deleteAttendanceRecord);
   exportExcelBtn.addEventListener('click', exportToExcel);
   
   // Date selector event listeners

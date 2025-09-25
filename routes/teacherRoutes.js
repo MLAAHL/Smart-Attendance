@@ -4228,5 +4228,70 @@ router.get("/teacher/:identifier/completed", asyncHandler(async (req, res) => {
   }
 }));
 
+// ✅ DELETE ATTENDANCE RECORD FOR SPECIFIC DATE
+router.delete("/delete-attendance/:stream/sem:sem/:subject", asyncHandler(async (req, res) => {
+  console.log('🗑️ Delete attendance request received');
+  
+  try {
+    const { stream, sem, subject } = req.params;
+    const { date } = req.body;
+    
+    console.log(`📋 Delete parameters: Stream=${stream}, Sem=${sem}, Subject=${subject}, Date=${date}`);
+    
+    // Validate parameters
+    if (!stream || !sem || !subject || !date) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required parameters: stream, semester, subject, and date"
+      });
+    }
+    
+    // Get the correct attendance model for this stream/semester/subject
+    const Attendance = getAttendanceModel(stream, sem, subject);
+    
+    // Parse date to ensure correct format
+    const targetDate = new Date(date);
+    targetDate.setHours(0, 0, 0, 0);
+    
+    const startOfDay = new Date(targetDate);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    console.log(`🗂️ Using model: ${Attendance.modelName}`);
+    console.log(`📅 Date range: ${startOfDay.toISOString()} to ${endOfDay.toISOString()}`);
+    
+    // Find and delete attendance records for the specific date
+    const deleteResult = await Attendance.deleteMany({
+      date: {
+        $gte: startOfDay,
+        $lte: endOfDay
+      }
+    });
+    
+    console.log(`✅ Deleted ${deleteResult.deletedCount} attendance records`);
+    
+    if (deleteResult.deletedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No attendance records found for the specified date"
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: `Successfully deleted ${deleteResult.deletedCount} attendance record(s) for ${date}`,
+      deletedCount: deleteResult.deletedCount
+    });
+    
+  } catch (error) {
+    console.error('❌ Error deleting attendance:', error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete attendance record",
+      error: error.message
+    });
+  }
+}));
+
 
 module.exports = router;
