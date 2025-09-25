@@ -1316,18 +1316,17 @@ router.post("/simple-promotion/:stream", asyncHandler(async (req, res) => {
       : "All students moved up one semester. Semester 1 is now empty for new admissions."
   });
 }));
-
-// ✅ FIXED: GET Students Route with Language Fields
+// ✅ UPDATED: GET Students Route with Elective Support Added
 router.get("/students/:stream/sem:sem", validateParams, asyncHandler(async (req, res) => {
   const { stream, sem } = req.params;
   
-  console.log(`👥 Loading students for: ${stream} Semester ${sem}`);
+  console.log(`Loading students for: ${stream} Semester ${sem}`);
   
   const Student = getStudentModel(stream, sem);
   const query = getActiveStudentQuery();
   
   const students = await Student.find(query)
-    .select('studentID name parentPhone stream semester migrationGeneration originalSemester languageSubject languageGroup')
+    .select('studentID name parentPhone stream semester migrationGeneration originalSemester languageSubject languageGroup electiveSubjects')
     .sort({ studentID: 1 });
   
   // ✅ Group students by language for better organization
@@ -1338,7 +1337,12 @@ router.get("/students/:stream/sem:sem", validateParams, asyncHandler(async (req,
     return acc;
   }, {});
   
-  console.log(`✅ Found ${students.length} students in collection: ${Student.collection.name}`);
+  // ✅ ADD: Group students by elective status
+  const studentsWithElectives = students.filter(s => s.electiveSubjects && s.electiveSubjects.length > 0);
+  const studentsWithoutElectives = students.filter(s => !s.electiveSubjects || s.electiveSubjects.length === 0);
+  
+  console.log(`Found ${students.length} students in collection: ${Student.collection.name}`);
+  console.log(`   With electives: ${studentsWithElectives.length}, Without electives: ${studentsWithoutElectives.length}`);
   
   res.json({
     success: true,
@@ -1347,6 +1351,13 @@ router.get("/students/:stream/sem:sem", validateParams, asyncHandler(async (req,
     semester: parseInt(sem),
     students: students,
     studentsByLanguage: studentsByLanguage,
+    // ✅ ADD: Elective breakdown
+    electiveBreakdown: {
+      totalStudents: students.length,
+      withElectives: studentsWithElectives.length,
+      withoutElectives: studentsWithoutElectives.length,
+      electivePercentage: Math.round((studentsWithElectives.length / students.length) * 100)
+    },
     languageBreakdown: Object.keys(studentsByLanguage).map(lang => ({
       language: lang,
       count: studentsByLanguage[lang].length,
@@ -1356,63 +1367,200 @@ router.get("/students/:stream/sem:sem", validateParams, asyncHandler(async (req,
   });
 }));
 
-// ✅ FIXED: GET Subjects Route with Language Fields
+// ✅ UPDATED: GET Subjects Route with Elective Support Added
 router.get("/subjects/:stream/sem:sem", validateParams, asyncHandler(async (req, res) => {
   const { stream, sem } = req.params;
   
-  console.log(`📚 Loading subjects for: ${stream} Semester ${sem}`);
+  console.log(`Loading subjects for: ${stream} Semester ${sem}`);
   
   const Subject = getSubjectModel(stream, sem);
   const query = { isActive: { $ne: false } };
   
   const subjects = await Subject.find(query)
-    .select('subjectName stream semester isActive subjectType isLanguageSubject languageType credits')
+    .select('_id subjectName stream semester isActive subjectType isLanguageSubject languageType credits')
     .sort({ subjectName: 1 });
   
-  // ✅ Separate core and language subjects
-  const coreSubjects = subjects.filter(s => !s.isLanguageSubject);
+  // ✅ UPDATED: Separate core, elective, and language subjects
+  const coreSubjects = subjects.filter(s => !s.isLanguageSubject && s.subjectType !== 'ELECTIVE');
+  const electiveSubjects = subjects.filter(s => !s.isLanguageSubject && s.subjectType === 'ELECTIVE');
   const languageSubjects = subjects.filter(s => s.isLanguageSubject);
   
-  console.log(`✅ Found ${subjects.length} subjects in collection: ${Subject.collection.name}`);
-  console.log(`   Core: ${coreSubjects.length}, Language: ${languageSubjects.length}`);
+  console.log(`Found ${subjects.length} subjects in collection: ${Subject.collection.name}`);
+  console.log(`   Core: ${coreSubjects.length}, Elective: ${electiveSubjects.length}, Language: ${languageSubjects.length}`);
   
   res.json({
     success: true,
     count: subjects.length,
     stream: stream,
     semester: parseInt(sem),
-    subjects: subjects,
+    subjects: subjects.map(s => ({
+      _id: s._id,
+      subjectName: s.subjectName,
+      subjectType: s.subjectType || 'CORE',
+      isLanguageSubject: s.isLanguageSubject || false,
+      languageType: s.languageType,
+      credits: s.credits
+    })),
     subjectsByType: {
       core: coreSubjects.map(s => ({
+        _id: s._id,
         name: s.subjectName,
-        type: s.subjectType,
+        type: s.subjectType || 'CORE',
         credits: s.credits,
         attendanceType: 'ALL_STUDENTS'
       })),
-      language: languageSubjects.map(s => ({
+      // ✅ ADD: Elective subjects
+      elective: electiveSubjects.map(s => ({
+        _id: s._id,
         name: s.subjectName,
         type: s.subjectType,
+        credits: s.credits,
+        attendanceType: 'ELECTIVE_FILTERED'
+      })),
+      language: languageSubjects.map(s => ({
+        _id: s._id,
+        name: s.subjectName,
+        type: s.subjectType || 'LANGUAGE',
         languageType: s.languageType,
         credits: s.credits,
         attendanceType: 'LANGUAGE_FILTERED'
       }))
     },
+    // ✅ ADD: Elective info
     attendanceInfo: {
       coreSubjects: "All students attend together",
+      electiveSubjects: "Only students enrolled in the elective attend",
       languageSubjects: "Students filtered by language choice"
+    },
+    // ✅ ADD: Subject counts
+    subjectCounts: {
+      total: subjects.length,
+      core: coreSubjects.length,
+      elective: electiveSubjects.length,
+      language: languageSubjects.length
     },
     collectionUsed: Subject.collection.name
   });
 }));
-// ✅ COMPLETE FIXED: POST Mark Attendance - All Issues Resolved
+
+// ✅ ADD: The subjects/:subjectId/students route for filtering
+router.get("/subjects/:subjectId/students", asyncHandler(async (req, res) => {
+  try {
+    const { subjectId } = req.params;
+    const mongoose = require('mongoose');
+
+    console.log(`Loading students for subject ID: ${subjectId}`);
+
+    // Find the subject in any collection
+    let subject = null;
+    let Student = null;
+    let foundIn = null;
+
+    // Try different stream/semester combinations
+    const attempts = [
+      { stream: 'BBA', sem: 1 }, { stream: 'BBA', sem: 2 }, { stream: 'BBA', sem: 3 }, 
+      { stream: 'BBA', sem: 4 }, { stream: 'BBA', sem: 5 }, { stream: 'BBA', sem: 6 },
+      { stream: 'BCA', sem: 1 }, { stream: 'BCA', sem: 2 }, { stream: 'BCA', sem: 3 },
+      { stream: 'BCA', sem: 4 }, { stream: 'BCA', sem: 5 }, { stream: 'BCA', sem: 6 }
+    ];
+
+    for (const attempt of attempts) {
+      try {
+        const Subject = getSubjectModel(attempt.stream, attempt.sem);
+        subject = await Subject.findById(subjectId);
+        
+        if (subject) {
+          Student = getStudentModel(attempt.stream, attempt.sem);
+          foundIn = attempt;
+          console.log(`Subject found: ${subject.subjectName} in ${attempt.stream} Sem ${attempt.sem}`);
+          break;
+        }
+      } catch (error) {
+        continue;
+      }
+    }
+
+    if (!subject || !Student) {
+      return res.status(404).json({ success: false, error: 'Subject not found' });
+    }
+
+    let students = [];
+    const query = getActiveStudentQuery();
+
+    // ✅ Filter based on subject type
+    if (subject.subjectType === 'ELECTIVE') {
+      // Only enrolled students
+      students = await Student.find({
+        ...query,
+        electiveSubjects: { $in: [new mongoose.Types.ObjectId(subjectId)] }
+      }).select('studentID name parentPhone electiveSubjects languageSubject')
+        .sort({ studentID: 1 });
+
+      console.log(`ELECTIVE: ${students.length} enrolled students`);
+
+    } else if (subject.isLanguageSubject) {
+      // Language filtered students
+      const languageQuery = {
+        ...query,
+        languageSubject: subject.languageType || subject.subjectName.toUpperCase()
+      };
+
+      students = await Student.find(languageQuery)
+        .select('studentID name parentPhone languageSubject electiveSubjects')
+        .sort({ studentID: 1 });
+
+      console.log(`LANGUAGE: ${students.length} ${subject.languageType} students`);
+
+    } else {
+      // All students for core subjects
+      students = await Student.find(query)
+        .select('studentID name parentPhone languageSubject electiveSubjects')
+        .sort({ studentID: 1 });
+
+      console.log(`CORE: ${students.length} students`);
+    }
+
+    const totalStudentsInClass = await Student.countDocuments(query);
+
+    res.json({
+      success: true,
+      subject: {
+        _id: subject._id,
+        subjectName: subject.subjectName,
+        subjectType: subject.subjectType || 'CORE',
+        isLanguageSubject: subject.isLanguageSubject || false,
+        languageType: subject.languageType,
+        credits: subject.credits
+      },
+      students: students.map(s => ({
+        _id: s._id,
+        name: s.name,
+        studentID: s.studentID,
+        parentPhone: s.parentPhone,
+        languageSubject: s.languageSubject,
+        electiveSubjects: s.electiveSubjects || []
+      })),
+      enrolledStudents: students.length,
+      totalStudentsInClass: totalStudentsInClass,
+      attendanceType: subject.isLanguageSubject ? 'LANGUAGE_FILTERED' : 
+                     subject.subjectType === 'ELECTIVE' ? 'ELECTIVE_FILTERED' : 'ALL_STUDENTS'
+    });
+
+  } catch (error) {
+    console.error('Error fetching students for subject:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+}));
+
+// ✅ FIXED: POST Mark Attendance - With Date Timezone Fix
 router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler(async (req, res) => {
   const { stream, sem, subject } = req.params;
   const { date, studentsPresent } = req.body;
 
-  console.log(`📝 Starting attendance for: ${stream} Sem ${sem} - ${subject} on ${date}`);
-  console.log(`📋 Students to mark present: ${studentsPresent ? studentsPresent.length : 0}`);
+  console.log(`Marking attendance for: ${stream} Sem ${sem} - ${subject} on ${date}`);
+  console.log(`Students to mark present: ${studentsPresent ? studentsPresent.length : 0}`);
 
-  // ✅ ENHANCED: Input validation
+  // ✅ Input validation
   if (!date || !subject) {
     return res.status(400).json({ 
       success: false,
@@ -1425,47 +1573,71 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
     return res.status(400).json({ 
       success: false,
       message: "studentsPresent must be an array (can be empty for all absent)",
-      received: typeof studentsPresent,
-      example: { studentsPresent: ["STUDENT001", "STUDENT002"] }
+      received: typeof studentsPresent
     });
   }
 
-  // ✅ ENHANCED: Date validation
-  const dateValidation = validateSingleDateSimple(date);
-  if (!dateValidation.isValid) {
+  // ✅ FIXED: Date validation and parsing for IST timezone
+  let attendanceDate;
+  try {
+    console.log(`Received date: ${date}`);
+    
+    // Parse date correctly for Indian timezone (avoid UTC conversion)
+    const dateParts = date.split('-');
+    if (dateParts.length !== 3) {
+      throw new Error('Invalid date format');
+    }
+    
+    // Create date in local timezone (IST)
+    attendanceDate = new Date(
+      parseInt(dateParts[0]), // year
+      parseInt(dateParts[1]) - 1, // month (0-indexed)
+      parseInt(dateParts[2]) // day
+    );
+    
+    console.log(`Parsed attendance date (local): ${attendanceDate.toString()}`);
+    console.log(`Attendance date ISO: ${attendanceDate.toISOString()}`);
+    console.log(`Attendance date (IST): ${attendanceDate.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`);
+    
+    // Validate the parsed date
+    if (isNaN(attendanceDate.getTime())) {
+      throw new Error('Invalid date');
+    }
+    
+  } catch (dateError) {
+    console.error('Date parsing error:', dateError);
     return res.status(400).json({
       success: false,
       message: "Invalid date format",
-      errors: dateValidation.errors,
-      expectedFormat: "YYYY-MM-DD"
+      receivedDate: date,
+      expectedFormat: "YYYY-MM-DD",
+      error: dateError.message
     });
   }
 
   try {
-    console.log(`🔧 Creating models for: ${stream} Sem ${sem}`);
+    console.log(`Creating models for: ${stream} Sem ${sem}`);
     
-    // ✅ FIXED: Create models with proper error handling
+    // ✅ Create models with error handling
     let Attendance, Student, Subject;
     
     try {
       Attendance = getAttendanceModel(stream, sem, subject);
       Student = getStudentModel(stream, sem);
       Subject = getSubjectModel(stream, sem);
-      console.log(`✅ Models created successfully`);
+      console.log(`Models created successfully`);
     } catch (modelError) {
-      console.error(`❌ Model creation error:`, modelError);
+      console.error(`Model creation error:`, modelError);
       return res.status(500).json({
         success: false,
         message: "Failed to create database models",
         error: modelError.message,
-        stream,
-        semester: sem,
-        subject
+        stream, semester: sem, subject
       });
     }
     
-    // ✅ ENHANCED: Get subject details with better error handling
-    console.log(`🔍 Looking for subject: ${subject.toUpperCase()}`);
+    // ✅ Get subject details
+    console.log(`Looking for subject: ${subject.toUpperCase()}`);
     
     const subjectDoc = await Subject.findOne({ 
       subjectName: subject.toUpperCase(),
@@ -1473,7 +1645,6 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
     });
     
     if (!subjectDoc) {
-      // ✅ DIAGNOSTIC: Show available subjects
       const availableSubjects = await Subject.find({ 
         isActive: { $ne: false } 
       }, 'subjectName subjectType isLanguageSubject languageType').limit(10);
@@ -1487,22 +1658,38 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
           type: s.subjectType,
           isLanguage: s.isLanguageSubject,
           languageType: s.languageType
-        })),
-        suggestion: "Check subject name spelling and ensure it exists in the subjects collection"
+        }))
       });
     }
     
-    console.log(`✅ Subject found: ${subjectDoc.subjectName} (${subjectDoc.subjectType})`);
+    console.log(`Subject found: ${subjectDoc.subjectName} (${subjectDoc.subjectType || 'CORE'})`);
     
-    // ✅ ENHANCED: Get relevant students with detailed logging
+    // ✅ Get relevant students based on subject type
     let relevantStudents;
     let attendanceScope;
     
-    console.log(`👥 Getting students...`);
+    console.log(`Getting students for subject type: ${subjectDoc.subjectType || 'CORE'}`);
     
-    if (subjectDoc.isLanguageSubject && subjectDoc.languageType) {
-      // Language Subject: Only get students who chose this language
-      console.log(`🔤 Language subject detected: ${subjectDoc.languageType}`);
+    if (subjectDoc.subjectType === 'ELECTIVE') {
+      // ✅ ELECTIVE SUBJECTS: Only get enrolled students
+      console.log(`Elective subject detected: ${subjectDoc.subjectName}`);
+      
+      relevantStudents = await Student.find({
+        ...getActiveStudentQuery(),
+        electiveSubjects: { $in: [subjectDoc._id] }
+      }).select("studentID name parentPhone electiveSubjects section").lean();
+      
+      attendanceScope = {
+        type: 'ELECTIVE_FILTERED',
+        elective: subjectDoc.subjectName,
+        note: `Only students enrolled in ${subjectDoc.subjectName} elective can attend`
+      };
+      
+      console.log(`Elective students found: ${relevantStudents.length} enrolled in ${subjectDoc.subjectName}`);
+      
+    } else if (subjectDoc.isLanguageSubject && subjectDoc.languageType) {
+      // ✅ LANGUAGE SUBJECTS: Only get students who chose this language
+      console.log(`Language subject detected: ${subjectDoc.languageType}`);
       
       relevantStudents = await Student.find({
         ...getActiveStudentQuery(),
@@ -1515,14 +1702,14 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
         note: `Only ${subjectDoc.languageType} students can attend this subject`
       };
       
-      console.log(`📚 Language students found: ${relevantStudents.length} for ${subjectDoc.languageType}`);
+      console.log(`Language students found: ${relevantStudents.length} for ${subjectDoc.languageType}`);
       
     } else {
-      // Core Subject: Get all students
-      console.log(`📖 Core subject detected`);
+      // ✅ CORE SUBJECTS: Get all students
+      console.log(`Core subject detected`);
       
       relevantStudents = await Student.find(getActiveStudentQuery())
-        .select("studentID name parentPhone languageSubject section")
+        .select("studentID name parentPhone languageSubject electiveSubjects section")
         .lean();
       
       attendanceScope = {
@@ -1531,119 +1718,144 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
         note: 'All active students can attend this subject'
       };
       
-      console.log(`👥 All students found: ${relevantStudents.length}`);
+      console.log(`All students found: ${relevantStudents.length}`);
     }
 
     const totalRelevantStudents = relevantStudents.length;
-    
-    console.log(`✅ Total relevant students: ${totalRelevantStudents}`);
+    console.log(`Total relevant students: ${totalRelevantStudents}`);
 
     if (totalRelevantStudents === 0) {
+      let errorMessage = `No active students found in ${stream} Semester ${sem}`;
+      let suggestion = "Check if students are enrolled and active in this stream/semester";
+      
+      if (subjectDoc.subjectType === 'ELECTIVE') {
+        errorMessage = `No students enrolled in ${subjectDoc.subjectName} elective`;
+        suggestion = "Ensure students have enrolled in this elective subject";
+      } else if (subjectDoc.isLanguageSubject) {
+        errorMessage = `No students found who chose ${subjectDoc.languageType} language`;
+        suggestion = "Ensure students have selected this language subject";
+      }
+      
       return res.status(404).json({ 
         success: false,
-        message: subjectDoc.isLanguageSubject ? 
-          `No students found who chose ${subjectDoc.languageType} language` :
-          `No active students found in ${stream} Semester ${sem}`,
+        message: errorMessage,
         attendanceScope,
-        suggestion: subjectDoc.isLanguageSubject ? 
-          "Ensure students have selected this language subject" :
-          "Check if students are enrolled and active in this stream/semester"
+        suggestion
       });
     }
 
-    // ✅ ENHANCED: Validate present students
+    // ✅ Validate present students
     const relevantStudentIDs = relevantStudents.map(s => s.studentID);
     const invalidStudents = studentsPresent.filter(id => !relevantStudentIDs.includes(id));
     
     if (invalidStudents.length > 0) {
-      console.warn(`⚠️ Invalid students detected: ${invalidStudents.join(', ')}`);
+      console.warn(`Invalid students detected: ${invalidStudents.join(', ')}`);
+      
+      let errorMessage = `Some students are not eligible for this subject`;
+      let hint = "Only enrolled and active students can be marked present";
+      
+      if (subjectDoc.subjectType === 'ELECTIVE') {
+        errorMessage = `Some students are not enrolled in ${subjectDoc.subjectName} elective`;
+        hint = `Only students enrolled in ${subjectDoc.subjectName} can attend this class`;
+      } else if (subjectDoc.isLanguageSubject) {
+        errorMessage = `Some students are not eligible for this language subject`;
+        hint = `Only ${subjectDoc.languageType} students can attend this subject`;
+      }
       
       return res.status(400).json({
         success: false,
-        message: `Some students are not eligible for this ${subjectDoc.isLanguageSubject ? 'language ' : ''}subject`,
+        message: errorMessage,
         invalidStudents,
-        validStudents: relevantStudentIDs.slice(0, 10), // Show first 10 valid students
+        validStudents: relevantStudentIDs.slice(0, 10),
         attendanceScope,
         totalValidStudents: relevantStudentIDs.length,
-        hint: subjectDoc.isLanguageSubject ? 
-          `Only ${subjectDoc.languageType} students can attend this subject` :
-          "Only enrolled and active students can be marked present"
+        hint
       });
     }
 
-    // ✅ FIXED: Create attendance record with proper error handling
+    // ✅ FIXED: Create attendance record with correct date
     const currentTime = new Date();
-    const attendanceDate = new Date(date);
     
-    console.log(`💾 Creating attendance record...`);
+    console.log(`Creating attendance record for date: ${attendanceDate.toDateString()}`);
     
     const attendanceData = {
-      date: attendanceDate,
+      date: attendanceDate, // ✅ Now uses correctly parsed local date
       subject: subject.toUpperCase(),
       stream: stream.toUpperCase(),
       semester: parseInt(sem),
       studentsPresent: studentsPresent,
       totalStudents: totalRelevantStudents,
       totalPossibleStudents: totalRelevantStudents,
+      // ✅ Elective support
+      isElectiveSubject: subjectDoc.subjectType === 'ELECTIVE' || false,
+      electiveSubjectId: subjectDoc.subjectType === 'ELECTIVE' ? subjectDoc._id : null,
       isLanguageSubject: subjectDoc.isLanguageSubject || false,
       languageType: subjectDoc.languageType || null,
       languageGroup: (subjectDoc.isLanguageSubject && subjectDoc.languageType) ? 
         `${stream.toUpperCase()}_SEM${sem}_${subjectDoc.languageType}` : null,
+      electiveGroup: (subjectDoc.subjectType === 'ELECTIVE') ?
+        `${stream.toUpperCase()}_SEM${sem}_${subjectDoc.subjectName}` : null,
       sessionTime: currentTime.toLocaleTimeString('en-IN', { 
         hour12: false,
         timeZone: 'Asia/Kolkata'
       }),
+      createdAt: currentTime, // ✅ Current IST time
       notes: `Attendance taken at ${currentTime.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`
     };
     
     let record;
     try {
-      // ✅ Create new attendance record
       record = new Attendance(attendanceData);
       await record.save();
-      console.log(`✅ Attendance record created with ID: ${record._id}`);
+      console.log(`Attendance record created with ID: ${record._id}`);
+      console.log(`Saved date: ${record.date.toString()}`);
       
     } catch (saveError) {
-      console.error(`❌ Error saving attendance:`, saveError);
+      console.error(`Error saving attendance:`, saveError);
       
-      // ✅ Handle specific MongoDB errors
       if (saveError.code === 11000) {
         return res.status(409).json({
           success: false,
           message: "Duplicate attendance session detected",
           error: "A session with this exact timestamp already exists",
-          solution: "Wait a moment and try again, or check existing sessions",
-          timestamp: currentTime.toISOString()
+          solution: "Wait a moment and try again, or check existing sessions"
         });
       }
       
       return res.status(500).json({
         success: false,
         message: "Failed to save attendance record",
-        error: saveError.message,
-        data: attendanceData
+        error: saveError.message
       });
     }
 
-    // ✅ ENHANCED: Calculate session statistics
+    // ✅ FIXED: Calculate session statistics with correct date range
     let sessionCount;
     try {
+      // Create date range for the specific day in local timezone
+      const startOfDay = new Date(attendanceDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date(attendanceDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      
       sessionCount = await Attendance.countDocuments({
         date: {
-          $gte: new Date(attendanceDate.getFullYear(), attendanceDate.getMonth(), attendanceDate.getDate()),
-          $lt: new Date(attendanceDate.getFullYear(), attendanceDate.getMonth(), attendanceDate.getDate() + 1)
+          $gte: startOfDay,
+          $lte: endOfDay
         },
         subject: subject.toUpperCase(),
         stream: stream.toUpperCase(),
         semester: parseInt(sem)
       });
-      console.log(`📊 Total sessions today: ${sessionCount}`);
+      
+      console.log(`Total sessions today (${attendanceDate.toDateString()}): ${sessionCount}`);
     } catch (countError) {
-      console.warn(`⚠️ Could not count sessions:`, countError.message);
-      sessionCount = 1; // Default fallback
+      console.warn(`Could not count sessions:`, countError.message);
+      sessionCount = 1;
     }
 
-    // ✅ ENHANCED: Calculate detailed attendance statistics
+    // ✅ Calculate attendance statistics
     const absentStudents = relevantStudents.filter(
       student => !studentsPresent.includes(student.studentID)
     );
@@ -1655,63 +1867,59 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
     const absentWithPhone = absentStudents.filter(s => s.parentPhone && s.parentPhone.trim() !== '').length;
     const absentWithoutPhone = absentStudents.filter(s => !s.parentPhone || s.parentPhone.trim() === '').length;
 
-    // ✅ LOG: Comprehensive attendance summary
-    console.log(`\n📊 ATTENDANCE SUMMARY:`);
-    console.log(`   📅 Date: ${date}`);
-    console.log(`   🏫 ${stream} Semester ${sem}`);
-    console.log(`   📚 Subject: ${subject.toUpperCase()}`);
-    console.log(`   ⏰ Session: ${record.sessionTime}`);
-    console.log(`   👥 Present: ${studentsPresent.length}/${totalRelevantStudents} (${record.attendancePercentage}%)`);
-    console.log(`   ❌ Absent: ${absentStudents.length} (${absentWithPhone} with phone)`);
-    console.log(`   🔢 Session #${sessionCount} today`);
-    console.log(`   🆔 Record ID: ${record._id}`);
+    // ✅ Log attendance summary
+    console.log(`\nATTENDANCE SUMMARY:`);
+    console.log(`   Date: ${attendanceDate.toDateString()} (${date})`);
+    console.log(`   ${stream} Semester ${sem}`);
+    console.log(`   Subject: ${subject.toUpperCase()} (${subjectDoc.subjectType || 'CORE'})`);
+    console.log(`   Session: ${record.sessionTime}`);
+    console.log(`   Present: ${studentsPresent.length}/${totalRelevantStudents} (${record.attendancePercentage}%)`);
+    console.log(`   Absent: ${absentStudents.length} (${absentWithPhone} with phone)`);
+    console.log(`   Record ID: ${record._id}`);
 
-    // ✅ ENHANCED: Success response with comprehensive data
+    // ✅ Success response
     res.status(201).json({ 
       success: true,
-      message: `✅ Attendance recorded successfully for ${stream} Sem ${sem} - ${subject}`,
+      message: `Attendance recorded successfully for ${stream} Sem ${sem} - ${subject}`,
       
-      // ✅ Core attendance data
       attendance: {
         _id: record._id,
         date: record.date,
+        dateString: attendanceDate.toDateString(),
+        inputDate: date,
         subject: record.subject,
         stream: record.stream,
         semester: record.semester,
         sessionTime: record.sessionTime,
-        sessionId: record.sessionId,
         studentsPresent: record.studentsPresent,
         totalStudents: record.totalStudents,
         attendancePercentage: record.attendancePercentage,
-        createdAt: record.createdAt,
+        isElectiveSubject: record.isElectiveSubject,
+        electiveSubjectId: record.electiveSubjectId,
         isLanguageSubject: record.isLanguageSubject,
         languageType: record.languageType,
-        languageGroup: record.languageGroup
+        createdAt: record.createdAt
       },
       
-      // ✅ Session information
       session: {
         sessionNumber: sessionCount,
         sessionTime: record.sessionTime,
         totalSessionsToday: sessionCount,
         uniqueId: record._id.toString(),
-        timestamp: currentTime.toISOString()
+        timezone: 'Asia/Kolkata'
       },
       
-      // ✅ Subject details
       subject: {
         name: subjectDoc.subjectName,
-        code: subjectDoc.subjectCode || null,
         type: subjectDoc.subjectType || 'CORE',
+        isElectiveSubject: subjectDoc.subjectType === 'ELECTIVE',
         isLanguageSubject: subjectDoc.isLanguageSubject || false,
         languageType: subjectDoc.languageType || null,
         credits: subjectDoc.credits || 4
       },
       
-      // ✅ Attendance scope and eligibility
       scope: attendanceScope,
       
-      // ✅ Detailed statistics
       statistics: {
         totalEligibleStudents: totalRelevantStudents,
         presentStudents: studentsPresent.length,
@@ -1721,36 +1929,28 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
         absentWithoutPhone: absentWithoutPhone
       },
       
-      // ✅ Student details for notifications/further processing
       students: {
         present: presentStudentDetails.map(s => ({
           studentID: s.studentID,
           name: s.name,
           section: s.section || null,
-          languageSubject: s.languageSubject || null
+          languageSubject: s.languageSubject || null,
+          hasElectives: s.electiveSubjects && s.electiveSubjects.length > 0
         })),
         absent: absentStudents.map(s => ({
           studentID: s.studentID,
           name: s.name,
           section: s.section || null,
           hasPhone: !!(s.parentPhone && s.parentPhone.trim() !== ''),
-          languageSubject: s.languageSubject || null
+          languageSubject: s.languageSubject || null,
+          hasElectives: s.electiveSubjects && s.electiveSubjects.length > 0
         }))
-      },
-      
-      // ✅ System information
-      system: {
-        multipleSessionsAllowed: true,
-        collectionName: Attendance.collection.name,
-        serverTime: currentTime.toISOString(),
-        timezone: 'Asia/Kolkata'
       }
     });
 
   } catch (error) {
-    console.error('❌ Attendance creation failed:', error);
+    console.error('Attendance creation failed:', error);
     
-    // ✅ ENHANCED: Detailed error response
     return res.status(500).json({
       success: false,
       message: "Internal server error while creating attendance",
@@ -1760,14 +1960,9 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
         name: error.name || 'Unknown'
       },
       request: {
-        stream,
-        semester: sem,
-        subject,
-        date,
+        stream, semester: sem, subject, date,
         studentsCount: studentsPresent ? studentsPresent.length : 0
-      },
-      timestamp: new Date().toISOString(),
-      suggestion: "Check server logs for detailed error information"
+      }
     });
   }
 }));
