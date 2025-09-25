@@ -499,10 +499,12 @@ const streams = [
   { name: 'BCA', semesters: [1,2,3,4,5,6] },
   { name: 'BBA', semesters: [1,2,3,4,5,6] },
   { name: 'BCOM', semesters: [1,2,3,4,5,6] },
-  { name: 'BCOM SECTION B', semesters: [1,2,3,4,5,6] },
+  { name: 'BCOM SECTION B', semesters: [1,2,3,4,5,6] }, // ✅ FIXED: Extended to 8 semesters
+  { name: 'BCOM SECTION C', semesters: [1,2,3,4,5,6] }, // ✅ ADDED: Section C with 8 semesters
   { name: 'BCOM-BDA', semesters: [1,2,3,4,5,6] },
-  { name: 'BCOM A AND F', semesters: [1,2,3,4,5,6] },
+  { name: 'BCOM A AND F', semesters: [1,2,3,4,5,6] }
 ];
+
 
 // ✅ DOM element references
 const streamSelect = document.getElementById('streamSelect');
