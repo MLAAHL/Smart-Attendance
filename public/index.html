@@ -959,134 +959,252 @@
 
       setupEventListeners();
     });
-
-    // ✅ LOAD STUDENTS FROM DATABASE
-    async function loadStudentsFromDatabase(classInfo) {
+// ✅ UPDATED: LOAD STUDENTS FROM DATABASE WITH FILTERING SUPPORT
+async function loadStudentsFromDatabase(classInfo) {
+  try {
+    showLoadingState();
+    console.log('Loading students for:', classInfo.subject);
+    
+    // Check if this subject needs special filtering (elective or language)
+    if (classInfo.subject && classInfo.subject !== 'All Subjects') {
       try {
-        showLoadingState();
+        const subjectsResponse = await fetch(`/api/subjects/${classInfo.stream}/sem${classInfo.semester}`);
+        const subjectsData = await subjectsResponse.json();
         
-        const response = await fetch(`/api/attendance-students/${classInfo.stream}/sem${classInfo.semester}/${encodeURIComponent(classInfo.subject)}`);
-        
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.students) {
-            displayStudents(data.students);
-            return;
+        if (subjectsData.success) {
+          const selectedSubject = subjectsData.subjects.find(s => 
+            s.subjectName === classInfo.subject
+          );
+          
+          // Check if it's elective or language subject
+          if (selectedSubject && 
+              (selectedSubject.subjectType === 'ELECTIVE' || selectedSubject.isLanguageSubject)) {
+            
+            console.log(`Using filtered endpoint for: ${selectedSubject.subjectName} (${selectedSubject.subjectType})`);
+            
+            const response = await fetch(`/api/subjects/${selectedSubject._id}/students`);
+            const data = await response.json();
+            
+            if (data.success && data.students) {
+              console.log(`Filtered students loaded: ${data.students.length}`);
+              displayStudents(data.students);
+              return;
+            }
           }
         }
-        
-        // Fallback
-        const fallbackResponse = await fetch(`/api/students/${classInfo.stream}/sem${classInfo.semester}`);
-        const fallbackData = await fallbackResponse.json();
-        displayStudents(fallbackData.students || []);
-        
       } catch (error) {
-        console.error('Error loading students:', error);
-        showErrorState('Failed to load students from database');
+        console.log('Could not use filtered endpoint, using fallback');
       }
     }
-
-    // ✅ LOAD ALL SUBJECTS (for dropdown mode)
-    async function loadAllSubjects() {
-      try {
-        const response = await fetch('/api/subjects/all');
-        if (!response.ok) throw new Error('Failed to fetch subjects');
-        
-        const data = await response.json();
-        const subjects = data.subjects || data || [];
-        
-        subjectSelect.innerHTML = '<option value="">Select Subject</option>';
-        subjects.forEach(subj => {
-          const option = document.createElement('option');
-          option.value = subj.name || subj.subjectName || subj;
-          option.textContent = subj.name || subj.subjectName || subj;
-          subjectSelect.appendChild(option);
-        });
-        
-      } catch (error) {
-        console.error('Error loading subjects:', error);
-        subjectSelect.innerHTML = '<option value="">❌ Failed to load subjects</option>';
-      }
-    }
-
-    // ✅ DISPLAY STUDENTS
-    function displayStudents(students) {
-      if (!students || students.length === 0) {
-        studentsList.innerHTML = `
-          <tr>
-            <td colspan="4" style="padding: 20px; text-align: center; color: #6b7280; border-right: none;">
-              <i class="fas fa-users-slash" style="color: #d1d5db; font-size: 2rem; display: block; margin-bottom: 8px;"></i>
-              No students found
-            </td>
-          </tr>
-        `;
-        updateCounts(0, 0);
-        saveToLocalStorage();
+    
+    // Regular endpoint for core subjects
+    const response = await fetch(`/api/attendance-students/${classInfo.stream}/sem${classInfo.semester}/${encodeURIComponent(classInfo.subject)}`);
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.students) {
+        console.log(`Regular students loaded: ${data.students.length}`);
+        displayStudents(data.students);
         return;
       }
+    }
+    
+    // Fallback to all students
+    const fallbackResponse = await fetch(`/api/students/${classInfo.stream}/sem${classInfo.semester}`);
+    const fallbackData = await fallbackResponse.json();
+    console.log('Using fallback - all students');
+    displayStudents(fallbackData.students || []);
+    
+  } catch (error) {
+    console.error('Error loading students:', error);
+    showErrorState('Failed to load students from database');
+  }
+}
+
+// ✅ UPDATED: LOAD ALL SUBJECTS WITH PROPER CATEGORIZATION
+async function loadAllSubjects(stream, semester) {
+  try {
+    let endpoint;
+    if (stream && semester) {
+      endpoint = `/api/subjects/${stream}/sem${semester}`;
+    } else {
+      endpoint = '/api/subjects/all';
+    }
+    
+    const response = await fetch(endpoint);
+    if (!response.ok) throw new Error('Failed to fetch subjects');
+    
+    const data = await response.json();
+    console.log('Subjects loaded:', data);
+    
+    subjectSelect.innerHTML = '<option value="">Select Subject</option>';
+    
+    if (data.subjectsByType) {
+      // Add Core Subjects
+      if (data.subjectsByType.core && data.subjectsByType.core.length > 0) {
+        data.subjectsByType.core.forEach(subj => {
+          const option = document.createElement('option');
+          option.value = subj.name;
+          option.textContent = subj.name;
+          option.setAttribute('data-type', 'CORE');
+          option.setAttribute('data-id', subj._id);
+          subjectSelect.appendChild(option);
+        });
+      }
       
-      const sortedStudents = students.sort((a, b) => {
-        const aNum = parseInt(a.studentID);
-        const bNum = parseInt(b.studentID);
-        
-        if (!isNaN(aNum) && !isNaN(bNum) && 
-            a.studentID === aNum.toString() && 
-            b.studentID === bNum.toString()) {
-          return aNum - bNum;
-        }
-        
-        return a.studentID.localeCompare(b.studentID, undefined, { numeric: true });
+      // Add Elective Subjects
+      if (data.subjectsByType.elective && data.subjectsByType.elective.length > 0) {
+        data.subjectsByType.elective.forEach(subj => {
+          const option = document.createElement('option');
+          option.value = subj.name;
+          option.textContent = subj.name;
+          option.setAttribute('data-type', 'ELECTIVE');
+          option.setAttribute('data-id', subj._id);
+          subjectSelect.appendChild(option);
+        });
+      }
+      
+      // Add Language Subjects
+      if (data.subjectsByType.language && data.subjectsByType.language.length > 0) {
+        data.subjectsByType.language.forEach(subj => {
+          const option = document.createElement('option');
+          option.value = subj.name;
+          option.textContent = subj.name;
+          option.setAttribute('data-type', 'LANGUAGE');
+          option.setAttribute('data-language', subj.languageType);
+          option.setAttribute('data-id', subj._id);
+          subjectSelect.appendChild(option);
+        });
+      }
+    } else {
+      // Fallback for simple subjects list
+      const subjects = data.subjects || data || [];
+      subjects.forEach(subj => {
+        const option = document.createElement('option');
+        option.value = subj.name || subj.subjectName || subj;
+        option.textContent = subj.name || subj.subjectName || subj;
+        subjectSelect.appendChild(option);
       });
-      
-      studentsList.innerHTML = sortedStudents.map((student, index) => `
-        <tr>
-          <td style="font-weight: 600;">${index + 1}</td>
-          <td class="student-id">${student.studentID}</td>
-          <td class="student-name">${student.name}</td>
-          <td>
-            <input 
-              type="checkbox" 
-              class="checkbox" 
-              data-student-id="${student.studentID}" 
-              data-student-name="${student.name}"
-              value="${student.studentID}"
-              checked 
-            />
-          </td>
-        </tr>
-      `).join('');
-
-      updateCounts(students.length, 0);
-      saveToLocalStorage();
     }
+    
+    console.log(`Loaded ${subjectSelect.options.length - 1} subjects into dropdown`);
+    
+  } catch (error) {
+    console.error('Error loading subjects:', error);
+    subjectSelect.innerHTML = '<option value="">Failed to load subjects</option>';
+  }
+}
 
-    // ✅ UTILITY FUNCTIONS
-    function updateCounts(present, absent) {
-      presentCountSpan.textContent = present;
-      absentCountSpan.textContent = absent;
+// ✅ CLEAN: DISPLAY STUDENTS (No Extra Indicators)
+function displayStudents(students) {
+  if (!students || students.length === 0) {
+    studentsList.innerHTML = `
+      <tr>
+        <td colspan="4" style="padding: 20px; text-align: center; color: #6b7280; border-right: none;">
+          <div style="color: #d1d5db; font-size: 2rem; margin-bottom: 8px;">No Students</div>
+          <div>No students found for this selection</div>
+        </td>
+      </tr>
+    `;
+    updateCounts(0, 0);
+    saveToLocalStorage();
+    return;
+  }
+  
+  const sortedStudents = students.sort((a, b) => {
+    const aNum = parseInt(a.studentID);
+    const bNum = parseInt(b.studentID);
+    
+    if (!isNaN(aNum) && !isNaN(bNum) && 
+        a.studentID === aNum.toString() && 
+        b.studentID === bNum.toString()) {
+      return aNum - bNum;
     }
+    
+    return a.studentID.localeCompare(b.studentID, undefined, { numeric: true });
+  });
+  
+  studentsList.innerHTML = sortedStudents.map((student, index) => `
+    <tr>
+      <td style="font-weight: 600;">${index + 1}</td>
+      <td class="student-id">${student.studentID}</td>
+      <td class="student-name">${student.name}</td>
+      <td>
+        <input 
+          type="checkbox" 
+          class="checkbox" 
+          data-student-id="${student.studentID}" 
+          data-student-name="${student.name}"
+          value="${student.studentID}"
+          checked 
+        />
+      </td>
+    </tr>
+  `).join('');
 
-    function showLoadingState() {
-      studentsList.innerHTML = `
-        <tr>
-          <td colspan="4" style="padding: 20px; text-align: center; color: #22c55e; border-right: none;">
-            <i class="fas fa-spinner fa-spin"></i> Loading students from database...
-          </td>
-        </tr>
-      `;
-      updateCounts(0, 0);
-    }
+  updateCounts(students.length, 0);
+  saveToLocalStorage();
+  
+  console.log(`Displayed ${students.length} students`);
+}
 
-    function showErrorState(message) {
-      studentsList.innerHTML = `
-        <tr>
-          <td colspan="4" style="padding: 20px; text-align: center; color: #ef4444; border-right: none;">
-            <i class="fas fa-exclamation-triangle"></i> ${message}
-          </td>
-        </tr>
-      `;
-      updateCounts(0, 0);
+// ✅ UTILITY FUNCTIONS
+function updateCounts(present, absent) {
+  presentCountSpan.textContent = present;
+  absentCountSpan.textContent = absent;
+}
+
+function showLoadingState() {
+  studentsList.innerHTML = `
+    <tr>
+      <td colspan="4" style="padding: 20px; text-align: center;">
+        <div style="display: flex; align-items: center; justify-content: center;">
+          <div style="width: 20px; height: 20px; border: 2px solid #f3f4f6; border-top: 2px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px;"></div>
+          Loading students...
+        </div>
+      </td>
+    </tr>
+  `;
+  updateCounts(0, 0);
+}
+
+function showErrorState(message) {
+  studentsList.innerHTML = `
+    <tr>
+      <td colspan="4" style="padding: 20px; text-align: center; color: #ef4444;">
+        <div style="font-size: 1.5rem; margin-bottom: 8px;">Error</div>
+        <div>${message}</div>
+        <button onclick="location.reload()" style="margin-top: 8px; padding: 4px 12px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Retry
+        </button>
+      </td>
+    </tr>
+  `;
+  updateCounts(0, 0);
+}
+
+// ✅ ADD: CSS Animation for Loading Spinner
+const spinnerCSS = `
+<style>
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
+`;
+
+// Add the CSS to the page if it doesn't exist
+if (!document.querySelector('#spinner-css')) {
+  const style = document.createElement('style');
+  style.id = 'spinner-css';
+  style.textContent = `
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
+  `;
+  document.head.appendChild(style);
+}
 
     // ✅ EVENT LISTENERS
     function setupEventListeners() {
