@@ -63,9 +63,21 @@ function getSubjectModel(stream, sem) {
 
 // ✅ Enhanced Attendance Model
 function getAttendanceModel(stream, sem, subject) {
-  const streamCode = getCollectionName(stream, sem, "").replace(`_sem${sem}_`, "");
+  // Direct stream mapping without using getCollectionName to avoid recursion
+  const streamMappings = {
+    "BCA": "bca",
+    "BBA": "bba", 
+    "BCom": "bcom",
+    "BCom Section B": "bcomsectionb",
+    "BCom-BDA": "bcom_bda",
+    "BCom A and F": "bcom_a_and_f"
+  };
+  
+  const streamCode = streamMappings[stream] || stream.toLowerCase().replace(/[\s&-]/g, "_");
   const cleanSubject = subject.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
   const modelName = `${streamCode}_sem${sem}_${cleanSubject}_attendance`;
+  
+  console.log(`🗂️ Creating attendance model: ${modelName}`);
   
   if (mongoose.models[modelName]) {
     return mongoose.models[modelName];
@@ -160,11 +172,39 @@ router.get("/student-subject-report/:stream/sem:sem", async (req, res) => {
       });
     }
     
+    // Pre-fetch all attendance data for all subjects to avoid repeated queries
+    console.log(`🔄 Pre-fetching attendance data for ${subjects.length} subjects...`);
+    const subjectAttendanceData = {};
+    
+    for (const subject of subjects) {
+      try {
+        const Attendance = getAttendanceModel(stream, sem, subject.subjectName);
+        
+        // Get all attendance records for this subject up to current date
+        const attendanceRecords = await Attendance.find({
+          date: { $lte: new Date() }
+        }).sort({ date: 1 });
+        
+        subjectAttendanceData[subject.subjectName] = attendanceRecords;
+        console.log(`📚 ${subject.subjectName}: ${attendanceRecords.length} classes found`);
+        
+      } catch (error) {
+        console.log(`⚠️ No attendance data for ${subject.subjectName}: ${error.message}`);
+        subjectAttendanceData[subject.subjectName] = [];
+      }
+    }
+    
     // Calculate attendance for each student in each subject
+    console.log(`👥 Processing attendance for ${students.length} students...`);
     const reportData = [];
     let totalAttendanceRecords = 0;
     
-    for (const student of students) {
+    for (let i = 0; i < students.length; i++) {
+      const student = students[i];
+      if (i % 10 === 0) {
+        console.log(`📊 Processing student ${i + 1}/${students.length}: ${student.name}`);
+      }
+      
       const studentReport = {
         studentID: student.studentID,
         name: student.name,
@@ -172,42 +212,24 @@ router.get("/student-subject-report/:stream/sem:sem", async (req, res) => {
       };
       
       for (const subject of subjects) {
-        try {
-          const Attendance = getAttendanceModel(stream, sem, subject.subjectName);
-          
-          // Get all attendance records for this subject up to current date
-          const attendanceRecords = await Attendance.find({
-            date: { $lte: new Date() },
-            subject: subject.subjectName
-          }).sort({ date: 1 });
-          
-          const totalClasses = attendanceRecords.length;
-          const attendedClasses = attendanceRecords.filter(record => 
-            record.studentsPresent && record.studentsPresent.includes(student.studentID)
-          ).length;
-          
-          const percentage = totalClasses > 0 ? 
-            parseFloat(((attendedClasses / totalClasses) * 100).toFixed(1)) : 0;
-          
-          studentReport.subjects[subject.subjectName] = {
-            totalClasses,
-            attendedClasses,
-            percentage,
-            absentClasses: totalClasses - attendedClasses
-          };
-          
-          totalAttendanceRecords += totalClasses;
-          
-        } catch (error) {
-          // Subject attendance collection doesn't exist or no data
-          console.log(`⚠️ No attendance data for ${subject.subjectName}: ${error.message}`);
-          studentReport.subjects[subject.subjectName] = {
-            totalClasses: 0,
-            attendedClasses: 0,
-            percentage: 0,
-            absentClasses: 0
-          };
-        }
+        const attendanceRecords = subjectAttendanceData[subject.subjectName] || [];
+        
+        const totalClasses = attendanceRecords.length;
+        const attendedClasses = attendanceRecords.filter(record => 
+          record.studentsPresent && record.studentsPresent.includes(student.studentID)
+        ).length;
+        
+        const percentage = totalClasses > 0 ? 
+          parseFloat(((attendedClasses / totalClasses) * 100).toFixed(1)) : 0;
+        
+        studentReport.subjects[subject.subjectName] = {
+          totalClasses,
+          attendedClasses,
+          percentage,
+          absentClasses: totalClasses - attendedClasses
+        };
+        
+        totalAttendanceRecords += totalClasses;
       }
       
       reportData.push(studentReport);

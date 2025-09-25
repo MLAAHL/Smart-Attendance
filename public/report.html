@@ -580,6 +580,40 @@
       }, 5000);
     }
     
+    // Enable/disable generate button based on selections
+    function checkFormValidity() {
+      const stream = document.getElementById('reportStream').value;
+      const semester = document.getElementById('reportSemester').value;
+      const generateBtn = document.getElementById('generateBtn');
+      
+      if (stream && semester) {
+        generateBtn.disabled = false;
+        generateBtn.style.opacity = '1';
+        generateBtn.style.cursor = 'pointer';
+      } else {
+        generateBtn.disabled = true;
+        generateBtn.style.opacity = '0.5';
+        generateBtn.style.cursor = 'not-allowed';
+      }
+    }
+    
+    // Add event listeners to dropdowns
+    document.addEventListener('DOMContentLoaded', function() {
+      const streamSelect = document.getElementById('reportStream');
+      const semesterSelect = document.getElementById('reportSemester');
+      
+      if (streamSelect) {
+        streamSelect.addEventListener('change', checkFormValidity);
+      }
+      
+      if (semesterSelect) {
+        semesterSelect.addEventListener('change', checkFormValidity);
+      }
+      
+      // Initial check
+      checkFormValidity();
+    });
+
     // Keyboard shortcuts
     document.addEventListener('keydown', function(e) {
       if (e.ctrlKey && e.key === 'r') {
