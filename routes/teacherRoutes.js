@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 
+const moment = require('moment-timezone');
+
 // ✅ FIXED: WhatsApp Cloud API Service Integration
 const WhatsAppService = require('../utils/sendWhatsAppMessage'); // Your WhatsApp Cloud API service
 
@@ -44,7 +46,7 @@ const studentSchema = new mongoose.Schema({
         'BCOMSECTIONB', 'BCOMSECTIONC',               
         'BCom Section B', 'BCom Section C',
         'BCOM-BDA', 'BCOM A AND F', 'BCOM A&F', 
-        'BCom A and F', 'BDA'
+        'BCom A and F', 'BDA','BA AI & ML'
       ],
       message: 'Invalid stream'
     }
@@ -490,6 +492,7 @@ const STREAM_MAPPINGS = {
   "BCOM": "bcom",
   "B.COM": "bcom",
   "BCom": "bcom",
+  "BCA AI & ML":"bcaaiandml",
   
   // SECTION B variants
   "BCOM SECTION B": "bcomsectionb",
@@ -1552,7 +1555,8 @@ router.get("/subjects/:subjectId/students", asyncHandler(async (req, res) => {
   }
 }));
 
-// ✅ FIXED: POST Mark Attendance - With Date Timezone Fix
+
+// ✅ FIXED: POST Mark Attendance - Complete Date Timezone Fix
 router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler(async (req, res) => {
   const { stream, sem, subject } = req.params;
   const { date, studentsPresent } = req.body;
@@ -1582,30 +1586,23 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
   try {
     console.log(`Received date: ${date}`);
     
-    // Parse date correctly for Indian timezone (avoid UTC conversion)
-    const dateParts = date.split('-');
-    if (dateParts.length !== 3) {
+    // ✅ CRITICAL FIX: Use noon (12:00) instead of midnight to avoid timezone edge cases
+    const attendanceDateIST = moment.tz(`${date} 12:00:00`, 'YYYY-MM-DD HH:mm:ss', 'Asia/Kolkata');
+    
+    if (!attendanceDateIST.isValid()) {
       throw new Error('Invalid date format');
     }
     
-    // Create date in local timezone (IST)
-    attendanceDate = new Date(
-      parseInt(dateParts[0]), // year
-      parseInt(dateParts[1]) - 1, // month (0-indexed)
-      parseInt(dateParts[2]) // day
-    );
+    // ✅ Set to start of day in IST to ensure correct date storage
+    attendanceDate = attendanceDateIST.startOf('day').toDate();
     
-    console.log(`Parsed attendance date (local): ${attendanceDate.toString()}`);
-    console.log(`Attendance date ISO: ${attendanceDate.toISOString()}`);
-    console.log(`Attendance date (IST): ${attendanceDate.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`);
-    
-    // Validate the parsed date
-    if (isNaN(attendanceDate.getTime())) {
-      throw new Error('Invalid date');
-    }
+    console.log(`✅ Parsed attendance date (IST): ${attendanceDate.toString()}`);
+    console.log(`✅ Attendance date ISO: ${attendanceDate.toISOString()}`);
+    console.log(`✅ IST formatted: ${attendanceDateIST.format('YYYY-MM-DD dddd')}`);
+    console.log(`✅ Will store as: ${attendanceDate.toDateString()}`);
     
   } catch (dateError) {
-    console.error('Date parsing error:', dateError);
+    console.error('❌ Date parsing error:', dateError);
     return res.status(400).json({
       success: false,
       message: "Invalid date format",
@@ -1625,9 +1622,9 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
       Attendance = getAttendanceModel(stream, sem, subject);
       Student = getStudentModel(stream, sem);
       Subject = getSubjectModel(stream, sem);
-      console.log(`Models created successfully`);
+      console.log(`✅ Models created successfully`);
     } catch (modelError) {
-      console.error(`Model creation error:`, modelError);
+      console.error(`❌ Model creation error:`, modelError);
       return res.status(500).json({
         success: false,
         message: "Failed to create database models",
@@ -1662,7 +1659,7 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
       });
     }
     
-    console.log(`Subject found: ${subjectDoc.subjectName} (${subjectDoc.subjectType || 'CORE'})`);
+    console.log(`✅ Subject found: ${subjectDoc.subjectName} (${subjectDoc.subjectType || 'CORE'})`);
     
     // ✅ Get relevant students based on subject type
     let relevantStudents;
@@ -1685,7 +1682,7 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
         note: `Only students enrolled in ${subjectDoc.subjectName} elective can attend`
       };
       
-      console.log(`Elective students found: ${relevantStudents.length} enrolled in ${subjectDoc.subjectName}`);
+      console.log(`✅ Elective students found: ${relevantStudents.length} enrolled in ${subjectDoc.subjectName}`);
       
     } else if (subjectDoc.isLanguageSubject && subjectDoc.languageType) {
       // ✅ LANGUAGE SUBJECTS: Only get students who chose this language
@@ -1702,7 +1699,7 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
         note: `Only ${subjectDoc.languageType} students can attend this subject`
       };
       
-      console.log(`Language students found: ${relevantStudents.length} for ${subjectDoc.languageType}`);
+      console.log(`✅ Language students found: ${relevantStudents.length} for ${subjectDoc.languageType}`);
       
     } else {
       // ✅ CORE SUBJECTS: Get all students
@@ -1718,11 +1715,11 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
         note: 'All active students can attend this subject'
       };
       
-      console.log(`All students found: ${relevantStudents.length}`);
+      console.log(`✅ All students found: ${relevantStudents.length}`);
     }
 
     const totalRelevantStudents = relevantStudents.length;
-    console.log(`Total relevant students: ${totalRelevantStudents}`);
+    console.log(`✅ Total relevant students: ${totalRelevantStudents}`);
 
     if (totalRelevantStudents === 0) {
       let errorMessage = `No active students found in ${stream} Semester ${sem}`;
@@ -1749,7 +1746,7 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
     const invalidStudents = studentsPresent.filter(id => !relevantStudentIDs.includes(id));
     
     if (invalidStudents.length > 0) {
-      console.warn(`Invalid students detected: ${invalidStudents.join(', ')}`);
+      console.warn(`⚠️ Invalid students detected: ${invalidStudents.join(', ')}`);
       
       let errorMessage = `Some students are not eligible for this subject`;
       let hint = "Only enrolled and active students can be marked present";
@@ -1773,71 +1770,141 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
       });
     }
 
-    // ✅ FIXED: Create attendance record with correct date
-    const currentTime = new Date();
-    
+    // ✅ CORRECTED: IST timezone handling for attendance record creation
+    const currentTime = moment().tz('Asia/Kolkata').toDate();
+    const currentTimeIST = moment().tz('Asia/Kolkata');
+
     console.log(`Creating attendance record for date: ${attendanceDate.toDateString()}`);
-    
+    console.log(`Current time (IST): ${currentTimeIST.format('YYYY-MM-DD HH:mm:ss')}`);
+
+    // ✅ Calculate attendance percentage
+    const attendancePercentage = Math.round((studentsPresent.length / totalRelevantStudents) * 100);
+
     const attendanceData = {
-      date: attendanceDate, // ✅ Now uses correctly parsed local date
+      date: attendanceDate, // ✅ Now uses correctly parsed IST date
       subject: subject.toUpperCase(),
       stream: stream.toUpperCase(),
       semester: parseInt(sem),
       studentsPresent: studentsPresent,
       totalStudents: totalRelevantStudents,
       totalPossibleStudents: totalRelevantStudents,
+      attendancePercentage: attendancePercentage, // ✅ Add missing percentage calculation
+      
       // ✅ Elective support
       isElectiveSubject: subjectDoc.subjectType === 'ELECTIVE' || false,
       electiveSubjectId: subjectDoc.subjectType === 'ELECTIVE' ? subjectDoc._id : null,
+      
+      // ✅ Language support
       isLanguageSubject: subjectDoc.isLanguageSubject || false,
       languageType: subjectDoc.languageType || null,
       languageGroup: (subjectDoc.isLanguageSubject && subjectDoc.languageType) ? 
         `${stream.toUpperCase()}_SEM${sem}_${subjectDoc.languageType}` : null,
+        
+      // ✅ Elective grouping
       electiveGroup: (subjectDoc.subjectType === 'ELECTIVE') ?
         `${stream.toUpperCase()}_SEM${sem}_${subjectDoc.subjectName}` : null,
-      sessionTime: currentTime.toLocaleTimeString('en-IN', { 
-        hour12: false,
-        timeZone: 'Asia/Kolkata'
-      }),
-      createdAt: currentTime, // ✅ Current IST time
-      notes: `Attendance taken at ${currentTime.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`
+        
+      // ✅ FIXED: Use IST timezone consistently for session time
+      sessionTime: currentTimeIST.format('HH:mm:ss'),
+      sessionIndex: 1, // ✅ Add session index (will be updated later)
+      
+      // ✅ FIXED: Use IST timezone for timestamps
+      createdAt: currentTime,
+      updatedAt: currentTime,
+      
+      // ✅ FIXED: Use IST timezone in notes
+      notes: `Attendance taken at ${currentTimeIST.format('DD/MM/YYYY, h:mm:ss a')}`
     };
-    
+
+    console.log(`✅ Attendance data prepared:`);
+    console.log(`   Date: ${attendanceData.date.toISOString()}`);
+    console.log(`   Date String: ${attendanceData.date.toDateString()}`);
+    console.log(`   Session Time: ${attendanceData.sessionTime}`);
+    console.log(`   Present: ${attendanceData.studentsPresent.length}/${attendanceData.totalStudents} (${attendanceData.attendancePercentage}%)`);
+    console.log(`   Created At: ${attendanceData.createdAt.toISOString()}`);
+    console.log(`   Notes: ${attendanceData.notes}`);
+
     let record;
     try {
       record = new Attendance(attendanceData);
       await record.save();
-      console.log(`Attendance record created with ID: ${record._id}`);
-      console.log(`Saved date: ${record.date.toString()}`);
+      
+      console.log(`🎉 Attendance record created successfully:`);
+      console.log(`   Record ID: ${record._id}`);
+      console.log(`   Saved date: ${record.date.toString()}`);
+      console.log(`   Saved date (ISO): ${record.date.toISOString()}`);
+      console.log(`   Session time: ${record.sessionTime}`);
+      console.log(`   Attendance %: ${record.attendancePercentage}%`);
+      console.log(`   Notes: ${record.notes}`);
       
     } catch (saveError) {
-      console.error(`Error saving attendance:`, saveError);
+      console.error(`❌ Error saving attendance:`, saveError);
       
+      // ✅ Enhanced error handling
       if (saveError.code === 11000) {
+        // Duplicate key error
+        const duplicateField = saveError.message.match(/index: (.+?) dup key/)?.[1] || 'unknown field';
+        
         return res.status(409).json({
           success: false,
           message: "Duplicate attendance session detected",
-          error: "A session with this exact timestamp already exists",
-          solution: "Wait a moment and try again, or check existing sessions"
+          error: `A session with this exact ${duplicateField} already exists`,
+          solution: "Wait a moment and try again, or check existing sessions",
+          duplicateInfo: {
+            date: attendanceDate.toDateString(),
+            subject: subject.toUpperCase(),
+            stream: stream.toUpperCase(),
+            semester: parseInt(sem)
+          }
         });
       }
       
+      // ✅ Validation errors
+      if (saveError.name === 'ValidationError') {
+        const validationErrors = Object.keys(saveError.errors).map(key => ({
+          field: key,
+          message: saveError.errors[key].message
+        }));
+        
+        return res.status(400).json({
+          success: false,
+          message: "Attendance data validation failed",
+          errors: validationErrors,
+          receivedData: {
+            date: attendanceDate.toDateString(),
+            subject: subject.toUpperCase(),
+            studentsCount: studentsPresent.length
+          }
+        });
+      }
+      
+      // ✅ Other database errors
       return res.status(500).json({
         success: false,
         message: "Failed to save attendance record",
-        error: saveError.message
+        error: {
+          message: saveError.message,
+          code: saveError.code || null,
+          name: saveError.name || 'DatabaseError'
+        },
+        timestamp: currentTimeIST.format('YYYY-MM-DD HH:mm:ss'),
+        requestInfo: {
+          stream: stream.toUpperCase(),
+          semester: parseInt(sem),
+          subject: subject.toUpperCase(),
+          date: attendanceDate.toDateString(),
+          studentsPresent: studentsPresent.length,
+          totalStudents: totalRelevantStudents
+        }
       });
     }
 
     // ✅ FIXED: Calculate session statistics with correct date range
     let sessionCount;
     try {
-      // Create date range for the specific day in local timezone
-      const startOfDay = new Date(attendanceDate);
-      startOfDay.setHours(0, 0, 0, 0);
-      
-      const endOfDay = new Date(attendanceDate);
-      endOfDay.setHours(23, 59, 59, 999);
+      // Create date range for the specific day using moment
+      const startOfDay = moment(attendanceDate).startOf('day').toDate();
+      const endOfDay = moment(attendanceDate).endOf('day').toDate();
       
       sessionCount = await Attendance.countDocuments({
         date: {
@@ -1849,9 +1916,9 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
         semester: parseInt(sem)
       });
       
-      console.log(`Total sessions today (${attendanceDate.toDateString()}): ${sessionCount}`);
+      console.log(`✅ Total sessions today (${attendanceDate.toDateString()}): ${sessionCount}`);
     } catch (countError) {
-      console.warn(`Could not count sessions:`, countError.message);
+      console.warn(`⚠️ Could not count sessions:`, countError.message);
       sessionCount = 1;
     }
 
@@ -1868,14 +1935,15 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
     const absentWithoutPhone = absentStudents.filter(s => !s.parentPhone || s.parentPhone.trim() === '').length;
 
     // ✅ Log attendance summary
-    console.log(`\nATTENDANCE SUMMARY:`);
+    console.log(`\n📊 ATTENDANCE SUMMARY:`);
     console.log(`   Date: ${attendanceDate.toDateString()} (${date})`);
     console.log(`   ${stream} Semester ${sem}`);
     console.log(`   Subject: ${subject.toUpperCase()} (${subjectDoc.subjectType || 'CORE'})`);
-    console.log(`   Session: ${record.sessionTime}`);
+    console.log(`   Session: ${record.sessionTime} IST`);
     console.log(`   Present: ${studentsPresent.length}/${totalRelevantStudents} (${record.attendancePercentage}%)`);
     console.log(`   Absent: ${absentStudents.length} (${absentWithPhone} with phone)`);
     console.log(`   Record ID: ${record._id}`);
+    console.log(`   Database Date: ${record.date.toISOString()}`);
 
     // ✅ Success response
     res.status(201).json({ 
@@ -1898,7 +1966,8 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
         electiveSubjectId: record.electiveSubjectId,
         isLanguageSubject: record.isLanguageSubject,
         languageType: record.languageType,
-        createdAt: record.createdAt
+        createdAt: record.createdAt,
+        timezone: 'Asia/Kolkata'
       },
       
       session: {
@@ -1949,7 +2018,7 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
     });
 
   } catch (error) {
-    console.error('Attendance creation failed:', error);
+    console.error('❌ Attendance creation failed:', error);
     
     return res.status(500).json({
       success: false,
@@ -1962,11 +2031,11 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
       request: {
         stream, semester: sem, subject, date,
         studentsCount: studentsPresent ? studentsPresent.length : 0
-      }
+      },
+      timestamp: moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss')
     });
   }
 }));
-
 
 
 // ✅ FIXED: Manual Send Consolidated WhatsApp Messages (Updated for WhatsApp Cloud API)
