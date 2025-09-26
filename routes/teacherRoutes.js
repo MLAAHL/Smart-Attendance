@@ -1581,25 +1581,26 @@ router.post("/attendance/:stream/sem:sem/:subject", validateParams, asyncHandler
     });
   }
 
-  // ✅ FIXED: Date validation and parsing for IST timezone
+  // ✅ CRITICAL FIX: Date validation and parsing to avoid timezone shift
   let attendanceDate;
   try {
     console.log(`Received date: ${date}`);
     
-    // ✅ CRITICAL FIX: Use noon (12:00) instead of midnight to avoid timezone edge cases
-    const attendanceDateIST = moment.tz(`${date} 12:00:00`, 'YYYY-MM-DD HH:mm:ss', 'Asia/Kolkata');
+    // ✅ FIXED: Store as noon UTC on the same date to prevent timezone shift
+    // This ensures the date stays correct regardless of how it's retrieved
+    const utcMoment = moment.utc(`${date} 12:00:00`, 'YYYY-MM-DD HH:mm:ss');
     
-    if (!attendanceDateIST.isValid()) {
+    if (!utcMoment.isValid()) {
       throw new Error('Invalid date format');
     }
     
-    // ✅ Set to start of day in IST to ensure correct date storage
-    attendanceDate = attendanceDateIST.startOf('day').toDate();
+    // ✅ Store as noon UTC - maintains correct date across timezones
+    attendanceDate = utcMoment.toDate();
     
-    console.log(`✅ Parsed attendance date (IST): ${attendanceDate.toString()}`);
-    console.log(`✅ Attendance date ISO: ${attendanceDate.toISOString()}`);
-    console.log(`✅ IST formatted: ${attendanceDateIST.format('YYYY-MM-DD dddd')}`);
-    console.log(`✅ Will store as: ${attendanceDate.toDateString()}`);
+    console.log(`✅ Input date: ${date}`);
+    console.log(`✅ Stored as UTC: ${attendanceDate.toISOString()}`);
+    console.log(`✅ Will display as: ${moment(attendanceDate).tz('Asia/Kolkata').format('YYYY-MM-DD')}`);
+    console.log(`✅ Date string: ${attendanceDate.toDateString()}`);
     
   } catch (dateError) {
     console.error('❌ Date parsing error:', dateError);
@@ -4557,5 +4558,37 @@ router.delete("/delete-attendance/:stream/sem:sem/:subject", asyncHandler(async 
   }
 }));
 
+// ✅ TEST: Date parsing verification endpoint
+router.get("/test-date/:date", asyncHandler(async (req, res) => {
+  const { date } = req.params;
+  
+  try {
+    // Same logic as attendance submission
+    const utcMoment = moment.utc(`${date} 12:00:00`, 'YYYY-MM-DD HH:mm:ss');
+    const attendanceDate = utcMoment.toDate();
+    
+    const results = {
+      inputDate: date,
+      storedAsUTC: attendanceDate.toISOString(),
+      willDisplayAs: moment(attendanceDate).tz('Asia/Kolkata').format('YYYY-MM-DD'),
+      currentIndianDate: moment().tz('Asia/Kolkata').format('YYYY-MM-DD'),
+      isCorrectDate: moment(attendanceDate).tz('Asia/Kolkata').format('YYYY-MM-DD') === date
+    };
+    
+    console.log(`🧪 Date test for ${date}:`, results);
+    
+    res.json({
+      success: true,
+      message: "Date parsing test completed",
+      results
+    });
+    
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+}));
 
 module.exports = router;
