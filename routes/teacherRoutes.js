@@ -3218,28 +3218,54 @@ router.post("/update-attendance/:stream/sem:sem/:subject",
   validateParams, 
   asyncHandler(async (req, res) => {
     const { stream, sem, subject } = req.params;
-    const { attendanceMap } = req.body; // Remove sessionsMap for now
+    const { attendanceMap, sessionUpdates } = req.body;
     const startTime = Date.now();
 
-    console.log(`📊 Multi-session update for: ${subject} in ${stream} Sem ${sem}`);
-    console.log(`📊 Attendance data received for ${Object.keys(attendanceMap || {}).length} dates`);
+    console.log(`📊 Session-aware attendance update for: ${subject} in ${stream} Sem ${sem}`);
+    console.log(`📊 Legacy attendance data received for ${Object.keys(attendanceMap || {}).length} dates`);
+    console.log(`� Session updates received for ${Object.keys(sessionUpdates || {}).length} dates`);
+    console.log(`�📊 Request metadata:`, req.body.metadata);
 
-    // ✅ SAME: Input validation (keep existing code)
-    if (!attendanceMap || typeof attendanceMap !== "object") {
-      return res.status(400).json({ 
-        success: false,
-        error: 'INVALID_INPUT_FORMAT',
-        message: "Invalid attendance data. Expected object with date keys and student arrays.",
-      });
-    }
+    // ✅ NEW: Prioritize session-aware updates if available
+    const useSessionAwareUpdates = sessionUpdates && Object.keys(sessionUpdates).length > 0;
+    console.log(`🔄 Processing mode: ${useSessionAwareUpdates ? 'SESSION-AWARE' : 'LEGACY'} updates`);
 
-    const dates = Object.keys(attendanceMap);
-    if (dates.length === 0) {
-      return res.status(400).json({ 
-        success: false,
-        error: 'EMPTY_ATTENDANCE_DATA',
-        message: "No attendance data provided"
-      });
+    // ✅ ENHANCED: Input validation for both legacy and session-aware formats
+    if (useSessionAwareUpdates) {
+      if (!sessionUpdates || typeof sessionUpdates !== "object") {
+        return res.status(400).json({ 
+          success: false,
+          error: 'INVALID_SESSION_UPDATES_FORMAT',
+          message: "Invalid session updates data. Expected object with date keys and session arrays.",
+        });
+      }
+
+      const sessionDates = Object.keys(sessionUpdates);
+      if (sessionDates.length === 0) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'EMPTY_SESSION_UPDATES',
+          message: "No session updates provided"
+        });
+      }
+    } else {
+      // Legacy validation
+      if (!attendanceMap || typeof attendanceMap !== "object") {
+        return res.status(400).json({ 
+          success: false,
+          error: 'INVALID_INPUT_FORMAT',
+          message: "Invalid attendance data. Expected object with date keys and student arrays.",
+        });
+      }
+
+      const dates = Object.keys(attendanceMap);
+      if (dates.length === 0) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'EMPTY_ATTENDANCE_DATA',
+          message: "No attendance data provided"
+        });
+      }
     }
 
     try {
@@ -3277,61 +3303,252 @@ router.post("/update-attendance/:stream/sem:sem/:subject",
       const updateResults = [];
 
       await session.withTransaction(async () => {
-        for (const [dateStr, attendanceData] of Object.entries(attendanceMap)) {
-          const dateObj = new Date(dateStr + 'T00:00:00.000Z');
+        if (useSessionAwareUpdates) {
+          // ✅ NEW: Session-aware processing with record identification
+          console.log(`🔑 Processing session-aware updates`);
           
-          console.log(`📅 Processing ${dateStr} with data:`, attendanceData);
-
-          // ✅ CHECK: If this is multi-session data (array of arrays)
-          if (Array.isArray(attendanceData) && attendanceData.length > 0 && Array.isArray(attendanceData[0])) {
-            // ✅ MULTI-SESSION: Handle multiple sessions per date
-            console.log(`🔀 Multi-session detected: ${attendanceData.length} sessions`);
+          for (const [dateStr, dateUpdates] of Object.entries(sessionUpdates)) {
+            const dateObj = new Date(dateStr + 'T00:00:00.000Z');
+            console.log(`📅 Processing session updates for ${dateStr}:`, dateUpdates);
             
-            // Delete existing records for this date first
-            await Attendance.deleteMany({ 
-              date: dateObj, 
-              subject: subject.toUpperCase()
-            }, { session });
-
-            // Create separate record for each session
-            for (let sessionIndex = 0; sessionIndex < attendanceData.length; sessionIndex++) {
-              const sessionStudents = attendanceData[sessionIndex] || [];
-              const validSessionStudents = sessionStudents.filter(id => 
+            for (const sessionUpdate of dateUpdates.sessions) {
+              const { recordId, sessionIndex, sessionNumber, notes, sessionTime, studentsPresent, action, metadata } = sessionUpdate;
+              
+              console.log(`🔄 Processing session ${sessionNumber} (${action}):`, {
+                recordId, notes, sessionTime, studentCount: studentsPresent.length
+              });
+              
+              // Validate students
+              const validStudents = studentsPresent.filter(id => 
                 validStudentIDsSet.has(String(id).trim())
               );
-
-              // ✅ CREATE: New record for this session (use a unique identifier in the record)
-              const sessionRecord = await Attendance.create([{
-                date: dateObj,
-                subject: subject.toUpperCase(),
-                studentsPresent: validSessionStudents,
+              
+              const sessionData = {
+                studentsPresent: validStudents,
                 totalStudents: validStudentIDs.length,
-                presentCount: validSessionStudents.length,
-                absentCount: validStudentIDs.length - validSessionStudents.length,
+                presentCount: validStudents.length,
+                absentCount: validStudentIDs.length - validStudents.length,
                 stream: stream.toUpperCase(),
                 semester: parseInt(sem),
                 isLanguageSubject: subjectDoc.isLanguageSubject || false,
                 languageType: subjectDoc.languageType || null,
-                // ✅ WORKAROUND: Store session info in existing fields
-                notes: `Session ${sessionIndex + 1}`, // Use notes field for session identifier
-                sessionData: { // If you have a flexible field for extra data
+                notes: notes,
+                sessionData: {
                   sessionIndex: sessionIndex,
-                  sessionNumber: sessionIndex + 1,
-                  isMultiSession: true,
-                  totalSessions: attendanceData.length
+                  sessionNumber: sessionNumber,
+                  isMultiSession: dateUpdates.sessions.length > 1,
+                  totalSessions: dateUpdates.sessions.length
                 },
                 lastUpdated: new Date(),
-                updatedBy: req.user?.name || 'multi_session_update',
-                updateMethod: 'multi_session_bulk_update'
-              }], { session });
-
+                updatedBy: req.user?.name || 'session_aware_update',
+                updateMethod: 'session_aware_update'
+              };
+              
+              let result;
+              
+              if (action === 'update' && recordId) {
+                // ✅ UPDATE EXISTING SESSION BY RECORD ID
+                try {
+                  result = await Attendance.findByIdAndUpdate(
+                    recordId,
+                    { $set: sessionData },
+                    { new: true, session }
+                  );
+                  
+                  if (result) {
+                    console.log(`✅ Updated session by recordId ${recordId}`);
+                  } else {
+                    console.warn(`⚠️ No record found with ID ${recordId}, falling back to composite key`);
+                    // Fallback to composite key if recordId not found
+                    result = await Attendance.findOneAndUpdate(
+                      { date: dateObj, subject: subject.toUpperCase(), notes: notes },
+                      { $set: sessionData },
+                      { upsert: true, new: true, session }
+                    );
+                  }
+                } catch (updateError) {
+                  console.error(`❌ Error updating by recordId ${recordId}:`, updateError.message);
+                  // Fallback to composite key
+                  result = await Attendance.findOneAndUpdate(
+                    { date: dateObj, subject: subject.toUpperCase(), notes: notes },
+                    { $set: sessionData },
+                    { upsert: true, new: true, session }
+                  );
+                }
+              } else {
+                // ✅ CREATE NEW SESSION OR UPDATE BY COMPOSITE KEY
+                const query = {
+                  date: dateObj,
+                  subject: subject.toUpperCase(),
+                  notes: notes
+                };
+                
+                result = await Attendance.findOneAndUpdate(
+                  query,
+                  { $set: sessionData },
+                  { upsert: true, new: true, session }
+                );
+                
+                console.log(`${action === 'create' ? '➕ Created' : '✅ Updated'} session by composite key:`, query);
+              }
+              
               updateResults.push({
                 date: dateStr,
                 sessionIndex,
-                sessionNumber: sessionIndex + 1,
-                presentCount: validSessionStudents.length,
-                attendanceId: sessionRecord[0]._id,
-                type: 'multi_session'
+                sessionNumber,
+                presentCount: validStudents.length,
+                attendanceId: result._id,
+                type: 'session_aware',
+                action: action,
+                recordId: recordId,
+                notes: notes
+              });
+            }
+          }
+          
+        } else {
+          // ✅ LEGACY: Process traditional attendanceMap format
+          console.log(`🔄 Processing legacy attendance format`);
+          
+          for (const [dateStr, attendanceData] of Object.entries(attendanceMap)) {
+          const dateObj = new Date(dateStr + 'T00:00:00.000Z');
+          
+          console.log(`📅 Processing ${dateStr} with data:`, attendanceData);
+
+          // ✅ IMPROVED: Smart session detection and update logic
+          if (Array.isArray(attendanceData) && attendanceData.length > 0 && Array.isArray(attendanceData[0])) {
+            // Potential multi-session format detected - validate if it's truly multi-session
+            const sessionsWithData = attendanceData.filter(session => 
+              Array.isArray(session) && session.length > 0
+            );
+            
+            console.log(`� Multi-session format detected: ${attendanceData.length} sessions, ${sessionsWithData.length} with data`);
+            
+            if (sessionsWithData.length > 1) {
+              // ✅ TRUE MULTI-SESSION: Update each session using composite key matching
+              console.log(`🔀 TRUE multi-session processing: ${sessionsWithData.length} sessions`);
+              
+              for (let sessionIndex = 0; sessionIndex < attendanceData.length; sessionIndex++) {
+                const sessionStudents = attendanceData[sessionIndex] || [];
+                const validSessionStudents = sessionStudents.filter(id => 
+                  validStudentIDsSet.has(String(id).trim())
+                );
+                
+                // Skip completely empty sessions (no students and no existing record)
+                const sessionNotes = `Session ${sessionIndex + 1}`;
+                const existingRecord = await Attendance.findOne({
+                  date: dateObj,
+                  subject: subject.toUpperCase(),
+                  notes: sessionNotes
+                });
+                
+                if (validSessionStudents.length === 0 && !existingRecord) {
+                  console.log(`⏭️ Skipping empty session ${sessionIndex + 1} (no data, no existing record)`);
+                  continue;
+                }
+                
+                // ✅ COMPOSITE KEY APPROACH: Use {date, subject, notes} as unique identifier
+                const sessionQuery = {
+                  date: dateObj,
+                  subject: subject.toUpperCase(),
+                  notes: sessionNotes // Use notes field as session identifier
+                };
+                
+                const sessionData = {
+                  studentsPresent: validSessionStudents,
+                  totalStudents: validStudentIDs.length,
+                  presentCount: validSessionStudents.length,
+                  absentCount: validStudentIDs.length - validSessionStudents.length,
+                  stream: stream.toUpperCase(),
+                  semester: parseInt(sem),
+                  isLanguageSubject: subjectDoc.isLanguageSubject || false,
+                  languageType: subjectDoc.languageType || null,
+                  notes: sessionNotes, // Ensure notes field is set for identification
+                  sessionData: {
+                    sessionIndex: sessionIndex,
+                    sessionNumber: sessionIndex + 1,
+                    isMultiSession: true,
+                    totalSessions: attendanceData.length
+                  },
+                  lastUpdated: new Date(),
+                  updatedBy: req.user?.name || 'multi_session_update',
+                  updateMethod: 'composite_key_update'
+                };
+                
+                // ✅ USE COMPOSITE KEY: findOneAndUpdate with proper unique identification
+                const result = await Attendance.findOneAndUpdate(
+                  sessionQuery, // Query by composite key {date, subject, notes}
+                  { $set: sessionData },
+                  { 
+                    upsert: true, // Create only if no matching record exists
+                    new: true,
+                    session
+                  }
+                );
+                
+                const wasUpdated = existingRecord !== null;
+                console.log(`${wasUpdated ? '✅ Updated' : '➕ Created'} session ${sessionIndex + 1} record using composite key`);
+
+                updateResults.push({
+                  date: dateStr,
+                  sessionIndex,
+                  sessionNumber: sessionIndex + 1,
+                  presentCount: validSessionStudents.length,
+                  attendanceId: result._id,
+                  type: 'multi_session',
+                  action: wasUpdated ? 'updated' : 'created',
+                  compositeKey: sessionQuery
+                });
+              }
+              
+            } else {
+              // ✅ FAKE MULTI-SESSION: Treat as single session
+              console.log(`📝 Fake multi-session detected - treating as single session`);
+              const allStudents = attendanceData.flat().filter(id => 
+                id && validStudentIDsSet.has(String(id).trim())
+              );
+              
+            // ✅ COMPOSITE KEY APPROACH: Use {date, subject, notes: null} for single session
+            const singleSessionQuery = {
+              date: dateObj,
+              subject: subject.toUpperCase(),
+              $or: [
+                { notes: null }, // Primary single session
+                { notes: { $exists: false } }, // Legacy single session
+                { notes: "" } // Empty notes single session
+              ]
+            };
+            
+            const result = await Attendance.findOneAndUpdate(
+              singleSessionQuery,
+              { 
+                $set: { 
+                  studentsPresent: allStudents,
+                  totalStudents: validStudentIDs.length,
+                  presentCount: allStudents.length,
+                  absentCount: validStudentIDs.length - allStudents.length,
+                  stream: stream.toUpperCase(),
+                  semester: parseInt(sem),
+                  isLanguageSubject: subjectDoc.isLanguageSubject || false,
+                  languageType: subjectDoc.languageType || null,
+                  notes: null, // Explicitly set to null for single session identification
+                  sessionData: { isMultiSession: false },
+                  lastUpdated: new Date(),
+                  updatedBy: req.user?.name || 'fake_multi_to_single_update',
+                  updateMethod: 'composite_key_single_session_update'
+                }
+              },
+              { 
+                upsert: true, 
+                new: true,
+                session
+              }
+            );              updateResults.push({
+                date: dateStr,
+                presentCount: allStudents.length,
+                attendanceId: result._id,
+                type: 'single_session',
+                action: 'normalized_from_fake_multi'
               });
             }
 
@@ -3344,11 +3561,19 @@ router.post("/update-attendance/:stream/sem:sem/:subject",
               validStudentIDsSet.has(String(id).trim())
             );
 
+            // ✅ COMPOSITE KEY APPROACH: Use {date, subject, notes: null} for single session
+            const singleSessionQuery = {
+              date: dateObj,
+              subject: subject.toUpperCase(),
+              $or: [
+                { notes: null }, // Primary single session identifier
+                { notes: { $exists: false } }, // Legacy records without notes field
+                { notes: "" } // Empty string notes
+              ]
+            };
+            
             const result = await Attendance.findOneAndUpdate(
-              { 
-                date: dateObj, 
-                subject: subject.toUpperCase()
-              },
+              singleSessionQuery,
               { 
                 $set: { 
                   studentsPresent: validStudents,
@@ -3359,11 +3584,11 @@ router.post("/update-attendance/:stream/sem:sem/:subject",
                   semester: parseInt(sem),
                   isLanguageSubject: subjectDoc.isLanguageSubject || false,
                   languageType: subjectDoc.languageType || null,
-                  notes: null, // Clear session notes for single session
+                  notes: null, // Explicitly set to null for single session identification
                   sessionData: { isMultiSession: false },
                   lastUpdated: new Date(),
                   updatedBy: req.user?.name || 'single_bulk_update',
-                  updateMethod: 'single_bulk_update'
+                  updateMethod: 'composite_key_single_session_update'
                 }
               },
               { 
@@ -3380,6 +3605,8 @@ router.post("/update-attendance/:stream/sem:sem/:subject",
               type: 'single_session'
             });
           }
+          
+          } // End legacy processing
         }
       });
 
@@ -3387,24 +3614,32 @@ router.post("/update-attendance/:stream/sem:sem/:subject",
 
       // ✅ SUCCESS: Calculate comprehensive summary
       const multiSessionCount = updateResults.filter(r => r.type === 'multi_session').length;
-      const singleSessionCount = updateResults.filter(r => r.type === 'single_session').length;
+      const singleSessionCount = updateResults.filter(r => r.type === 'single_session').length;  
+      const sessionAwareCount = updateResults.filter(r => r.type === 'session_aware').length;
       const totalPresent = updateResults.reduce((sum, result) => sum + result.presentCount, 0);
       const processingTime = Date.now() - startTime;
 
-      console.log(`✅ Multi-session update completed: ${dates.length} dates, ${multiSessionCount} multi-sessions`);
+      // ✅ FIXED: Calculate total dates from appropriate source
+      const totalDates = useSessionAwareUpdates ? 
+        Object.keys(sessionUpdates).length : 
+        Object.keys(attendanceMap).length;
+
+      console.log(`✅ ${useSessionAwareUpdates ? 'Session-aware' : 'Legacy'} update completed: ${totalDates} dates, ${sessionAwareCount + multiSessionCount} total sessions`);
 
       res.status(200).json({ 
         success: true,
-        message: `✅ Multi-session attendance updated successfully`,
-        updatedDates: dates.length,
+        message: `✅ ${useSessionAwareUpdates ? 'Session-aware' : 'Multi-session'} attendance updated successfully`,
+        updatedDates: totalDates,
         summary: {
-          totalDates: dates.length,
-          multiSessionDates: updateResults.filter(r => r.type === 'multi_session').length / updateResults.filter(r => r.sessionIndex !== undefined).reduce((max, r) => Math.max(max, (r.sessionIndex || 0) + 1), 0) || 0,
+          totalDates: totalDates,
+          multiSessionDates: updateResults.filter(r => r.type === 'multi_session').length,
           singleSessionDates: updateResults.filter(r => r.type === 'single_session').length,
+          sessionAwareDates: updateResults.filter(r => r.type === 'session_aware').length,
           totalStudents: validStudentIDs.length,
           totalPresentMarks: totalPresent,
           processingTimeMs: processingTime,
-          sessionSupport: true
+          sessionSupport: true,
+          processingMode: useSessionAwareUpdates ? 'session_aware' : 'legacy'
         },
         updateResults: updateResults,
         metadata: {
@@ -3412,7 +3647,8 @@ router.post("/update-attendance/:stream/sem:sem/:subject",
           stream: stream.toUpperCase(),
           semester: parseInt(sem),
           subject: subject.toUpperCase(),
-          multiSessionSupport: true
+          multiSessionSupport: true,
+          sessionAwareSupport: useSessionAwareUpdates
         }
       });
 

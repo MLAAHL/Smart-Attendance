@@ -464,6 +464,27 @@
         </button>
       </div>
       
+      <!-- Search Bar -->
+      <div class="mb-4 hidden" id="searchContainer">
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <i class="fas fa-search text-gray-400"></i>
+          </div>
+          <input type="text" id="studentSearchInput" 
+                 class="form-input w-full pl-10 pr-4 py-3" 
+                 placeholder="Search students by Name or ID..." 
+                 autocomplete="off">
+          <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+            <button id="clearSearchBtn" class="text-gray-400 hover:text-gray-600 hidden">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        <div class="mt-2 text-sm text-gray-600" id="searchStats">
+          <!-- Search results info will appear here -->
+        </div>
+      </div>
+      
       <!-- Simple Table -->
       <div class="table-container mb-6">
         <div class="overflow-x-auto">
@@ -526,6 +547,12 @@ const saveAttendanceBtn = document.getElementById('saveAttendanceBtn');
 const cancelEditBtn = document.getElementById('cancelEditBtn');
 const deleteAttendanceBtn = document.getElementById('deleteAttendanceBtn');
 
+// Search elements
+const searchContainer = document.getElementById('searchContainer');
+const studentSearchInput = document.getElementById('studentSearchInput');
+const clearSearchBtn = document.getElementById('clearSearchBtn');
+const searchStats = document.getElementById('searchStats');
+
 // Date selector elements
 const fullRegisterBtn = document.getElementById('fullRegisterBtn') || document.querySelector('[data-view="full"]');
 const singleDateBtn = document.getElementById('singleDateBtn') || document.querySelector('[data-view="single"]');
@@ -577,6 +604,123 @@ function setupEventListeners() {
     if (singleDateBtn) singleDateBtn.addEventListener('click', () => toggleViewMode(false));
     if (specificDateInput) specificDateInput.addEventListener('change', onDateSelect);
     if (exportExcelBtn) exportExcelBtn.addEventListener('click', exportToExcel);
+    
+    // Search functionality
+    if (studentSearchInput) {
+        studentSearchInput.addEventListener('input', handleStudentSearch);
+        studentSearchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleStudentSearch();
+            }
+        });
+        
+        // Keyboard shortcut: Ctrl+F to focus search
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f' && !searchContainer?.classList.contains('hidden')) {
+                e.preventDefault();
+                studentSearchInput.focus();
+            }
+        });
+    }
+    if (clearSearchBtn) clearSearchBtn.addEventListener('click', clearSearch);
+}
+
+// ✅ SEARCH FUNCTIONALITY
+function handleStudentSearch() {
+    const searchTerm = studentSearchInput.value.toLowerCase().trim();
+    
+    if (searchTerm === '') {
+        clearSearch();
+        return;
+    }
+    
+    // Show clear button
+    clearSearchBtn?.classList.remove('hidden');
+    
+    // Get all table rows (excluding header)
+    const tableBody = document.getElementById('view-tbody');
+    if (!tableBody) return;
+    
+    const rows = tableBody.querySelectorAll('tr');
+    let visibleCount = 0;
+    let totalCount = rows.length;
+    
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length < 2) {
+            row.style.display = 'none';
+            return;
+        }
+        
+        // Get student ID (usually 2nd cell) and Name (usually 3rd cell)
+        const studentId = cells[1]?.textContent?.toLowerCase().trim() || '';
+        const studentName = cells[2]?.textContent?.toLowerCase().trim() || '';
+        
+        // Check if search term matches ID or Name (partial match)
+        const matchesSearch = studentId.includes(searchTerm) || studentName.includes(searchTerm);
+        
+        if (matchesSearch) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Update search stats
+    updateSearchStats(visibleCount, totalCount, searchTerm);
+}
+
+function clearSearch() {
+    if (studentSearchInput) {
+        studentSearchInput.value = '';
+    }
+    
+    // Hide clear button
+    clearSearchBtn?.classList.add('hidden');
+    
+    // Show all rows
+    const tableBody = document.getElementById('view-tbody');
+    if (!tableBody) return;
+    
+    const rows = tableBody.querySelectorAll('tr');
+    rows.forEach(row => {
+        row.style.display = '';
+    });
+    
+    // Clear search stats
+    if (searchStats) {
+        searchStats.textContent = '';
+    }
+}
+
+function updateSearchStats(visibleCount, totalCount, searchTerm) {
+    if (!searchStats) return;
+    
+    if (visibleCount === 0) {
+        searchStats.innerHTML = `<span class="text-red-600"><i class="fas fa-exclamation-circle mr-1"></i>No students found matching "${searchTerm}"</span>`;
+    } else if (visibleCount === totalCount) {
+        searchStats.textContent = '';
+    } else {
+        searchStats.innerHTML = `<span class="text-blue-600"><i class="fas fa-filter mr-1"></i>Showing ${visibleCount} of ${totalCount} students</span>`;
+    }
+}
+
+function showSearchContainer() {
+    searchContainer?.classList.remove('hidden');
+}
+
+function hideSearchContainer() {
+    searchContainer?.classList.add('hidden');
+    clearSearch();
+}
+
+function reapplySearch() {
+    // If there's an active search term, reapply it after table re-render
+    if (studentSearchInput && studentSearchInput.value.trim() !== '') {
+        handleStudentSearch();
+    }
 }
 
 // ✅ INITIALIZE VIEW MODE
@@ -1029,6 +1173,7 @@ function hideRegister() {
         if (element) element.classList.add('hidden');
     });
     
+    hideSearchContainer();
     isEditMode = false;
 }
 
@@ -1110,6 +1255,7 @@ async function loadAttendanceRegister() {
         registerTable?.classList.remove('hidden');
         exportExcelBtn?.classList.remove('hidden');
         editAttendanceBtn?.classList.remove('hidden');
+        showSearchContainer();
 
         // Render table and update stats
         await renderAttendanceTable();
@@ -2072,6 +2218,9 @@ async function renderAttendanceTable() {
       });
 
       console.log(`✅ Table rendered: ${sortedStudents.length} students, ${displayDates.length} dates`);
+      
+      // Reapply search filter if active
+      reapplySearch();
 
   } catch (error) {
       console.error('❌ Render error:', error);
@@ -2138,48 +2287,101 @@ function formatTimeSlot(timeString) {
 
 
 
-// ✅ COMPLETE: Save changes to server function with debugging
+// ✅ COMPLETE: Save changes to server function with SESSION METADATA PRESERVATION
 async function saveChangesToServer(changes) {
   console.log('🌐 Starting saveChangesToServer with changes:', changes);
   
   try {
-      // ✅ STEP 1: Create a complete copy of current attendance data
-      const attendanceMap = {};
+      // ✅ STEP 1: Build session-aware attendance structure with metadata preservation
+      const attendanceWithMetadata = {};
       
-      // First, copy ALL existing data (not just changed dates)
+      // Process each date to preserve session metadata
       Object.keys(currentAttendanceMap).forEach(date => {
-          const existingData = currentAttendanceMap[date];
+          const existingAttendanceData = currentAttendanceMap[date];
+          const existingSessionsData = currentSessionsMap[date] || [];
           
-          if (Array.isArray(existingData) && existingData.length > 0) {
-              if (Array.isArray(existingData[0])) {
-                  // Multi-session format: [[session1], [session2], ...]
-                  attendanceMap[date] = existingData.map(session => [...session]);
-                  console.log(`📅 Copied multi-session data for ${date}:`, attendanceMap[date]);
-              } else {
-                  // Single session array format: [student1, student2, ...]
-                  attendanceMap[date] = [...existingData];
-                  console.log(`📅 Copied single session array for ${date}:`, attendanceMap[date]);
-              }
-          } else if (existingData && existingData.studentsPresent) {
-              // Old format: { studentsPresent: [...] }
-              attendanceMap[date] = [...existingData.studentsPresent];
-              console.log(`📅 Copied old format data for ${date}:`, attendanceMap[date]);
+          console.log(`📅 Processing ${date}:`, {
+              attendance: existingAttendanceData,
+              sessions: existingSessionsData.length,
+              sessionMetadata: existingSessionsData.map(s => ({ 
+                  recordId: s.recordId, 
+                  time: s.time, 
+                  notes: s.sessionMetadata?.notes,
+                  sessionNumber: s.sessionNumber
+              }))
+          });
+          
+          if (existingSessionsData.length > 0 && existingSessionsData.some(s => s.recordId)) {
+              // ✅ SESSIONS WITH METADATA: Preserve session identity
+              attendanceWithMetadata[date] = {
+                  type: 'sessions_with_metadata',
+                  sessions: existingSessionsData.map((sessionInfo, index) => ({
+                      sessionIndex: index,
+                      sessionNumber: sessionInfo.sessionNumber,
+                      recordId: sessionInfo.recordId,
+                      time: sessionInfo.time,
+                      notes: sessionInfo.sessionMetadata?.notes || `Session ${sessionInfo.sessionNumber}`,
+                      studentsPresent: [...(sessionInfo.studentsPresent || [])],
+                      metadata: {
+                          ...sessionInfo.sessionMetadata,
+                          originalSessionIndex: index
+                      }
+                  }))
+              };
+              console.log(`� Preserved ${existingSessionsData.length} sessions with metadata for ${date}`);
+              
+          } else if (Array.isArray(existingAttendanceData) && existingAttendanceData.length > 0 && Array.isArray(existingAttendanceData[0])) {
+              // ✅ MULTI-SESSION ARRAY FORMAT: Convert to session metadata format
+              attendanceWithMetadata[date] = {
+                  type: 'multi_session_array',
+                  sessions: existingAttendanceData.map((sessionStudents, index) => ({
+                      sessionIndex: index,
+                      sessionNumber: index + 1,
+                      recordId: null, // No existing record ID
+                      time: null,
+                      notes: `Session ${index + 1}`,
+                      studentsPresent: [...(sessionStudents || [])],
+                      metadata: { isLegacyMultiSession: true }
+                  }))
+              };
+              console.log(`� Converted multi-session array to metadata format for ${date}`);
+              
+          } else if (Array.isArray(existingAttendanceData)) {
+              // ✅ SINGLE SESSION ARRAY: Convert to single session with metadata
+              attendanceWithMetadata[date] = {
+                  type: 'single_session',
+                  sessions: [{
+                      sessionIndex: 0,
+                      sessionNumber: 1,
+                      recordId: null,
+                      time: null,
+                      notes: null, // Single session has null notes
+                      studentsPresent: [...existingAttendanceData],
+                      metadata: { isSingleSession: true }
+                  }]
+              };
+              console.log(`� Converted single session to metadata format for ${date}`);
+              
           } else {
-              // Initialize empty based on session count
-              const dateSessions = currentSessionsMap[date] || [];
-              if (dateSessions.length > 1) {
-                  attendanceMap[date] = Array(dateSessions.length).fill().map(() => []);
-                  console.log(`📅 Initialized empty multi-session for ${date}:`, attendanceMap[date]);
-              } else {
-                  attendanceMap[date] = [];
-                  console.log(`📅 Initialized empty single session for ${date}:`, attendanceMap[date]);
-              }
+              // ✅ NEW/EMPTY DATE: Initialize as single session
+              attendanceWithMetadata[date] = {
+                  type: 'new_single_session',
+                  sessions: [{
+                      sessionIndex: 0,
+                      sessionNumber: 1,
+                      recordId: null,
+                      time: null,
+                      notes: null,
+                      studentsPresent: [],
+                      metadata: { isNewSession: true }
+                  }]
+              };
+              console.log(`➕ Initialized new single session for ${date}`);
           }
       });
       
-      console.log('📋 Initial attendanceMap after copying existing data:', attendanceMap);
-      
-      // ✅ STEP 2: Apply each change to the copied data
+      console.log('📋 Built attendance structure with session metadata:', attendanceWithMetadata);
+      // ✅ STEP 2: Apply changes while preserving session identity
       changes.forEach((change, changeIndex) => {
           const { date, studentId, sessionIndex, isPresent } = change;
           
@@ -2187,89 +2389,137 @@ async function saveChangesToServer(changes) {
               date, studentId, sessionIndex, isPresent
           });
           
-          // Ensure date exists
-          if (!attendanceMap[date]) {
-              const dateSessions = currentSessionsMap[date] || [];
-              if (dateSessions.length > 1) {
-                  attendanceMap[date] = Array(dateSessions.length).fill().map(() => []);
-              } else {
-                  attendanceMap[date] = [];
-              }
+          // Ensure date exists in our metadata structure
+          if (!attendanceWithMetadata[date]) {
+              attendanceWithMetadata[date] = {
+                  type: 'new_single_session',
+                  sessions: [{
+                      sessionIndex: 0,
+                      sessionNumber: 1,
+                      recordId: null,
+                      time: null,
+                      notes: null,
+                      studentsPresent: [],
+                      metadata: { isNewSession: true }
+                  }]
+              };
+              console.log(`� Initialized new session structure for ${date}`);
           }
           
+          const dateData = attendanceWithMetadata[date];
+          
           if (sessionIndex !== null && sessionIndex !== undefined) {
-              // ✅ MULTI-SESSION CHANGE
+              // ✅ SESSION-SPECIFIC CHANGE: Apply to specific session while preserving metadata
               const sessionIdx = parseInt(sessionIndex);
-              console.log(`🔀 Multi-session change for session ${sessionIdx}`);
+              console.log(`🔀 Applying change to session ${sessionIdx} with metadata preservation`);
               
-              // Ensure it's a multi-session array
-              if (!Array.isArray(attendanceMap[date]) || !Array.isArray(attendanceMap[date][0])) {
-                  const currentData = Array.isArray(attendanceMap[date]) ? attendanceMap[date] : [];
-                  const sessionCount = Math.max((currentSessionsMap[date] || []).length, sessionIdx + 1);
-                  attendanceMap[date] = Array(sessionCount).fill().map((_, idx) => 
-                      idx === 0 ? [...currentData] : []
-                  );
-              }
-              
-              if (!Array.isArray(attendanceMap[date][sessionIdx])) {
-                  attendanceMap[date][sessionIdx] = [];
-              }
-              
-              const sessionStudents = attendanceMap[date][sessionIdx];
-              const studentIdx = sessionStudents.indexOf(studentId);
-              
-              if (isPresent && studentIdx === -1) {
-                  sessionStudents.push(studentId);
-                  console.log(`✅ Added ${studentId} to session ${sessionIdx}`);
-              } else if (!isPresent && studentIdx !== -1) {
-                  sessionStudents.splice(studentIdx, 1);
-                  console.log(`❌ Removed ${studentId} from session ${sessionIdx}`);
+              if (dateData.sessions[sessionIdx]) {
+                  // ✅ TARGET EXISTING SESSION: Update the specific session's student list
+                  const targetSession = dateData.sessions[sessionIdx];
+                  const studentsPresent = targetSession.studentsPresent;
+                  const studentIdx = studentsPresent.indexOf(studentId);
+                  
+                  if (isPresent && studentIdx === -1) {
+                      studentsPresent.push(studentId);
+                      console.log(`✅ Added ${studentId} to session ${sessionIdx} (${targetSession.notes || 'unnamed'}) - RecordID: ${targetSession.recordId}`);
+                  } else if (!isPresent && studentIdx !== -1) {
+                      studentsPresent.splice(studentIdx, 1);
+                      console.log(`❌ Removed ${studentId} from session ${sessionIdx} (${targetSession.notes || 'unnamed'}) - RecordID: ${targetSession.recordId}`);
+                  }
+                  
+                  // Mark session as modified for backend processing
+                  targetSession.metadata.modified = true;
+                  targetSession.metadata.lastModified = new Date().toISOString();
+                  
+              } else {
+                  console.warn(`⚠️ Session ${sessionIdx} not found for date ${date}. Available sessions:`, dateData.sessions.length);
               }
               
           } else {
-              // ✅ SINGLE SESSION CHANGE
-              console.log(`📝 Single session change`);
+              // ✅ NO SESSION INDEX: Apply to first/primary session
+              console.log(`📝 Applying change to primary session (no sessionIndex specified)`);
               
-              if (!Array.isArray(attendanceMap[date])) {
-                  attendanceMap[date] = [];
-              } else if (attendanceMap[date].length > 0 && Array.isArray(attendanceMap[date][0])) {
-                  attendanceMap[date] = [...(attendanceMap[date][0] || [])];
-              }
-              
-              const studentIdx = attendanceMap[date].indexOf(studentId);
-              
-              if (isPresent && studentIdx === -1) {
-                  attendanceMap[date].push(studentId);
-                  console.log(`✅ Added ${studentId} to single session`);
-              } else if (!isPresent && studentIdx !== -1) {
-                  attendanceMap[date].splice(studentIdx, 1);
-                  console.log(`❌ Removed ${studentId} from single session`);
+              if (dateData.sessions.length > 0) {
+                  const primarySession = dateData.sessions[0];
+                  const studentsPresent = primarySession.studentsPresent;
+                  const studentIdx = studentsPresent.indexOf(studentId);
+                  
+                  if (isPresent && studentIdx === -1) {
+                      studentsPresent.push(studentId);
+                      console.log(`✅ Added ${studentId} to primary session - RecordID: ${primarySession.recordId}`);
+                  } else if (!isPresent && studentIdx !== -1) {
+                      studentsPresent.splice(studentIdx, 1);
+                      console.log(`❌ Removed ${studentId} from primary session - RecordID: ${primarySession.recordId}`);
+                  }
+                  
+                  primarySession.metadata.modified = true;
+                  primarySession.metadata.lastModified = new Date().toISOString();
               }
           }
       });
       
-      console.log('📋 Final attendanceMap to send to server:', attendanceMap);
+      console.log('📋 Final attendance structure with session metadata:', attendanceWithMetadata);
       
-      // ✅ STEP 3: Make the API call
-      console.log('🚀 Making API call to:', `/api/update-attendance/${encodeURIComponent(currentStream)}/sem${currentSemester}/${encodeURIComponent(currentSubject)}`);
-      
-      const requestBody = {
-          attendanceMap: attendanceMap,
+      // ✅ STEP 3: Build backend payload with session metadata for proper identification
+      const backendPayload = {
+          sessionUpdates: {}, // New: session-aware updates with metadata
+          attendanceMap: {}, // Legacy: for backward compatibility
           metadata: {
               totalChanges: changes.length,
               updatedAt: new Date().toISOString(),
-              changeSource: 'bulk_edit'
+              changeSource: 'session_aware_bulk_edit',
+              dataFormat: 'session_metadata_preserved',
+              hasSessionMetadata: true
           }
       };
       
-      console.log('📤 Request body:', JSON.stringify(requestBody, null, 2));
+      // Build session-aware payload for backend
+      Object.entries(attendanceWithMetadata).forEach(([date, dateData]) => {
+          const modifiedSessions = dateData.sessions.filter(session => session.metadata.modified);
+          
+          if (modifiedSessions.length > 0) {
+              backendPayload.sessionUpdates[date] = {
+                  type: dateData.type,
+                  sessions: modifiedSessions.map(session => ({
+                      // ✅ CRITICAL: Include session identification metadata
+                      recordId: session.recordId,
+                      sessionIndex: session.sessionIndex,
+                      sessionNumber: session.sessionNumber,
+                      notes: session.notes,
+                      sessionTime: session.time,
+                      
+                      // ✅ CRITICAL: Updated attendance data
+                      studentsPresent: session.studentsPresent,
+                      
+                      // ✅ CRITICAL: Action for backend (update vs create)
+                      action: session.recordId ? 'update' : 'create',
+                      
+                      // ✅ Additional metadata for backend processing
+                      metadata: session.metadata
+                  }))
+              };
+              console.log(`🔑 Prepared ${modifiedSessions.length} session updates for ${date}`);
+          }
+          
+          // ✅ LEGACY COMPATIBILITY: Also build traditional attendanceMap
+          if (dateData.sessions.length === 1 && !dateData.sessions[0].notes) {
+              // Single session - send as array
+              backendPayload.attendanceMap[date] = dateData.sessions[0].studentsPresent;
+          } else {
+              // Multi-session - send as array of arrays
+              backendPayload.attendanceMap[date] = dateData.sessions.map(s => s.studentsPresent);
+          }
+      });
+      
+      console.log('🚀 Making session-aware API call to:', `/api/update-attendance/${encodeURIComponent(currentStream)}/sem${currentSemester}/${encodeURIComponent(currentSubject)}`);
+      console.log('📤 SESSION-AWARE Request body:', JSON.stringify(backendPayload, null, 2));
       
       const response = await fetch(`/api/update-attendance/${encodeURIComponent(currentStream)}/sem${currentSemester}/${encodeURIComponent(currentSubject)}`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json'
           },
-          body: JSON.stringify(requestBody)
+          body: JSON.stringify(backendPayload)
       });
       
       console.log('📨 Response status:', response.status);
@@ -2456,23 +2706,53 @@ async function saveAttendanceChanges() {
                       currentSessionsMap[date][sessionIndex].totalPresent = sessionStudents.length;
                   }
               } else {
-                  // Single session
+                  // Single session or sessionIndex = null
+                  console.log(`📝 Updating single session for ${studentId} on ${date}`);
+                  
                   if (!Array.isArray(currentAttendanceMap[date])) {
                       currentAttendanceMap[date] = [];
+                  }
+                  
+                  // Handle multi-session format that needs to be treated as single session
+                  if (Array.isArray(currentAttendanceMap[date]) && currentAttendanceMap[date].length > 0 && Array.isArray(currentAttendanceMap[date][0])) {
+                      // Convert from [[students]] to [students] for single session
+                      currentAttendanceMap[date] = [...(currentAttendanceMap[date][0] || [])];
+                      console.log(`🔄 Converted multi-session format to single session for ${date}`);
                   }
                   
                   const idx = currentAttendanceMap[date].indexOf(studentId);
                   
                   if (isPresent && idx === -1) {
                       currentAttendanceMap[date].push(studentId);
+                      console.log(`✅ Added ${studentId} to single session ${date}`);
                   } else if (!isPresent && idx !== -1) {
                       currentAttendanceMap[date].splice(idx, 1);
+                      console.log(`❌ Removed ${studentId} from single session ${date}`);
                   }
                   
-                  // Update sessionsMap
-                  if (currentSessionsMap[date] && currentSessionsMap[date][0]) {
-                      currentSessionsMap[date][0].studentsPresent = [...currentAttendanceMap[date]];
-                      currentSessionsMap[date][0].totalPresent = currentAttendanceMap[date].length;
+                  // ✅ IMPROVED: Update sessionsMap with better error handling
+                  if (currentSessionsMap[date]) {
+                      if (Array.isArray(currentSessionsMap[date]) && currentSessionsMap[date].length > 0) {
+                          // Update the first session (primary session for single session scenario)
+                          currentSessionsMap[date][0].studentsPresent = [...currentAttendanceMap[date]];
+                          currentSessionsMap[date][0].totalPresent = currentAttendanceMap[date].length;
+                          console.log(`🔄 Updated sessionsMap[${date}][0] with ${currentAttendanceMap[date].length} students`);
+                      } else {
+                          console.warn(`⚠️ currentSessionsMap[${date}] is not a valid array:`, currentSessionsMap[date]);
+                      }
+                  } else {
+                      console.warn(`⚠️ No sessionsMap entry found for ${date}`);
+                      // Create a basic session entry if it doesn't exist
+                      currentSessionsMap[date] = [{
+                          sessionNumber: 1,
+                          time: '00:00:00',
+                          studentsPresent: [...currentAttendanceMap[date]],
+                          totalPresent: currentAttendanceMap[date].length,
+                          attendancePercentage: 0,
+                          recordId: null,
+                          sessionMetadata: { isSingleSession: true }
+                      }];
+                      console.log(`➕ Created new sessionsMap entry for ${date}`);
                   }
               }
           });
